@@ -96,7 +96,7 @@ async def listen_to_stream(screening_id: str, last_id: str = "$"):
     
     while True:
         # XREAD blocks until a new message arrives. block=0 means wait indefinitely.
-        # last_id '$' means 'only give me messages that arrive AFTER I started listening'
+        # last_id means 'only give me messages that arrive AFTER I started listening'
         response = await redis_client.xread({stream_key: last_id}, count=1, block=0)
         
         if response:
