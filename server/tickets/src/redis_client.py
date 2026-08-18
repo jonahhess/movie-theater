@@ -1,7 +1,9 @@
+import asyncio
 import os
 from typing import Any
 
 import redis.asyncio as aioredis
+from redis.exceptions import RedisError
 
 REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
 REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
@@ -86,19 +88,38 @@ async def publish_seat_update(screening_id: str, seat_id: str, status: str):
         "seat_id": seat_id,
         "status": status  # "locked", "available", or "purchased"
     }
-    # XADD appends the message to the stream. '*' lets Redis generate a unique ID.
-    await redis_client.xadd(stream_key, screening_data, id="*")
+    # Keep the stream bounded to avoid unbounded growth over time.
+    await redis_client.xadd(
+        stream_key,
+        screening_data,
+        id="*",
+        maxlen=10_000,
+        approximate=True,
+    )
 
 # 3. READ NEW MESSAGES FROM THE STREAM (The Listening Layer)
-async def listen_to_stream(screening_id: str, last_id: str = "$"):
+async def listen_to_stream(
+    screening_id: str,
+    last_id: str = "$",
+    block_ms: int = 5000,
+):
     """Generates new stream messages as they arrive (Async Generator)."""
     stream_key = f"stream:screening:{screening_id}"
-    
+
     while True:
-        # XREAD blocks until a new message arrives. block=0 means wait indefinitely.
-        # last_id means 'only give me messages that arrive AFTER I started listening'
-        response = await redis_client.xread({stream_key: last_id}, count=1, block=0)
-        
+        # Finite blocking read so cancellation/shutdown checks can occur regularly.
+        try:
+            response = await redis_client.xread(
+                {stream_key: last_id},
+                count=1,
+                block=block_ms,
+            )
+        except asyncio.CancelledError:
+            raise
+        except RedisError:
+            await asyncio.sleep(0.5)
+            continue
+
         if response:
             # Response format: [[stream_key, [(message_id, data_dict)]]]
             _, messages = response[0]
