@@ -25,29 +25,29 @@ async def close_redis():
 
 # --- PURPOSE 1: HIGH CONTENTION SEAT RESERVATION (SET NX EX) ---
 
-async def reserve_seat(event_id:str, seat_id: str, user_uuid: str, 
+async def reserve_seat(screening_id:str, seat_id: str, user_uuid: str, 
                        lock_ttl_seconds: int = 600) -> bool:
     """
     Attempts to reserve a specific seat atomically.
     Returns True if the reservation succeeded, False if already reserved.
     """
-    key = f"event:{event_id}::{seat_id}"
+    key = f"screening:{screening_id}::{seat_id}"
     # nx=True makes it atomic (SET if Not Exists)
     # ex=lock_ttl_seconds ensures the reservation expires if they don't check out
     success = await redis_client.set(key, user_uuid, nx=True, ex=lock_ttl_seconds)
     return bool(success)
 
-async def release_seat(event_id:str, seat_id: str, user_uuid: str) -> None:
+async def release_seat(screening_id:str, seat_id: str, user_uuid: str) -> None:
     """Removes the seat reservation explicitly (e.g., if checkout fails)."""
-    await redis_client.delex(f"event:{event_id}::{seat_id}", ifeq=user_uuid)
+    await redis_client.delex(f"screening:{screening_id}::{seat_id}", ifeq=user_uuid)
 
 
 # --- PURPOSE 2: CACHE WARMING ---
 
-async def warm_event_cache(hash_key: str, event_data: dict[str, Any], 
+async def warm_screening_cache(hash_key: str, screening_data: dict[str, Any], 
                            ttl_seconds: int | None = None):
-    """Pre-populates basic event rules/details into a Hash structure."""
-    clean_data = {k: str(v) for k, v in event_data.items()}
+    """Pre-populates basic screening details into a Hash structure."""
+    clean_data = {k: str(v) for k, v in screening_data.items()}
     async with redis_client.pipeline(transaction=True) as pipe:
         pipe.hset(hash_key, mapping=clean_data)
         if ttl_seconds:
@@ -55,15 +55,15 @@ async def warm_event_cache(hash_key: str, event_data: dict[str, Any],
         await pipe.execute()
 
 
-async def clear_cache_by_prefix(event_id: str, batch_size: int = 500) -> int:
+async def clear_cache_by_prefix(screening_id: str, batch_size: int = 500) -> int:
     """
     Deletes all Redis keys that start with the given prefix.
     Returns the number of deleted keys.
     """
-    if not event_id:
-        raise ValueError("event_id must be a non-empty string")
+    if not screening_id:
+        raise ValueError("screening_id must be a non-empty string")
 
-    pattern = f"event:{event_id}*"
+    pattern = f"screening:{screening_id}*"
     deleted_total = 0
     batch: list[str] = []
 
@@ -79,20 +79,20 @@ async def clear_cache_by_prefix(event_id: str, batch_size: int = 500) -> int:
     return int(deleted_total)
 
 # 2. PUSH AN UPDATE TO THE STREAM (The Event Layer)
-async def publish_seat_update(event_id: str, seat_id: str, status: str):
+async def publish_seat_update(screening_id: str, seat_id: str, status: str):
     """Pushes a seat status change into the Redis Stream."""
-    stream_key = f"stream:event:{event_id}"
-    event_data = {
+    stream_key = f"stream:screening:{screening_id}"
+    screening_data = {
         "seat_id": seat_id,
         "status": status  # "locked", "available", or "purchased"
     }
     # XADD appends the message to the stream. '*' lets Redis generate a unique ID.
-    await redis_client.xadd(stream_key, event_data, id="*")
+    await redis_client.xadd(stream_key, screening_data, id="*")
 
 # 3. READ NEW MESSAGES FROM THE STREAM (The Listening Layer)
-async def listen_to_stream(event_id: str, last_id: str = "$"):
+async def listen_to_stream(screening_id: str, last_id: str = "$"):
     """Generates new stream messages as they arrive (Async Generator)."""
-    stream_key = f"stream:event:{event_id}"
+    stream_key = f"stream:screening:{screening_id}"
     
     while True:
         # XREAD blocks until a new message arrives. block=0 means wait indefinitely.
