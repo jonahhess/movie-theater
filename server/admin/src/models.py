@@ -1,7 +1,12 @@
+from __future__ import annotations
+
+import uuid
+from decimal import Decimal
+from datetime import date, datetime
+
 from database import Base
 from sqlalchemy import (
     Boolean,
-    Column,
     Date,
     DateTime,
     Enum,
@@ -11,51 +16,79 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
+    Uuid,
     func,
     select,
     text,
 )
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+class User(Base):
+    __tablename__ = "users"
+
+    # UUIDv7 is the single, direct primary key
+    id: Mapped[uuid.UUID] = mapped_column(
+        Uuid,
+        primary_key=True,
+        default=uuid.uuid7
+    )
+    username: Mapped[str] = mapped_column(String(255), nullable=False)
+    email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+    phone: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=False,
+        server_default=text("CURRENT_TIMESTAMP"),
+    )
 
 
 class Movie(Base):
     __tablename__ = "movies"
 
-    id = Column(Integer, primary_key=True, index=True)
-    title = Column(String(255), nullable=False)
-    description = Column(Text, nullable=True)
-    duration_minutes = Column(Integer, nullable=False)
-    rating = Column(Enum("G", "PG", "PG-13", "R", 
-        name="movie_rating_enum"), nullable=False, server_default="PG-13")
-    release_date = Column(Date, nullable=True)
-    delete_at = Column(DateTime, nullable=True, default=None)
-    is_deleted = Column(Boolean, default=False, nullable=False)
-    created_at = Column(DateTime, nullable=False, 
-        server_default=text("CURRENT_TIMESTAMP"))
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    duration_minutes: Mapped[int] = mapped_column(Integer, nullable=False)
+    rating: Mapped[str] = mapped_column(
+        Enum("G", "PG", "PG-13", "R", name="movie_rating_enum"),
+        nullable=False,
+        server_default="PG-13",
+    )
+    release_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    delete_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True, default=None)
+    is_deleted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=False,
+        server_default=text("CURRENT_TIMESTAMP"),
+    )
 
 class Auditorium(Base):
     __tablename__ = "auditoriums"
 
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(100), nullable=False)
-    is_active = Column(Boolean, nullable=False, default=True)
-    
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+
     # Relationships
-    seats = relationship("Seats", 
-        back_populates="auditorium", cascade="all, delete-orphan")
-    
+    seats: Mapped[list[Seats]] = relationship(
+        "Seats",
+        back_populates="auditorium",
+        cascade="all, delete-orphan",
+    )
+
     # Dynamic properties
     @hybrid_property
     def total_capacity(self):
-        return sum(1 for seat in self.seats if seat.status != "unavailable")
+        return sum(1 for seat in self.seats if seat.is_available)
 
     @total_capacity.inplace.expression
     @classmethod
     def _total_capacity_expression(cls):
         return (
             select(func.count(Seats.id))
-            .where(Seats.auditorium_id == cls.id, Seats.status != "unavailable")
+            .where(Seats.auditorium_id == cls.id, Seats.is_available)
             .label("total_capacity")
         )
 
@@ -67,48 +100,59 @@ class Auditorium(Base):
     @is_accessible.inplace.expression
     @classmethod
     def _is_accessible_expression(cls):
-        return (
-            select(func.coalesce(func.max(1), 0).cast(Boolean))
-            .where(Seats.auditorium_id == cls.id, Seats.is_accessible)
-            .label("is_accessible")
-        ).as_scalar()
+        return select(func.count(Seats.id) > 0).where(
+            Seats.auditorium_id == cls.id,
+            Seats.is_accessible,
+        ).scalar_subquery()
 
 
 class Seats(Base):
     __tablename__ = "seats"
 
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(100), nullable=False)
-    auditorium_id = Column(Integer, 
-        ForeignKey("auditoriums.id", ondelete="CASCADE"), nullable=False)
-    row = Column(String(5), nullable=False)
-    number = Column(Integer, nullable=False)
-    is_available = Column(Boolean, nullable=False)
-    is_accessible = Column(Boolean, nullable=False, server_default=text("TRUE"))
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    auditorium_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("auditoriums.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    row: Mapped[str] = mapped_column(String(5), nullable=False)
+    number: Mapped[int] = mapped_column(Integer, nullable=False)
+    is_available: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    is_accessible: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("TRUE"))
 
-    x_pos = Column(Integer, nullable=False)
-    y_pos = Column(Integer, nullable=False)
-    angle = Column(Integer, nullable=False, default=0)
+    x_pos: Mapped[int] = mapped_column(Integer, nullable=False)
+    y_pos: Mapped[int] = mapped_column(Integer, nullable=False)
+    angle: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
     # Relationships
-    auditorium = relationship("Auditorium", back_populates="seats")
+    auditorium: Mapped[Auditorium] = relationship("Auditorium", back_populates="seats")
 
 
 class Showtime(Base):
     __tablename__ = "showtimes"
 
-    id = Column(Integer, primary_key=True, index=True)
-    movie_id = Column(Integer, 
-        ForeignKey("movies.id", ondelete="RESTRICT"), nullable=False)
-    auditorium_id = Column(Integer, 
-        ForeignKey("auditoriums.id", ondelete="RESTRICT"), nullable=False)
-    start_time = Column(DateTime, index=True, nullable=False)
-    price = Column(Numeric(10, 2), default=12.50, nullable=False)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    movie_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("movies.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
+    auditorium_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("auditoriums.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
+    start_time: Mapped[datetime] = mapped_column(DateTime, index=True, nullable=False)
+    price: Mapped[Decimal] = mapped_column(Numeric(10, 2), default=12.50, nullable=False)
 
     # Relationships
-    auditorium = relationship("Auditorium")
-    showtime_seats = relationship("ShowtimeSeat", 
-        back_populates="showtime", cascade="all, delete-orphan")
+    auditorium: Mapped[Auditorium] = relationship("Auditorium")
+    showtime_seats: Mapped[list[ShowtimeSeat]] = relationship(
+        "ShowtimeSeat",
+        back_populates="showtime",
+        cascade="all, delete-orphan",
+    )
 
 class ShowtimeSeat(Base):
     __tablename__ = "showtime_seats"
@@ -116,30 +160,45 @@ class ShowtimeSeat(Base):
         UniqueConstraint("showtime_id", "seat_id", name="unique_seat_per_show"),
     )
 
-    id = Column(Integer, primary_key=True, index=True)
-    showtime_id = Column(Integer, 
-        ForeignKey("showtimes.id", ondelete="CASCADE"), nullable=False)
-    seat_id = Column(Integer, 
-        ForeignKey("seats.id", ondelete="CASCADE"), nullable=False)
-    is_taken = Column(Boolean, nullable=False)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    showtime_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("showtimes.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    seat_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("seats.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    is_taken: Mapped[bool] = mapped_column(Boolean, nullable=False)
 
     # Relationships
-    showtime = relationship("Showtime", back_populates="showtime_seats")
-    seat = relationship("Seats")
+    showtime: Mapped[Showtime] = relationship("Showtime", back_populates="showtime_seats")
+    seat: Mapped[Seats] = relationship("Seats")
 
 class Ticket(Base):
     __tablename__ = "tickets"
 
-    id = Column(Integer, primary_key=True, index=True)
-    showtime_seat_id = Column(Integer, 
-        ForeignKey("showtime_seats.id", ondelete="RESTRICT"), nullable=False)
-    email = Column(String(255), index=True, nullable=False)
-    phone = Column(String(20), nullable=True)
-    receipt_number = Column(String(50), unique=True, nullable=False)
-    status = Column(Enum("pending", "confirmed", "cancelled", 
-        name="ticket_status_enum"), server_default="pending", nullable=False)
-    created_at = Column(DateTime, nullable=False, 
-        server_default=text("CURRENT_TIMESTAMP"))
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    showtime_seat_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("showtime_seats.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
+    email: Mapped[str] = mapped_column(String(255), index=True, nullable=False)
+    phone: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    receipt_number: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
+    status: Mapped[str] = mapped_column(
+        Enum("pending", "confirmed", "cancelled", name="ticket_status_enum"),
+        server_default="pending",
+        nullable=False,
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=False,
+        server_default=text("CURRENT_TIMESTAMP"),
+    )
 
     # Relationships
-    showtime_seat = relationship("ShowtimeSeat")
+    showtime_seat: Mapped[ShowtimeSeat] = relationship("ShowtimeSeat")
