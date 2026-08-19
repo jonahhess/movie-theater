@@ -5,6 +5,8 @@ import bcrypt
 import jwt
 from dotenv import load_dotenv
 from fastapi import HTTPException, status
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from admin.src.models import Admin
 
@@ -16,7 +18,7 @@ JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 JWT_EXP_MINUTES = int(os.getenv("JWT_EXP_MINUTES", "60"))
 
 
-def validate_admin_authorization_header(authorization_header: str | None) -> dict:
+def validate_admin_authorization_header(authorization_header: str | None, db: Session) -> Admin:
     if not authorization_header:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -44,13 +46,23 @@ def validate_admin_authorization_header(authorization_header: str | None) -> dic
             detail="Invalid or expired token",
         ) from exc
 
-    if payload.get("is_admin") is not True:
+    admin_id = payload.get("sub")
+    if not admin_id:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Admin privileges required",
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token is missing required subject claim",
         )
 
-    return payload
+    admin = db.scalar(
+        select(Admin).where(Admin.id == admin_id, Admin.is_active.is_(True))
+    )
+    if admin is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Admin account not found or inactive",
+        )
+
+    return admin
 
 
 def verify_admin_login_password(password: str, password_hash: str) -> bool:
@@ -72,7 +84,6 @@ def create_admin_access_token(admin_user: Admin) -> str:
     payload = {
         "sub": str(admin_user.id),
         "email": admin_user.email,
-        "is_admin": True,
         "iat": int(now.timestamp()),
         "exp": int(exp.timestamp()),
     }
