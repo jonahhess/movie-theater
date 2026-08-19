@@ -11,6 +11,11 @@ from admin.src.auth import (
 )
 from admin.src.database import get_admin_db
 from admin.src.models import Admin
+from admin.src.routes.auditoriums import router as auditoriums_router
+from admin.src.routes.movies import router as movies_router
+from admin.src.routes.screenings import router as screenings_router
+from admin.src.routes.seat_maps import router as seat_maps_router
+from admin.src.routes.users import router as users_router
 
 
 class AdminLoginRequest(BaseModel):
@@ -66,7 +71,8 @@ def admin_login(payload: AdminLoginRequest, db: Session = db_dependency):
     )
 
 
-# Example protected admin endpoint
-@protected_router.get("/users")
-def get_admin_users(db: Session = db_dependency):
-    return {"message": "Hello from admin's isolated router endpoint!", "data": []}
+protected_router.include_router(users_router)
+protected_router.include_router(movies_router)
+protected_router.include_router(screenings_router)
+protected_router.include_router(auditoriums_router)
+protected_router.include_router(seat_maps_router)
