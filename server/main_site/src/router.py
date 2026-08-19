@@ -5,6 +5,7 @@ from typing import Literal
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy import func, select
+from sqlalchemy.exc import DBAPIError, OperationalError, ProgrammingError
 from sqlalchemy.orm import Session, selectinload
 
 from main_site.src.database import get_read_db
@@ -12,6 +13,22 @@ from main_site.src.models import Auditorium, Movie, Screening
 
 router = APIRouter()
 db_dependency = Depends(get_read_db)
+
+
+def _translate_db_error(exc: DBAPIError) -> HTTPException:
+    # Cross-database check for missing table/view errors.
+    details = str(getattr(exc, "orig", exc)).lower()
+    schema_missing_markers = ("no such table", "doesn't exist", "unknown table", "1146")
+    if any(marker in details for marker in schema_missing_markers):
+        return HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database schema is not ready yet. Please try again later.",
+        )
+
+    return HTTPException(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        detail="Database query failed.",
+    )
 
 
 class MovieResponse(BaseModel):
@@ -79,31 +96,38 @@ def browse_movies(
     offset: int = Query(0, ge=0),
     db: Session = db_dependency,
 ):
-    count_stmt = select(func.count()).select_from(Movie)
-    list_stmt = select(Movie)
+    try:
+        count_stmt = select(func.count()).select_from(Movie)
+        list_stmt = select(Movie)
 
-    if rating is not None:
-        count_stmt = count_stmt.where(Movie.rating == rating)
-        list_stmt = list_stmt.where(Movie.rating == rating)
+        if rating is not None:
+            count_stmt = count_stmt.where(Movie.rating == rating)
+            list_stmt = list_stmt.where(Movie.rating == rating)
 
-    if release_year is not None:
-        count_stmt = count_stmt.where(func.extract("year", Movie.release_date) == release_year)
-        list_stmt = list_stmt.where(func.extract("year", Movie.release_date) == release_year)
+        if release_year is not None:
+            count_stmt = count_stmt.where(func.extract("year", Movie.release_date) == release_year)
+            list_stmt = list_stmt.where(func.extract("year", Movie.release_date) == release_year)
 
-    total = db.scalar(count_stmt) or 0
-    items = db.scalars(
-        list_stmt
-        .order_by(Movie.release_date.desc(), Movie.id.desc())
-        .offset(offset)
-        .limit(limit)
-    ).all()
+        total = db.scalar(count_stmt) or 0
+        items = db.scalars(
+            list_stmt
+            .order_by(Movie.release_date.desc(), Movie.id.desc())
+            .offset(offset)
+            .limit(limit)
+        ).all()
+    except (OperationalError, ProgrammingError) as exc:
+        raise _translate_db_error(exc) from exc
 
     return MoviesListResponse(total=total, limit=limit, offset=offset, items=items)
 
 
 @router.get("/movies/{movie_id}", response_model=MovieResponse)
 def movie_details(movie_id: int, db: Session = db_dependency):
-    movie = db.scalar(select(Movie).where(Movie.id == movie_id))
+    try:
+        movie = db.scalar(select(Movie).where(Movie.id == movie_id))
+    except (OperationalError, ProgrammingError) as exc:
+        raise _translate_db_error(exc) from exc
+
     if movie is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -127,43 +151,50 @@ def browse_screenings(
             detail="start_date must be before or equal to end_date",
         )
 
-    count_stmt = select(func.count()).select_from(Screening)
-    list_stmt = (
-        select(Screening)
-        .options(selectinload(Screening.auditorium))
-        .order_by(Screening.start_time.asc(), Screening.id.asc())
-        .offset(offset)
-        .limit(limit)
-    )
+    try:
+        count_stmt = select(func.count()).select_from(Screening)
+        list_stmt = (
+            select(Screening)
+            .options(selectinload(Screening.auditorium))
+            .order_by(Screening.start_time.asc(), Screening.id.asc())
+            .offset(offset)
+            .limit(limit)
+        )
 
-    if movie_id is not None:
-        count_stmt = count_stmt.where(Screening.movie_id == movie_id)
-        list_stmt = list_stmt.where(Screening.movie_id == movie_id)
+        if movie_id is not None:
+            count_stmt = count_stmt.where(Screening.movie_id == movie_id)
+            list_stmt = list_stmt.where(Screening.movie_id == movie_id)
 
-    if start_date is not None:
-        start_dt = datetime.combine(start_date, time.min)
-        count_stmt = count_stmt.where(Screening.start_time >= start_dt)
-        list_stmt = list_stmt.where(Screening.start_time >= start_dt)
+        if start_date is not None:
+            start_dt = datetime.combine(start_date, time.min)
+            count_stmt = count_stmt.where(Screening.start_time >= start_dt)
+            list_stmt = list_stmt.where(Screening.start_time >= start_dt)
 
-    if end_date is not None:
-        # Inclusive end-of-day filter by bounding to the next day.
-        end_dt_exclusive = datetime.combine(end_date + timedelta(days=1), time.min)
-        count_stmt = count_stmt.where(Screening.start_time < end_dt_exclusive)
-        list_stmt = list_stmt.where(Screening.start_time < end_dt_exclusive)
+        if end_date is not None:
+            # Inclusive end-of-day filter by bounding to the next day.
+            end_dt_exclusive = datetime.combine(end_date + timedelta(days=1), time.min)
+            count_stmt = count_stmt.where(Screening.start_time < end_dt_exclusive)
+            list_stmt = list_stmt.where(Screening.start_time < end_dt_exclusive)
 
-    total = db.scalar(count_stmt) or 0
-    items = db.scalars(list_stmt).all()
+        total = db.scalar(count_stmt) or 0
+        items = db.scalars(list_stmt).all()
+    except (OperationalError, ProgrammingError) as exc:
+        raise _translate_db_error(exc) from exc
 
     return ScreeningsListResponse(total=total, limit=limit, offset=offset, items=items)
 
 
 @router.get("/screenings/{screening_id}", response_model=ScreeningResponse)
 def screening_details(screening_id: int, db: Session = db_dependency):
-    screening = db.scalar(
-        select(Screening)
-        .options(selectinload(Screening.auditorium))
-        .where(Screening.id == screening_id)
-    )
+    try:
+        screening = db.scalar(
+            select(Screening)
+            .options(selectinload(Screening.auditorium))
+            .where(Screening.id == screening_id)
+        )
+    except (OperationalError, ProgrammingError) as exc:
+        raise _translate_db_error(exc) from exc
+
     if screening is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
