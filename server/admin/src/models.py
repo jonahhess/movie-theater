@@ -229,8 +229,8 @@ class Ticket(Base):
     phone: Mapped[str | None] = mapped_column(String(20), nullable=True)
     receipt_number: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
     status: Mapped[str] = mapped_column(
-        Enum("pending", "confirmed", "cancelled", name="ticket_status_enum"),
-        server_default="pending",
+        Enum("confirmed", "cancelled","redeemed", name="ticket_status_enum"),
+        server_default="confirmed",
         nullable=False,
     )
     created_at: Mapped[datetime] = mapped_column(
