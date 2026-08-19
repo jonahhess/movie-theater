@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 import uuid
-from decimal import Decimal
 from datetime import date, datetime
+from decimal import Decimal
 
-from database import Base
 from sqlalchemy import (
     Boolean,
     Date,
@@ -23,6 +22,9 @@ from sqlalchemy import (
 )
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from admin.src.database import Base
+
 
 class User(Base):
     __tablename__ = "users"
@@ -43,6 +45,28 @@ class User(Base):
     )
 
 
+class Admin(Base):
+    __tablename__ = "admins"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        Uuid,
+        primary_key=True,
+        default=uuid.uuid7,
+    )
+    email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+    password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    is_active: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        server_default=text("TRUE"),
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=False,
+        server_default=text("CURRENT_TIMESTAMP"),
+    )
+
+
 class Movie(Base):
     __tablename__ = "movies"
 
@@ -56,8 +80,8 @@ class Movie(Base):
         server_default="PG-13",
     )
     release_date: Mapped[date | None] = mapped_column(Date, nullable=True)
-    delete_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True, default=None)
     is_deleted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    is_published: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         nullable=False,
@@ -73,7 +97,7 @@ class Auditorium(Base):
 
     # Relationships
     seats: Mapped[list[Seats]] = relationship(
-        "Seats",
+        "admin.src.models.Seats",
         back_populates="auditorium",
         cascade="all, delete-orphan",
     )
@@ -119,18 +143,22 @@ class Seats(Base):
     row: Mapped[str] = mapped_column(String(5), nullable=False)
     number: Mapped[int] = mapped_column(Integer, nullable=False)
     is_available: Mapped[bool] = mapped_column(Boolean, nullable=False)
-    is_accessible: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("TRUE"))
+    is_accessible: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        server_default=text("TRUE"),
+    )
 
     x_pos: Mapped[int] = mapped_column(Integer, nullable=False)
     y_pos: Mapped[int] = mapped_column(Integer, nullable=False)
     angle: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
     # Relationships
-    auditorium: Mapped[Auditorium] = relationship("Auditorium", back_populates="seats")
+    auditorium: Mapped[Auditorium] = relationship("admin.src.models.Auditorium", back_populates="seats")
 
 
-class Showtime(Base):
-    __tablename__ = "showtimes"
+class Screening(Base):
+    __tablename__ = "screenings"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     movie_id: Mapped[int] = mapped_column(
@@ -144,26 +172,31 @@ class Showtime(Base):
         nullable=False,
     )
     start_time: Mapped[datetime] = mapped_column(DateTime, index=True, nullable=False)
-    price: Mapped[Decimal] = mapped_column(Numeric(10, 2), default=12.50, nullable=False)
+    price: Mapped[Decimal] = mapped_column(
+        Numeric(10, 2),
+        default=12.50,
+        nullable=False,
+    )
+    is_published: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     # Relationships
-    auditorium: Mapped[Auditorium] = relationship("Auditorium")
-    showtime_seats: Mapped[list[ShowtimeSeat]] = relationship(
-        "ShowtimeSeat",
-        back_populates="showtime",
+    auditorium: Mapped[Auditorium] = relationship("admin.src.models.Auditorium")
+    screening_seats: Mapped[list[ScreeningSeat]] = relationship(
+        "admin.src.models.ScreeningSeat",
+        back_populates="screening",
         cascade="all, delete-orphan",
     )
 
-class ShowtimeSeat(Base):
-    __tablename__ = "showtime_seats"
+class ScreeningSeat(Base):
+    __tablename__ = "screening_seats"
     __table_args__ = (
-        UniqueConstraint("showtime_id", "seat_id", name="unique_seat_per_show"),
+        UniqueConstraint("screening_id", "seat_id", name="unique_seat_per_screening"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    showtime_id: Mapped[int] = mapped_column(
+    screening_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("showtimes.id", ondelete="CASCADE"),
+        ForeignKey("screenings.id", ondelete="CASCADE"),
         nullable=False,
     )
     seat_id: Mapped[int] = mapped_column(
@@ -174,24 +207,27 @@ class ShowtimeSeat(Base):
     is_taken: Mapped[bool] = mapped_column(Boolean, nullable=False)
 
     # Relationships
-    showtime: Mapped[Showtime] = relationship("Showtime", back_populates="showtime_seats")
-    seat: Mapped[Seats] = relationship("Seats")
+    screening: Mapped[Screening] = relationship(
+        "admin.src.models.Screening",
+        back_populates="screening_seats",
+    )
+    seat: Mapped[Seats] = relationship("admin.src.models.Seats")
 
 class Ticket(Base):
     __tablename__ = "tickets"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    showtime_seat_id: Mapped[int] = mapped_column(
+    screening_seat_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("showtime_seats.id", ondelete="RESTRICT"),
+        ForeignKey("screening_seats.id", ondelete="RESTRICT"),
         nullable=False,
     )
     email: Mapped[str] = mapped_column(String(255), index=True, nullable=False)
     phone: Mapped[str | None] = mapped_column(String(20), nullable=True)
     receipt_number: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
     status: Mapped[str] = mapped_column(
-        Enum("pending", "confirmed", "cancelled", name="ticket_status_enum"),
-        server_default="pending",
+        Enum("confirmed", "cancelled","redeemed", name="ticket_status_enum"),
+        server_default="confirmed",
         nullable=False,
     )
     created_at: Mapped[datetime] = mapped_column(
@@ -201,4 +237,4 @@ class Ticket(Base):
     )
 
     # Relationships
-    showtime_seat: Mapped[ShowtimeSeat] = relationship("ShowtimeSeat")
+    screening_seat: Mapped[ScreeningSeat] = relationship("admin.src.models.ScreeningSeat")
