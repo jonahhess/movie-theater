@@ -30,11 +30,5 @@ def upgrade() -> None:
         sa.UniqueConstraint("email"),
     )
 
-    op.drop_column("users", "is_admin")
-    op.drop_column("users", "password_hash")
-
-
 def downgrade() -> None:
-    op.add_column("users", sa.Column("password_hash", sa.String(length=255), nullable=True))
-    op.add_column("users", sa.Column("is_admin", sa.Boolean(), nullable=False, server_default=sa.text("FALSE")))
     op.drop_table("admins")
