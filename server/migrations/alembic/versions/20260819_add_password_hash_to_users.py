@@ -19,8 +19,9 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.add_column("users", sa.Column("password_hash", sa.String(length=255), nullable=True))
+    # No-op: users.password_hash was removed in favor of dedicated admins table.
+    pass
 
 
 def downgrade() -> None:
-    op.drop_column("users", "password_hash")
+    pass
