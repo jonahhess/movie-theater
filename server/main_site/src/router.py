@@ -1,33 +1,172 @@
-from fastapi import APIRouter
+from datetime import date, datetime, time, timedelta
+from decimal import Decimal
+from typing import Literal
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from pydantic import BaseModel, ConfigDict
+from sqlalchemy import func, select
+from sqlalchemy.orm import Session, selectinload
+
+from main_site.src.database import get_read_db
+from main_site.src.models import Auditorium, Movie, Screening
 
 router = APIRouter()
+db_dependency = Depends(get_read_db)
+
+
+class MovieResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    title: str
+    description: str | None
+    duration_minutes: int
+    rating: str
+    release_date: date | None
+
+
+class AuditoriumResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str
+    is_accessible: bool
+
+
+class ScreeningResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    movie_id: int
+    auditorium_id: int
+    start_time: datetime
+    price: Decimal
+    auditorium: AuditoriumResponse | None
+
+
+class MoviesListResponse(BaseModel):
+    total: int
+    limit: int
+    offset: int
+    items: list[MovieResponse]
+
+
+class ScreeningsListResponse(BaseModel):
+    total: int
+    limit: int
+    offset: int
+    items: list[ScreeningResponse]
 
 
 @router.get("/")
 async def home():
-    ...
+    return {
+        "message": "Welcome to the movie theater main site API.",
+        "routes": {
+            "movies": "/movies",
+            "movie_details": "/movies/{movie_id}",
+            "screenings": "/screenings",
+            "screening_details": "/screenings/{screening_id}",
+        },
+    }
 
 
-@router.get("/movies")
-async def browse_movies():
-    ...
+@router.get("/movies", response_model=MoviesListResponse)
+def browse_movies(
+    rating: Literal["G", "PG", "PG-13", "R"] | None = Query(None),
+    release_year: int | None = Query(None, ge=1888),
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    db: Session = db_dependency,
+):
+    count_stmt = select(func.count()).select_from(Movie)
+    list_stmt = select(Movie)
+
+    if rating is not None:
+        count_stmt = count_stmt.where(Movie.rating == rating)
+        list_stmt = list_stmt.where(Movie.rating == rating)
+
+    if release_year is not None:
+        count_stmt = count_stmt.where(func.extract("year", Movie.release_date) == release_year)
+        list_stmt = list_stmt.where(func.extract("year", Movie.release_date) == release_year)
+
+    total = db.scalar(count_stmt) or 0
+    items = db.scalars(
+        list_stmt
+        .order_by(Movie.release_date.desc(), Movie.id.desc())
+        .offset(offset)
+        .limit(limit)
+    ).all()
+
+    return MoviesListResponse(total=total, limit=limit, offset=offset, items=items)
 
 
-@router.get("/movies/{movie_id}")
-async def movie_details(movie_id: int):
-    ...
+@router.get("/movies/{movie_id}", response_model=MovieResponse)
+def movie_details(movie_id: int, db: Session = db_dependency):
+    movie = db.scalar(select(Movie).where(Movie.id == movie_id))
+    if movie is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Movie {movie_id} was not found",
+        )
+    return movie
 
 
-@router.get("/screenings")
-async def browse_screenings():
-    ...
+@router.get("/screenings", response_model=ScreeningsListResponse)
+def browse_screenings(
+    movie_id: int | None = Query(None),
+    start_date: date | None = Query(None),
+    end_date: date | None = Query(None),
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    db: Session = db_dependency,
+):
+    if start_date and end_date and start_date > end_date:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="start_date must be before or equal to end_date",
+        )
+
+    count_stmt = select(func.count()).select_from(Screening)
+    list_stmt = (
+        select(Screening)
+        .options(selectinload(Screening.auditorium))
+        .order_by(Screening.start_time.asc(), Screening.id.asc())
+        .offset(offset)
+        .limit(limit)
+    )
+
+    if movie_id is not None:
+        count_stmt = count_stmt.where(Screening.movie_id == movie_id)
+        list_stmt = list_stmt.where(Screening.movie_id == movie_id)
+
+    if start_date is not None:
+        start_dt = datetime.combine(start_date, time.min)
+        count_stmt = count_stmt.where(Screening.start_time >= start_dt)
+        list_stmt = list_stmt.where(Screening.start_time >= start_dt)
+
+    if end_date is not None:
+        # Inclusive end-of-day filter by bounding to the next day.
+        end_dt_exclusive = datetime.combine(end_date + timedelta(days=1), time.min)
+        count_stmt = count_stmt.where(Screening.start_time < end_dt_exclusive)
+        list_stmt = list_stmt.where(Screening.start_time < end_dt_exclusive)
+
+    total = db.scalar(count_stmt) or 0
+    items = db.scalars(list_stmt).all()
+
+    return ScreeningsListResponse(total=total, limit=limit, offset=offset, items=items)
 
 
-@router.get("/screenings/{screening_id}")
-async def screening_details(screening_id: int):
-    ...
-
-
-@router.get("/screenings/{screening_id}/seats")
-async def view_seats(screening_id: int):
-    ...
+@router.get("/screenings/{screening_id}", response_model=ScreeningResponse)
+def screening_details(screening_id: int, db: Session = db_dependency):
+    screening = db.scalar(
+        select(Screening)
+        .options(selectinload(Screening.auditorium))
+        .where(Screening.id == screening_id)
+    )
+    if screening is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Screening {screening_id} was not found",
+        )
+    return screening
