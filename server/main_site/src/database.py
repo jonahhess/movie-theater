@@ -5,8 +5,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.engine import URL
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-# Load server/.env explicitly.
-ENV_PATH = os.path.join(os.path.dirname(__file__), ".env")
+# Load main_site/.env explicitly.
+ENV_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".env"))
 load_dotenv(dotenv_path=ENV_PATH)
 
 
