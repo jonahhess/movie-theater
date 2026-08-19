@@ -175,7 +175,7 @@ class Screening(Base):
 class ScreeningSeat(Base):
     __tablename__ = "screening_seats"
     __table_args__ = (
-        UniqueConstraint("screening_id", "seat_id", name="unique_seat_per_show"),
+        UniqueConstraint("screening_id", "seat_id", name="unique_seat_per_screening"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
