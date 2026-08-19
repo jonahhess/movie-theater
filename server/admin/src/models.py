@@ -80,12 +80,8 @@ class Movie(Base):
         server_default="PG-13",
     )
     release_date: Mapped[date | None] = mapped_column(Date, nullable=True)
-    delete_at: Mapped[datetime | None] = mapped_column(
-        DateTime,
-        nullable=True,
-        default=None,
-    )
     is_deleted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    is_published: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         nullable=False,
@@ -101,7 +97,7 @@ class Auditorium(Base):
 
     # Relationships
     seats: Mapped[list[Seats]] = relationship(
-        "Seats",
+        "admin.src.models.Seats",
         back_populates="auditorium",
         cascade="all, delete-orphan",
     )
@@ -158,7 +154,7 @@ class Seats(Base):
     angle: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
     # Relationships
-    auditorium: Mapped[Auditorium] = relationship("Auditorium", back_populates="seats")
+    auditorium: Mapped[Auditorium] = relationship("admin.src.models.Auditorium", back_populates="seats")
 
 
 class Screening(Base):
@@ -181,11 +177,12 @@ class Screening(Base):
         default=12.50,
         nullable=False,
     )
+    is_published: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     # Relationships
-    auditorium: Mapped[Auditorium] = relationship("Auditorium")
+    auditorium: Mapped[Auditorium] = relationship("admin.src.models.Auditorium")
     screening_seats: Mapped[list[ScreeningSeat]] = relationship(
-        "ScreeningSeat",
+        "admin.src.models.ScreeningSeat",
         back_populates="screening",
         cascade="all, delete-orphan",
     )
@@ -210,11 +207,11 @@ class ScreeningSeat(Base):
     is_taken: Mapped[bool] = mapped_column(Boolean, nullable=False)
 
     # Relationships
-    Screening: Mapped[Screening] = relationship(
-        "Screening",
+    screening: Mapped[Screening] = relationship(
+        "admin.src.models.Screening",
         back_populates="screening_seats",
     )
-    seat: Mapped[Seats] = relationship("Seats")
+    seat: Mapped[Seats] = relationship("admin.src.models.Seats")
 
 class Ticket(Base):
     __tablename__ = "tickets"
@@ -229,8 +226,8 @@ class Ticket(Base):
     phone: Mapped[str | None] = mapped_column(String(20), nullable=True)
     receipt_number: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
     status: Mapped[str] = mapped_column(
-        Enum("pending", "confirmed", "cancelled", name="ticket_status_enum"),
-        server_default="pending",
+        Enum("confirmed", "cancelled","redeemed", name="ticket_status_enum"),
+        server_default="confirmed",
         nullable=False,
     )
     created_at: Mapped[datetime] = mapped_column(
@@ -240,4 +237,4 @@ class Ticket(Base):
     )
 
     # Relationships
-    screening_seat: Mapped[ScreeningSeat] = relationship("ScreeningSeat")
+    screening_seat: Mapped[ScreeningSeat] = relationship("admin.src.models.ScreeningSeat")
