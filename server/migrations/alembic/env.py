@@ -5,7 +5,7 @@ from alembic import context
 
 # 1. IMPORT YOUR MODELS HERE
 # Adjust 'models' if your file is inside a subfolder (e.g., from app.models import Base)
-from server.models import Base
+from admin.src.models import Base
 from sqlalchemy import engine_from_config, pool
 
 # this is the Alembic Config object, which provides
