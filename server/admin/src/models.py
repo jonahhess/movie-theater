@@ -177,6 +177,7 @@ class Screening(Base):
         default=12.50,
         nullable=False,
     )
+    is_published: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     # Relationships
     auditorium: Mapped[Auditorium] = relationship("Auditorium")
