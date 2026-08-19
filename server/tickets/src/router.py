@@ -1,4 +1,3 @@
-from collections.abc import AsyncIterator
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
@@ -6,14 +5,10 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
 from tickets.src.database import get_admin_db  # Import admin's local database helper
+from tickets.src.redis_client import stream_sse_events
 
 router = APIRouter()
 db_dependency = Depends(get_admin_db)
-
-async def seat_availability_stream(screening_id: UUID) -> AsyncIterator[str]:
-    # TODO: subscribe to seat availability updates
-    # and yield SSE-formatted events.
-    yield ""
 
 
 # Example endpoint for tickets
@@ -26,7 +21,7 @@ async def stream_seat_availability(
     screening_id: UUID,
 ) -> StreamingResponse:
     return StreamingResponse(
-        seat_availability_stream(screening_id),
+        stream_sse_events(str(screening_id)),
         media_type="text/event-stream",
     )
 
