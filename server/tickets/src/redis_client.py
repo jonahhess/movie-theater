@@ -1,6 +1,6 @@
 import asyncio
+import json
 import os
-from typing import Any
 
 import redis.asyncio as aioredis
 from redis.exceptions import RedisError
@@ -41,6 +41,8 @@ async def reserve_seat(screening_id:str, seat_id: str, user_uuid: str,
 
 async def release_seat(screening_id:str, seat_id: str, user_uuid: str) -> None:
     """Removes the seat reservation explicitly (e.g., if checkout fails)."""
+    # delex executes a conditional delete operation using Redis's built-in Compare-and-Delete capability.
+    # It safely deletes a seat reservation only if it belongs to the specified user.
     await redis_client.delex(f"screening:{screening_id}::{seat_id}", ifeq=user_uuid)
 
 
@@ -126,3 +128,10 @@ async def listen_to_stream(
             for msg_id, data in messages:
                 last_id = msg_id  # Update tracking pointer
                 yield msg_id, data
+
+
+async def stream_sse_events(screening_id: str):
+    """Convert Redis stream messages into SSE-formatted chunks."""
+    async for msg_id, data in listen_to_stream(screening_id=screening_id):
+        payload = {"id": msg_id, **data}
+        yield f"id: {msg_id}\nevent: seat_update\ndata: {json.dumps(payload)}\n\n"
