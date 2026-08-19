@@ -19,7 +19,7 @@ branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 TEST_ADMIN_ID = "00000000-0000-0000-0000-000000000001"
-TEST_ADMIN_EMAIL = "admin@test.local"
+TEST_ADMIN_EMAIL = "admin@test.com"
 TEST_ADMIN_PASSWORD_HASH = "$2b$12$6ibMmIa5vY9GUoTYrOneBeveiRX3k70RfuUiwNZv5HZZ2/5.qFdtC"
 
 
