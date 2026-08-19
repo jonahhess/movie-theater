@@ -21,13 +21,14 @@ from sqlalchemy import (
     text,
 )
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, foreign, mapped_column, relationship
 
 from admin.src.database import Base
 
 
 class User(Base):
     __tablename__ = "users"
+    __table_args__ = {"extend_existing": True}
 
     # UUIDv7 is the single, direct primary key
     id: Mapped[uuid.UUID] = mapped_column(
@@ -70,9 +71,10 @@ class Auditorium(Base):
 
     # Relationships
     seats: Mapped[list[Seats]] = relationship(
-        "Seats",
+        "main_site.src.models.Seats",
         back_populates="auditorium",
-        cascade="all, delete-orphan",
+        primaryjoin=lambda: Auditorium.id == foreign(Seats.auditorium_id),
+        viewonly=True,
     )
 
     # Dynamic property for accessibility (True if >= 1 seat is accessible)
@@ -92,6 +94,7 @@ class Auditorium(Base):
 # only used to decide if there are accessible seats in the auditorium
 class Seats(Base):
     __tablename__ = "seats"
+    __table_args__ = {"extend_existing": True}
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
@@ -114,7 +117,12 @@ class Seats(Base):
     angle: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
     # Relationships
-    auditorium: Mapped[Auditorium] = relationship("Auditorium", back_populates="seats")
+    auditorium: Mapped[Auditorium] = relationship(
+        "main_site.src.models.Auditorium",
+        back_populates="seats",
+        primaryjoin=lambda: foreign(Seats.auditorium_id) == Auditorium.id,
+        viewonly=True,
+    )
 
 
 # only show viewings based on start_time and is_published
@@ -124,12 +132,12 @@ class Screening(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     movie_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("movies.id", ondelete="RESTRICT"),
+        ForeignKey("movies_public_view.id", ondelete="RESTRICT"),
         nullable=False,
     )
     auditorium_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("auditoriums.id", ondelete="RESTRICT"),
+        ForeignKey("auditoriums_public_view.id", ondelete="RESTRICT"),
         nullable=False,
     )
     start_time: Mapped[datetime] = mapped_column(DateTime, index=True, nullable=False)
@@ -140,4 +148,8 @@ class Screening(Base):
     )
 
     # Relationships
-    auditorium: Mapped[Auditorium] = relationship("Auditorium")
+    auditorium: Mapped[Auditorium] = relationship(
+        "main_site.src.models.Auditorium",
+        primaryjoin=lambda: foreign(Screening.auditorium_id) == Auditorium.id,
+        viewonly=True,
+    )
