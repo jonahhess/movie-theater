@@ -5,10 +5,12 @@ from datetime import datetime, timedelta, timezone
 import bcrypt
 import jwt
 from dotenv import load_dotenv
-from fastapi import HTTPException, status
+from fastapi import Depends, HTTPException, Security, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from admin.src.database import get_admin_db
 from admin.src.models import Admin
 
 ENV_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".env"))
@@ -17,6 +19,8 @@ load_dotenv(dotenv_path=ENV_PATH)
 JWT_SECRET = os.getenv("JWT_SECRET")
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 JWT_EXP_MINUTES = int(os.getenv("JWT_EXP_MINUTES", "60"))
+
+bearer_scheme = HTTPBearer(auto_error=False)
 
 
 def validate_admin_authorization_header(authorization_header: str | None, db: Session) -> Admin:
@@ -72,6 +76,20 @@ def validate_admin_authorization_header(authorization_header: str | None, db: Se
         )
 
     return admin
+
+
+def require_admin(
+    credentials: HTTPAuthorizationCredentials | None = Security(bearer_scheme),
+    db: Session = Depends(get_admin_db),
+) -> Admin:
+    if credentials is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing Authorization header",
+        )
+
+    header_value = f"{credentials.scheme} {credentials.credentials}"
+    return validate_admin_authorization_header(header_value, db)
 
 
 def verify_admin_login_password(password: str, password_hash: str) -> bool:
