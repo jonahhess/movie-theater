@@ -1,4 +1,5 @@
 import os
+import uuid
 from datetime import datetime, timedelta, timezone
 
 import bcrypt
@@ -53,8 +54,16 @@ def validate_admin_authorization_header(authorization_header: str | None, db: Se
             detail="Token is missing required subject claim",
         )
 
+    try:
+        admin_uuid = uuid.UUID(str(admin_id))
+    except (ValueError, TypeError) as exc:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token subject is invalid",
+        ) from exc
+
     admin = db.scalar(
-        select(Admin).where(Admin.id == admin_id, Admin.is_active.is_(True))
+        select(Admin).where(Admin.id == admin_uuid, Admin.is_active.is_(True))
     )
     if admin is None:
         raise HTTPException(
