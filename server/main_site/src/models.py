@@ -117,7 +117,7 @@ class Seats(Base):
     auditorium: Mapped[Auditorium] = relationship("Auditorium", back_populates="seats")
 
 
-# only show viewings based on start_time
+# only show viewings based on start_time and is_published
 class Screening(Base):
     __tablename__ = "screenings_public_view"
 
