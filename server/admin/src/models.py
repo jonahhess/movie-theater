@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 import uuid
-from decimal import Decimal
 from datetime import date, datetime
+from decimal import Decimal
 
-from admin.src.database import Base
 from sqlalchemy import (
     Boolean,
     Date,
@@ -23,6 +22,9 @@ from sqlalchemy import (
 )
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from admin.src.database import Base
+
 
 class User(Base):
     __tablename__ = "users"
@@ -53,7 +55,11 @@ class Admin(Base):
     )
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
-    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("TRUE"))
+    is_active: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        server_default=text("TRUE"),
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         nullable=False,
@@ -74,7 +80,11 @@ class Movie(Base):
         server_default="PG-13",
     )
     release_date: Mapped[date | None] = mapped_column(Date, nullable=True)
-    delete_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True, default=None)
+    delete_at: Mapped[datetime | None] = mapped_column(
+        DateTime,
+        nullable=True,
+        default=None,
+    )
     is_deleted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
@@ -137,7 +147,11 @@ class Seats(Base):
     row: Mapped[str] = mapped_column(String(5), nullable=False)
     number: Mapped[int] = mapped_column(Integer, nullable=False)
     is_available: Mapped[bool] = mapped_column(Boolean, nullable=False)
-    is_accessible: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("TRUE"))
+    is_accessible: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        server_default=text("TRUE"),
+    )
 
     x_pos: Mapped[int] = mapped_column(Integer, nullable=False)
     y_pos: Mapped[int] = mapped_column(Integer, nullable=False)
@@ -162,7 +176,11 @@ class Screening(Base):
         nullable=False,
     )
     start_time: Mapped[datetime] = mapped_column(DateTime, index=True, nullable=False)
-    price: Mapped[Decimal] = mapped_column(Numeric(10, 2), default=12.50, nullable=False)
+    price: Mapped[Decimal] = mapped_column(
+        Numeric(10, 2),
+        default=12.50,
+        nullable=False,
+    )
 
     # Relationships
     auditorium: Mapped[Auditorium] = relationship("Auditorium")
@@ -192,7 +210,10 @@ class ScreeningSeat(Base):
     is_taken: Mapped[bool] = mapped_column(Boolean, nullable=False)
 
     # Relationships
-    Screening: Mapped[Screening] = relationship("Screening", back_populates="screening_seats")
+    Screening: Mapped[Screening] = relationship(
+        "Screening",
+        back_populates="screening_seats",
+    )
     seat: Mapped[Seats] = relationship("Seats")
 
 class Ticket(Base):
