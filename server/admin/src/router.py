@@ -30,7 +30,7 @@ def admin_home():
         "login": {
             "method": "POST",
             "path": "/admin/",
-            "body": {"email": "admin@example.com", "password": "your-password"},
+            "body": {"email": "admin@test.local", "password": "Admin123!"},
         },
         "next": "Use returned token in Authorization: Bearer <token>",
     }
