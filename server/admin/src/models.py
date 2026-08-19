@@ -147,8 +147,8 @@ class Seats(Base):
     auditorium: Mapped[Auditorium] = relationship("Auditorium", back_populates="seats")
 
 
-class Showtime(Base):
-    __tablename__ = "showtimes"
+class Screening(Base):
+    __tablename__ = "screenings"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     movie_id: Mapped[int] = mapped_column(
@@ -166,22 +166,22 @@ class Showtime(Base):
 
     # Relationships
     auditorium: Mapped[Auditorium] = relationship("Auditorium")
-    showtime_seats: Mapped[list[ShowtimeSeat]] = relationship(
-        "ShowtimeSeat",
-        back_populates="showtime",
+    screening_seats: Mapped[list[ScreeningSeat]] = relationship(
+        "ScreeningSeat",
+        back_populates="screening",
         cascade="all, delete-orphan",
     )
 
-class ShowtimeSeat(Base):
-    __tablename__ = "showtime_seats"
+class ScreeningSeat(Base):
+    __tablename__ = "screening_seats"
     __table_args__ = (
-        UniqueConstraint("showtime_id", "seat_id", name="unique_seat_per_show"),
+        UniqueConstraint("screening_id", "seat_id", name="unique_seat_per_screening"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    showtime_id: Mapped[int] = mapped_column(
+    screening_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("showtimes.id", ondelete="CASCADE"),
+        ForeignKey("screenings.id", ondelete="CASCADE"),
         nullable=False,
     )
     seat_id: Mapped[int] = mapped_column(
@@ -192,16 +192,16 @@ class ShowtimeSeat(Base):
     is_taken: Mapped[bool] = mapped_column(Boolean, nullable=False)
 
     # Relationships
-    showtime: Mapped[Showtime] = relationship("Showtime", back_populates="showtime_seats")
+    Screening: Mapped[Screening] = relationship("Screening", back_populates="screening_seats")
     seat: Mapped[Seats] = relationship("Seats")
 
 class Ticket(Base):
     __tablename__ = "tickets"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    showtime_seat_id: Mapped[int] = mapped_column(
+    screening_seat_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("showtime_seats.id", ondelete="RESTRICT"),
+        ForeignKey("screening_seats.id", ondelete="RESTRICT"),
         nullable=False,
     )
     email: Mapped[str] = mapped_column(String(255), index=True, nullable=False)
@@ -219,4 +219,4 @@ class Ticket(Base):
     )
 
     # Relationships
-    showtime_seat: Mapped[ShowtimeSeat] = relationship("ShowtimeSeat")
+    screening_seat: Mapped[ScreeningSeat] = relationship("ScreeningSeat")

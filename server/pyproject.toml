@@ -1,7 +1,7 @@
 [project]
 name = "movie_theater"
 version = "1.0.0"
-description = "Servers to run a movie theater (movie management, showtimes, ticketing)"
+description = "Servers to run a movie theater (movie management, screenings, ticketing)"
 authors = [
     { name = "Jonah Hess", email = "jonahhessdev@gmail.com" }
 ]
