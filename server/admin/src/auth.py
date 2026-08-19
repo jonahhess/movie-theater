@@ -1,10 +1,10 @@
 import os
 from datetime import datetime, timedelta, timezone
 
+import bcrypt
 import jwt
 from dotenv import load_dotenv
 from fastapi import HTTPException, status
-from passlib.context import CryptContext
 
 from admin.src.models import Admin
 
@@ -14,8 +14,6 @@ load_dotenv(dotenv_path=ENV_PATH)
 JWT_SECRET = os.getenv("JWT_SECRET")
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 JWT_EXP_MINUTES = int(os.getenv("JWT_EXP_MINUTES", "60"))
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def validate_admin_authorization_header(authorization_header: str | None) -> dict:
@@ -57,7 +55,7 @@ def validate_admin_authorization_header(authorization_header: str | None) -> dic
 
 def verify_admin_login_password(password: str, password_hash: str) -> bool:
     try:
-        return pwd_context.verify(password, password_hash)
+        return bcrypt.checkpw(password.encode("utf-8"), password_hash.encode("utf-8"))
     except ValueError:
         return False
 
