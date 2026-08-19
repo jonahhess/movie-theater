@@ -3,7 +3,12 @@ from pydantic import BaseModel, EmailStr
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from admin.src.auth import JWT_EXP_MINUTES, create_admin_access_token, require_admin, verify_admin_login_password
+from admin.src.auth import (
+    JWT_EXP_MINUTES,
+    create_admin_access_token,
+    require_admin,
+    verify_admin_login_password,
+)
 from admin.src.database import get_admin_db
 from admin.src.models import Admin
 
@@ -27,7 +32,10 @@ db_dependency = Depends(get_admin_db)
 @public_router.get("/")
 def admin_home():
     return {
-        "message": "Admin home. Please log in with your admin credentials to access protected routes.",
+        "message": (
+            "Admin home. Please log in with your admin credentials "
+            "to access protected routes."
+        ),
         "login": {
             "method": "POST",
             "path": "/admin/",

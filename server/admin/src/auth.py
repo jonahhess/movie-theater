@@ -1,6 +1,6 @@
 import os
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import bcrypt
 import jwt
@@ -21,9 +21,14 @@ JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 JWT_EXP_MINUTES = int(os.getenv("JWT_EXP_MINUTES", "60"))
 
 bearer_scheme = HTTPBearer(auto_error=False)
+security_credentials = Security(bearer_scheme)
+db_session_dependency = Depends(get_admin_db)
 
 
-def validate_admin_authorization_header(authorization_header: str | None, db: Session) -> Admin:
+def validate_admin_authorization_header(
+    authorization_header: str | None,
+    db: Session,
+) -> Admin:
     if not authorization_header:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -79,8 +84,8 @@ def validate_admin_authorization_header(authorization_header: str | None, db: Se
 
 
 def require_admin(
-    credentials: HTTPAuthorizationCredentials | None = Security(bearer_scheme),
-    db: Session = Depends(get_admin_db),
+    credentials: HTTPAuthorizationCredentials | None = security_credentials,
+    db: Session = db_session_dependency,
 ) -> Admin:
     if credentials is None:
         raise HTTPException(
@@ -106,7 +111,7 @@ def create_admin_access_token(admin_user: Admin) -> str:
             detail="JWT_SECRET is not configured",
         )
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     exp = now + timedelta(minutes=JWT_EXP_MINUTES)
     payload = {
         "sub": str(admin_user.id),
