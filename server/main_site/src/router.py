@@ -1,5 +1,5 @@
 from datetime import date, datetime, time, timedelta
-from typing import Literal
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, select
@@ -33,10 +33,10 @@ async def home():
 
 @router.get("/movies", response_model=MoviesListResponse)
 def browse_movies(
-    rating: Literal["G", "PG", "PG-13", "R"] | None = Query(None),
-    release_year: int | None = Query(None, ge=1888),
-    limit: int = Query(20, ge=1, le=100),
-    offset: int = Query(0, ge=0),
+    rating: Annotated[Literal["G", "PG", "PG-13", "R"] | None, Query()] = None,
+    release_year: Annotated[int | None, Query(ge=1888)] = None,
+    limit: Annotated[int, Query(ge=1, le=100)] = 20,
+    offset: Annotated[int, Query(ge=0)] = 0,
     db: Session = db_dependency,
 ):
     count_stmt = select(func.count()).select_from(Movie)
@@ -47,8 +47,10 @@ def browse_movies(
         list_stmt = list_stmt.where(Movie.rating == rating)
 
     if release_year is not None:
-        count_stmt = count_stmt.where(func.extract("year", Movie.release_date) == release_year)
-        list_stmt = list_stmt.where(func.extract("year", Movie.release_date) == release_year)
+        count_stmt = count_stmt.where(func.extract(
+            "year", Movie.release_date) == release_year)
+        list_stmt = list_stmt.where(func.extract(
+            "year", Movie.release_date) == release_year)
 
     total = db.scalar(count_stmt) or 0
     items = db.scalars(
@@ -75,11 +77,11 @@ def movie_details(movie_id: int, db: Session = db_dependency):
 
 @router.get("/screenings", response_model=ScreeningsListResponse)
 def browse_screenings(
-    movie_id: int | None = Query(None),
-    start_date: date | None = Query(None),
-    end_date: date | None = Query(None),
-    limit: int = Query(20, ge=1, le=100),
-    offset: int = Query(0, ge=0),
+    movie_id: Annotated[int | None, Query()] = None,
+    start_date: Annotated[date | None, Query()] = None,
+    end_date: Annotated[date | None, Query()] = None,
+    limit: Annotated[int, Query(ge=1, le=100)] = 20,
+    offset: Annotated[int, Query(ge=0)] = 0,
     db: Session = db_dependency,
 ):
     if start_date and end_date and start_date > end_date:
