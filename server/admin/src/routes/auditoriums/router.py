@@ -1,10 +1,10 @@
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
-from server.admin.src.database import get_admin_db
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from ...database import get_admin_db
 from ...models import Auditorium
 from .schemas import AuditoriumSchema, AuditoriumWithSeats
 
@@ -20,15 +20,15 @@ async def list_auditoriums(db: Session = db_dependency):
 
 
 @router.post("", response_model=AuditoriumSchema)
-async def create_auditorium(query: AuditoriumSchema, db: Session = db_dependency):
-    auditorium = Auditorium(**query.model_dump())
+async def create_auditorium(auditorium: AuditoriumSchema, db: Session = db_dependency):
+    auditorium = Auditorium(**auditorium.model_dump(exclude_unset=True))
     db.add(auditorium)
     db.commit()
     db.refresh(auditorium)
     return auditorium
 
 
-@router.get("/{auditorium_id}")
+@router.get("/{auditorium_id}", response_model=AuditoriumSchema)
 async def get_auditorium(auditorium_id: UUID, db: Session = db_dependency):
     auditorium = db.scalar(select(Auditorium).where(Auditorium.id == auditorium_id))
     if not auditorium:
@@ -36,17 +36,18 @@ async def get_auditorium(auditorium_id: UUID, db: Session = db_dependency):
     return auditorium
 
 
-@router.patch("/{auditorium_id}")
+@router.patch("/{auditorium_id}", response_model=AuditoriumSchema)
 async def update_auditorium(
-    auditorium_id: UUID, query: AuditoriumSchema, db: Session = db_dependency):
-    auditorium = db.scalar(select(Auditorium).where(Auditorium.id == auditorium_id))
-    if not auditorium:
+    auditorium_id: UUID, auditorium: AuditoriumSchema, db: Session = db_dependency):
+    existing_auditorium = db.scalar(
+        select(Auditorium).where(Auditorium.id == auditorium_id))
+    if not existing_auditorium:
         return {"error": "Auditorium not found"}
-    for key, value in query.model_dump().items():
-        setattr(auditorium, key, value)
+    for key, value in auditorium.model_dump(exclude_unset=True).items():
+        setattr(existing_auditorium, key, value)
     db.commit()
-    db.refresh(auditorium)
-    return auditorium
+    db.refresh(existing_auditorium)
+    return existing_auditorium
 
 
 @router.delete("/{auditorium_id}")
