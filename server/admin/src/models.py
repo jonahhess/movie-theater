@@ -80,8 +80,11 @@ class Movie(Base):
         server_default="PG-13",
     )
     release_date: Mapped[date | None] = mapped_column(Date, nullable=True)
-    is_deleted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    is_published: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    status: Mapped[str] = mapped_column(
+        Enum("draft", "now_showing","archived", name="movie_status_enum"),
+        server_default="draft",
+        nullable=False,
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         nullable=False,
@@ -177,7 +180,11 @@ class Screening(Base):
         default=12.50,
         nullable=False,
     )
-    is_published: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    status: Mapped[str] = mapped_column(
+        Enum("draft","on_sale","past", "cancelled", name="screening_status_enum"),
+        server_default="draft",
+        nullable=False,
+    )
 
     # Relationships
     auditorium: Mapped[Auditorium] = relationship("admin.src.models.Auditorium")
