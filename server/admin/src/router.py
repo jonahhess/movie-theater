@@ -1,20 +1,20 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from server.admin.src.routes.auditoriums.router import router as auditoriums_router
-from server.admin.src.routes.movies.router import router as movies_router
-from server.admin.src.routes.screenings.router import router as screenings_router
-from server.admin.src.routes.users.users import router as users_router
 from server.admin.src.schemas import AdminLoginRequest, AdminLoginResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from admin.src.auth import (
+from .auth import (
     JWT_EXP_MINUTES,
     create_admin_access_token,
     require_admin,
     verify_admin_login_password,
 )
-from admin.src.database import get_admin_db
-from admin.src.models import Admin
+from .database import get_admin_db
+from .models import Admin
+from .routes.auditoriums.router import router as auditoriums_router
+from .routes.movies.router import router as movies_router
+from .routes.screenings.router import router as screenings_router
+from .routes.users.users import router as users_router
 
 public_router = APIRouter()
 protected_router = APIRouter(dependencies=[Depends(require_admin)])
