@@ -14,7 +14,7 @@ from .models import Admin
 from .routes.auditoriums.router import router as auditoriums_router
 from .routes.movies.router import router as movies_router
 from .routes.screenings.router import router as screenings_router
-from .routes.users.users import router as users_router
+from .routes.users.router import router as users_router
 
 public_router = APIRouter()
 protected_router = APIRouter(dependencies=[Depends(require_admin)])
