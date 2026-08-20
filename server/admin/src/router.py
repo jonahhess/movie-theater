@@ -11,11 +11,10 @@ from admin.src.auth import (
 )
 from admin.src.database import get_admin_db
 from admin.src.models import Admin
-from admin.src.routes.auditoriums import router as auditoriums_router
-from admin.src.routes.movies import router as movies_router
-from admin.src.routes.screenings import router as screenings_router
-from admin.src.routes.seat_maps import router as seat_maps_router
-from admin.src.routes.users import router as users_router
+from server.admin.src.routes.auditoriums.router import router as auditoriums_router
+from server.admin.src.routes.movies.router import router as movies_router
+from server.admin.src.routes.screenings.router import router as screenings_router
+from server.admin.src.routes.users.users import router as users_router
 
 public_router = APIRouter()
 protected_router = APIRouter(dependencies=[Depends(require_admin)])
@@ -63,4 +62,3 @@ protected_router.include_router(users_router)
 protected_router.include_router(movies_router)
 protected_router.include_router(screenings_router)
 protected_router.include_router(auditoriums_router)
-protected_router.include_router(seat_maps_router)
