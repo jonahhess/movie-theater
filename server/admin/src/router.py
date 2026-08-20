@@ -15,7 +15,7 @@ from admin.src.routes.movies import router as movies_router
 from admin.src.routes.screenings import router as screenings_router
 from admin.src.routes.seat_maps import router as seat_maps_router
 from admin.src.routes.users import router as users_router
-from admin.src.scehmas import AdminLoginRequest, AdminLoginResponse
+from server.admin.src.schemas import AdminLoginRequest, AdminLoginResponse
 
 
 public_router = APIRouter()
