@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, EmailStr
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -16,17 +15,7 @@ from admin.src.routes.movies import router as movies_router
 from admin.src.routes.screenings import router as screenings_router
 from admin.src.routes.seat_maps import router as seat_maps_router
 from admin.src.routes.users import router as users_router
-
-
-class AdminLoginRequest(BaseModel):
-    email: EmailStr
-    password: str
-
-
-class AdminLoginResponse(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
-    expires_in_seconds: int
+from admin.src.scehmas import AdminLoginRequest, AdminLoginResponse
 
 
 public_router = APIRouter()
