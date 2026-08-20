@@ -46,7 +46,7 @@ class User(Base):
     )
 
 
-# View filters based on is_deleted and is_published
+# View filters based on status=now_showing
 class Movie(Base):
     __tablename__ = "movies_public_view"
 
@@ -125,7 +125,7 @@ class Seats(Base):
     )
 
 
-# only show viewings based on start_time and is_published
+# only show viewings based on start_time? and status=on_sale
 class Screening(Base):
     __tablename__ = "screenings_public_view"
 
