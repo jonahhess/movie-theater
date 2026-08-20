@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from server.admin.src.schemas import AdminLoginRequest, AdminLoginResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -15,8 +16,6 @@ from admin.src.routes.movies import router as movies_router
 from admin.src.routes.screenings import router as screenings_router
 from admin.src.routes.seat_maps import router as seat_maps_router
 from admin.src.routes.users import router as users_router
-from server.admin.src.schemas import AdminLoginRequest, AdminLoginResponse
-
 
 public_router = APIRouter()
 protected_router = APIRouter(dependencies=[Depends(require_admin)])
