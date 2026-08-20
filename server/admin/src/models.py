@@ -99,8 +99,8 @@ class Auditorium(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
     # Relationships
-    seats: Mapped[list[Seats]] = relationship(
-        "admin.src.models.Seats",
+    seats: Mapped[list[Seat]] = relationship(
+        "admin.src.models.Seat",
         back_populates="auditorium",
         cascade="all, delete-orphan",
     )
@@ -114,8 +114,8 @@ class Auditorium(Base):
     @classmethod
     def _total_capacity_expression(cls):
         return (
-            select(func.count(Seats.id))
-            .where(Seats.auditorium_id == cls.id, Seats.is_available)
+            select(func.count(Seat.id))
+            .where(Seat.auditorium_id == cls.id, Seat.is_available)
             .label("total_capacity")
         )
 
@@ -127,13 +127,18 @@ class Auditorium(Base):
     @is_accessible.inplace.expression
     @classmethod
     def _is_accessible_expression(cls):
-        return select(func.count(Seats.id) > 0).where(
-            Seats.auditorium_id == cls.id,
-            Seats.is_accessible,
+        return select(func.count(Seat.id) > 0).where(
+            Seat.auditorium_id == cls.id,
+            Seat.is_accessible,
         ).scalar_subquery()
+    
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=False,
+        server_default=text("CURRENT_TIMESTAMP"),
+    )
 
-
-class Seats(Base):
+class Seat(Base):
     __tablename__ = "seats"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
@@ -213,13 +218,18 @@ class ScreeningSeat(Base):
         nullable=False,
     )
     is_taken: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=False,
+        server_default=text("CURRENT_TIMESTAMP"),
+    )
 
     # Relationships
     screening: Mapped[Screening] = relationship(
         "admin.src.models.Screening",
         back_populates="screening_seats",
     )
-    seat: Mapped[Seats] = relationship("admin.src.models.Seats")
+    seat: Mapped[Seat] = relationship("admin.src.models.Seat")
 
 class Ticket(Base):
     __tablename__ = "tickets"
