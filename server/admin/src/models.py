@@ -157,7 +157,8 @@ class Seats(Base):
     angle: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
     # Relationships
-    auditorium: Mapped[Auditorium] = relationship("admin.src.models.Auditorium", back_populates="seats")
+    auditorium: Mapped[Auditorium] = relationship(
+        "admin.src.models.Auditorium", back_populates="seats")
 
 
 class Screening(Base):
@@ -244,4 +245,5 @@ class Ticket(Base):
     )
 
     # Relationships
-    screening_seat: Mapped[ScreeningSeat] = relationship("admin.src.models.ScreeningSeat")
+    screening_seat: Mapped[ScreeningSeat] = relationship(
+                                            "admin.src.models.ScreeningSeat")

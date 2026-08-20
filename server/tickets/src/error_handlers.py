@@ -16,7 +16,8 @@ def register_exception_handlers(app: FastAPI) -> None:
         if _is_schema_missing_db_error(exc):
             return JSONResponse(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                content={"detail": "Database schema is not ready yet. Please try again later."},
+                content={"detail": "Database schema is not ready yet. \
+                         Please try again later."},
             )
 
         return JSONResponse(
