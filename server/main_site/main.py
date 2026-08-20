@@ -1,13 +1,14 @@
 
-from fastapi import Depends, FastAPI
+from fastapi import FastAPI
 
 from admin.main import admin
-from main_site.src.database import get_read_db
+from main_site.src.error_handlers import register_exception_handlers
 from main_site.src.router import router
 from tickets.main import tickets
 
 app = FastAPI(title="Main Root Application")
-db_dependency = Depends(get_read_db)
+
+register_exception_handlers(app)
 
 app.include_router(router)
 
