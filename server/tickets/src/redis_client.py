@@ -1,6 +1,7 @@
 import asyncio
 import json
 import os
+from typing import Any
 
 import redis.asyncio as aioredis
 from redis.exceptions import RedisError
@@ -41,10 +42,72 @@ async def reserve_seat(screening_id:str, seat_id: str, user_uuid: str,
 
 async def release_seat(screening_id:str, seat_id: str, user_uuid: str) -> None:
     """Removes the seat reservation explicitly (e.g., if checkout fails)."""
-    # delex executes a conditional delete operation using Redis's built-in Compare-and-Delete capability.
+    # delex executes a conditional delete operation using Redis's CAD.
     # It safely deletes a seat reservation only if it belongs to the specified user.
     await redis_client.delex(f"screening:{screening_id}::{seat_id}", ifeq=user_uuid)
 
+async def extend_reservation(screening_id:str, seat_id: str, user_uuid: str, 
+                            ttl_seconds: int = 300) -> bool:
+    """
+    Add more time to a reservation
+    """
+    key = f"screening:{screening_id}::{seat_id}"
+
+    # Atomically extend only if the key is still owned by this user.
+    script = """
+    local current = redis.call('GET', KEYS[1])
+    if current == ARGV[1] then
+        return redis.call('EXPIRE', KEYS[1], ARGV[2])
+    end
+    return 0
+    """
+    result = await redis_client.eval(script, 1, key, user_uuid, str(ttl_seconds))
+    return bool(result)
+
+async def acquire_seats(screening_id: str, user_uuid: str) -> bool:
+    """
+    If payment goes through, call this function to persist ownership of all tickets 
+        reserved under user_uuid which have expiration.
+    """
+    pattern = f"screening:{screening_id}::*"
+    keys = [key async for key in redis_client.scan_iter(match=pattern, count=500)]
+    if not keys:
+        return False
+
+    # For one key:
+    # 0 = not owned by user_uuid
+    # 1 = owned and persisted now
+    # 2 = owned and already persistent
+    # 3 = owned but key disappeared before persist (race/expiry)
+    script = """
+    local current = redis.call('GET', KEYS[1])
+    if current ~= ARGV[1] then
+        return 0
+    end
+
+    local ttl = redis.call('TTL', KEYS[1])
+    if ttl > 0 then
+        return redis.call('PERSIST', KEYS[1]) == 1 and 1 or 3
+    end
+
+    if ttl == -1 then
+        return 2
+    end
+
+    return 3
+    """
+
+    owned = 0
+    finalized = 0
+
+    for key in keys:
+        code = int(await redis_client.eval(script, 1, key, user_uuid))
+        if code in (1, 2, 3):
+            owned += 1
+        if code in (1, 2):
+            finalized += 1
+
+    return owned > 0 and finalized == owned
 
 # --- PURPOSE 2: CACHE WARMING ---
 
