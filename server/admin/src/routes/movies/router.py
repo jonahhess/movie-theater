@@ -1,10 +1,10 @@
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
-from server.admin.src.models import Movie
 from sqlalchemy.orm import Session
 
 from ...database import get_admin_db
+from ...models import Movie
 from .schemas import MovieSchema
 
 router = APIRouter(prefix="/movies")
