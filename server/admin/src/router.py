@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from .auth import (
     JWT_EXP_MINUTES,
@@ -38,8 +38,8 @@ def admin_home():
 
 
 @public_router.post("/", response_model=AdminLoginResponse)
-def admin_login(payload: AdminLoginRequest, db: Session = db_dependency):
-    admin_user = db.scalar(
+async def admin_login(payload: AdminLoginRequest, db: AsyncSession = db_dependency):
+    admin_user = await db.scalar(
         select(Admin).where(Admin.email == payload.email, Admin.is_active.is_(True))
     )
     if (

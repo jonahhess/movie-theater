@@ -1,9 +1,9 @@
 import os
 
 from dotenv import load_dotenv
-from sqlalchemy import create_engine
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from sqlalchemy.engine import URL
-from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy.orm import declarative_base
 
 # Load main_site/.env explicitly.
 ENV_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".env"))
@@ -30,14 +30,11 @@ def _build_read_url() -> URL:
 
 DATABASE_URL = os.getenv("DATABASE_READ_URL") or _build_read_url()
 
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+engine = create_async_engine(DATABASE_URL, future=True)
+SessionLocal = async_sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 # Dependency to inject Main DB sessions into Main routes
-def get_read_db():
-    db = SessionLocal()
-    try:
+async def get_read_db():
+    async with SessionLocal() as db:
         yield db
-    finally:
-        db.close()

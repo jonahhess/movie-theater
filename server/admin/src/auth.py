@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from fastapi import Depends, HTTPException, Security, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from admin.src.database import get_admin_db
 from admin.src.models import Admin
@@ -25,9 +25,9 @@ security_credentials = Security(bearer_scheme)
 db_session_dependency = Depends(get_admin_db)
 
 
-def validate_admin_authorization_header(
+async def validate_admin_authorization_header(
     authorization_header: str | None,
-    db: Session,
+    db: AsyncSession,
 ) -> Admin:
     if not authorization_header:
         raise HTTPException(
@@ -71,7 +71,7 @@ def validate_admin_authorization_header(
             detail="Token subject is invalid",
         ) from exc
 
-    admin = db.scalar(
+    admin = await db.scalar(
         select(Admin).where(Admin.id == admin_uuid, Admin.is_active.is_(True))
     )
     if admin is None:
@@ -83,9 +83,9 @@ def validate_admin_authorization_header(
     return admin
 
 
-def require_admin(
+async def require_admin(
     credentials: HTTPAuthorizationCredentials | None = security_credentials,
-    db: Session = db_session_dependency,
+    db: AsyncSession = db_session_dependency,
 ) -> Admin:
     if credentials is None:
         raise HTTPException(
@@ -94,7 +94,7 @@ def require_admin(
         )
 
     header_value = f"{credentials.scheme} {credentials.credentials}"
-    return validate_admin_authorization_header(header_value, db)
+    return await validate_admin_authorization_header(header_value, db)
 
 
 def verify_admin_login_password(password: str, password_hash: str) -> bool:
