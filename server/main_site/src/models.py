@@ -46,8 +46,9 @@ class User(Base):
 
 
 # View filters based on status=now_showing
-class Movie(Base):
+class MovieView(Base):
     __tablename__ = "movies_public_view"
+    __table_args__ = {"info": {"is_view": True}} 
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     title: Mapped[str] = mapped_column(String(255), nullable=False)
@@ -62,8 +63,9 @@ class Movie(Base):
 
 
 # view based on is_active
-class Auditorium(Base):
+class AuditoriumView(Base):
     __tablename__ = "auditoriums_public_view"
+    __table_args__ = {"info": {"is_view": True}} 
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
@@ -72,7 +74,7 @@ class Auditorium(Base):
     seats: Mapped[list[Seats]] = relationship(
         "main_site.src.models.Seats",
         back_populates="auditorium",
-        primaryjoin=lambda: Auditorium.id == foreign(Seats.auditorium_id),
+        primaryjoin=lambda: AuditoriumView.id == foreign(Seats.auditorium_id),
         viewonly=True,
     )
 
@@ -116,17 +118,18 @@ class Seats(Base):
     angle: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
     # Relationships
-    auditorium: Mapped[Auditorium] = relationship(
-        "main_site.src.models.Auditorium",
+    auditorium: Mapped[AuditoriumView] = relationship(
+        "main_site.src.models.AuditoriumView",
         back_populates="seats",
-        primaryjoin=lambda: foreign(Seats.auditorium_id) == Auditorium.id,
+        primaryjoin=lambda: foreign(Seats.auditorium_id) == AuditoriumView.id,
         viewonly=True,
     )
 
 
 # only show viewings based on start_time? and status=on_sale
-class Screening(Base):
+class ScreeningView(Base):
     __tablename__ = "screenings_public_view"
+    __table_args__ = {"info": {"is_view": True}} 
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     movie_id: Mapped[int] = mapped_column(
@@ -147,8 +150,8 @@ class Screening(Base):
     )
 
     # Relationships
-    auditorium: Mapped[Auditorium] = relationship(
-        "main_site.src.models.Auditorium",
-        primaryjoin=lambda: foreign(Screening.auditorium_id) == Auditorium.id,
+    auditorium: Mapped[AuditoriumView] = relationship(
+        "main_site.src.models.AuditoriumView",
+        primaryjoin=lambda: foreign(ScreeningView.auditorium_id) == AuditoriumView.id,
         viewonly=True,
     )
