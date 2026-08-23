@@ -17,6 +17,7 @@ dependencies = [
     "pyjwt>=2.13.0",
     "passlib[bcrypt]>=1.7.4",
     "aiomysql>=0.3.2",
+    "cryptography>=50.0.0",
 ]
 
 [tool.ruff]
