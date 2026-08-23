@@ -158,7 +158,7 @@ IDENTIFIED BY 'REPLACE_WITH_A_SECURE_PASSWORD';
 Grant the required permissions to the administrator:
 
 ```sql
-GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP
+GRANT ALL PRIVILEGES
 ON movie_theater.*
 TO 'movie_theater_admin'@'localhost';
 ```
