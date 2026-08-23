@@ -2,7 +2,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from tickets.src.database import get_admin_db  # Import admin's local database helper
 from tickets.src.redis_client import stream_sse_events
@@ -13,7 +13,7 @@ db_dependency = Depends(get_admin_db)
 
 # Example endpoint for tickets
 @router.get("/")
-async def get_tickets_users(db: Session = db_dependency):
+async def get_tickets_users(db: AsyncSession = db_dependency):
     return {"message": "Hello from tickets's isolated router endpoint!", "data": []}
 
 @router.get("/screenings/{screening_id}/availability/stream")
