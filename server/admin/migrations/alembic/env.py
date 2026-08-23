@@ -3,21 +3,20 @@ import os
 import sys
 from logging.config import fileConfig
 
+from alembic import context
+from dotenv import load_dotenv
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
-from alembic import context
+from admin.src.models import Base
 
 ADMIN_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, ADMIN_DIR)
 
-# Load environment variables relative to the server folder
-from dotenv import load_dotenv
+
 load_dotenv(os.path.join(ADMIN_DIR, ".env"))
 
-# my change 1: import my models from code
-from admin.src.models import Base
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
