@@ -19,7 +19,7 @@ def _required_env(name: str) -> str:
 
 def _build_write_url() -> URL:
     return URL.create(
-        "mysql+pymysql",
+        "mysql+aiomysql",
         username=_required_env("MYSQL_ADMIN_USER"),
         password=_required_env("MYSQL_ADMIN_PASSWORD"),
         host=_required_env("MYSQL_HOST"),

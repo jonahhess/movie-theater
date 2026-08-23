@@ -1,10 +1,10 @@
 import uuid
 
 from fastapi import APIRouter, Depends
-from server.admin.src.models import User
 from sqlalchemy.orm import Session
 
 from ...database import get_admin_db
+from ...models import User
 from .schemas import UserSchema
 
 router = APIRouter()
