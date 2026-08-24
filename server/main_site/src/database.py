@@ -30,7 +30,7 @@ def _build_read_url() -> URL:
 
 DATABASE_URL = os.getenv("DATABASE_READ_URL") or _build_read_url()
 
-engine = create_async_engine(DATABASE_URL, future=True)
+engine = create_async_engine(DATABASE_URL)
 SessionLocal = async_sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 

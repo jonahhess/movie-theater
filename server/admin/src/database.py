@@ -30,7 +30,7 @@ def _build_write_url() -> URL:
 
 DATABASE_URL = os.getenv("DATABASE_WRITE_URL") or _build_write_url()
 
-engine = create_async_engine(DATABASE_URL, future=True, echo=True)
+engine = create_async_engine(DATABASE_URL, echo=True)
 SessionLocal = async_sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
