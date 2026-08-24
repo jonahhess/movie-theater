@@ -54,12 +54,12 @@ async def browse_movies(
             "year", MovieView.release_date) == release_year)
 
     total = await db.scalar(count_stmt) or 0
-    items = await db.scalars(
+    items = (await db.scalars(
         list_stmt
         .order_by(MovieView.release_date.desc(), MovieView.id.desc())
         .offset(offset)
         .limit(limit)
-    ).all()
+    )).all()
 
     return MoviesListResponse(total=total, limit=limit, offset=offset, items=items)
 
@@ -116,7 +116,7 @@ async def browse_screenings(
         list_stmt = list_stmt.where(ScreeningView.start_time < end_dt_exclusive)
 
     total = await db.scalar(count_stmt) or 0
-    items = await db.scalars(list_stmt).all()
+    items = (await db.scalars(list_stmt)).all()
 
     return ScreeningsListResponse(total=total, limit=limit, offset=offset, items=items)
 

@@ -12,7 +12,7 @@ db_dependency = Depends(get_admin_db)
 
 @router.get("", response_model=list[ScreeningSchema])
 async def list_screenings(db: AsyncSession = db_dependency):
-    screenings = await db.scalars(select(Screening)).all()
+    screenings = (await db.scalars(select(Screening))).all()
     return screenings
 
 

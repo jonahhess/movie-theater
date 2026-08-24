@@ -14,7 +14,7 @@ db_dependency = Depends(get_admin_db)
 
 @router.get("", response_model=list[MovieSchema])
 async def list_movies(db: AsyncSession = db_dependency):
-    movies = await db.scalars(select(Movie)).all()
+    movies = (await db.scalars(select(Movie))).all()
     return movies
 
 
