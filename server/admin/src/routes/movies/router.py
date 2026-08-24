@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -33,8 +33,15 @@ async def get_movie(movie_id: int, db: AsyncSession = db_dependency):
 async def create_movie(movie: MovieSchema, db: AsyncSession = db_dependency):
     new_movie = Movie(**movie.model_dump(exclude_unset=True))
     db.add(new_movie)
-    await db.commit()
-    await db.refresh(new_movie)
+    try:
+        await db.commit()
+        await db.refresh(new_movie)
+    except:
+        await db.rollback()
+        raise HTTPException(
+            status_code=409,
+            detail="Movie already exists",
+        )
     return new_movie
 
 @router.patch("/{movie_id}", response_model=MovieSchema)
