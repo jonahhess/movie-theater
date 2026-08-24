@@ -4,9 +4,13 @@ from pydantic import BaseModel, ConfigDict
 
 
 class SeatBase(BaseModel):
-    id: int
-    auditorium_id: int
-    seat_number: str
+    row: str
+    number: int
+    is_available: bool
+    is_accessible: bool = True
+    x_pos: int
+    y_pos: int
+    angle: int = 0
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -19,6 +23,12 @@ class AuditoriumSchema(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+
+class SeatResponse(SeatBase):
+    id: int
+    auditorium_id: int
+
+    model_config = ConfigDict(from_attributes=True)
 
 # --- Schemas with Relationships ---
 
