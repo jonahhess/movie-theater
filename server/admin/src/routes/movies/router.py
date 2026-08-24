@@ -1,8 +1,8 @@
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...database import get_admin_db
 from ...models import Movie
@@ -33,7 +33,8 @@ async def create_movie(movie: MovieSchema, db: AsyncSession = db_dependency):
     return new_movie
 
 @router.patch("/{movie_id}", response_model=MovieSchema)
-async def update_movie(movie_id: UUID, movie: MovieSchema, db: AsyncSession = db_dependency):
+async def update_movie(
+    movie_id: UUID, movie: MovieSchema, db: AsyncSession = db_dependency):
     existing_movie = await db.scalar(select(Movie).where(Movie.id == movie_id))
     if not existing_movie:
         return None
