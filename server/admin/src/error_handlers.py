@@ -3,11 +3,14 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import DBAPIError
 
+from .exceptions import NotFoundError
+
 
 def _is_schema_missing_db_error(exc: DBAPIError) -> bool:
     details = str(getattr(exc, "orig", exc)).lower()
     schema_missing_markers = ("no such table", "doesn't exist", "unknown table", "1146")
     return any(marker in details for marker in schema_missing_markers)
+
 
 
 def register_exception_handlers(app: FastAPI) -> None:
@@ -46,3 +49,10 @@ def register_exception_handlers(app: FastAPI) -> None:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={"detail": "Internal server error."},
         )
+
+    @app.exception_handler(NotFoundError)
+    async def not_found_handler(_: Request, exc: NotFoundError):
+        return JSONResponse(
+        status_code=404,
+        content={"detail": str(exc)},
+    )

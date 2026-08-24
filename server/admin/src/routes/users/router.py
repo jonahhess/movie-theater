@@ -1,8 +1,10 @@
 import uuid
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from ...exceptions import NotFoundError
 
 from ...database import get_admin_db
 from ...models import User
@@ -13,29 +15,43 @@ db_dependency = Depends(get_admin_db)
 
 
 @router.get("/users", response_model=list[UserSchema])
-async def get_admin_users(db: AsyncSession = db_dependency):
+async def get_users(db: AsyncSession = db_dependency):
     users = await db.scalars(select(User)).all()
     return users
 
 @router.get("/users/{user_id}", response_model=UserSchema)
-async def get_admin_user(user_id: uuid.UUID, db: AsyncSession = db_dependency):
+async def get_user(user_id: uuid.UUID, db: AsyncSession = db_dependency):
     user = await db.scalar(select(User).where(User.id == user_id))
+
+    if user is None:
+        raise NotFoundError("User", user_id)
+
     return user
 
 @router.post("/users", response_model=UserSchema)
-async def create_admin_user(user: UserSchema, db: AsyncSession = db_dependency):
+async def create_user(user: UserSchema, db: AsyncSession = db_dependency):
     new_user = User(**user.model_dump(exclude_unset=True))
     db.add(new_user)
-    await db.commit()
-    await db.refresh(new_user)
+    try:
+        await db.commit()
+        await db.refresh(new_user)
+    except:
+        await db.rollback()
+        raise HTTPException(
+            status_code=409,
+            detail="Email already exists",
+        )
+
     return new_user
 
 @router.put("/users/{user_id}", response_model=UserSchema)
-async def update_admin_user(
+async def update_user(
     user_id: uuid.UUID, user: UserSchema, db: AsyncSession = db_dependency):
     existing_user = await db.scalar(select(User).where(User.id == user_id))
-    if not existing_user:
-        return None
+
+    if existing_user is None:
+        raise NotFoundError("User", user_id)
+
     for key, value in user.model_dump(exclude_unset=True).items():
         setattr(existing_user, key, value)
     await db.commit()
@@ -43,10 +59,12 @@ async def update_admin_user(
     return existing_user
 
 @router.delete("/users/{user_id}", response_model=UserSchema)
-async def delete_admin_user(user_id: uuid.UUID, db: AsyncSession = db_dependency):
+async def delete_user(user_id: uuid.UUID, db: AsyncSession = db_dependency):
     user = await db.scalar(select(User).where(User.id == user_id))
-    if not user:
-        return None
+
+    if user is None:
+        raise NotFoundError("User", user_id)
+
     await db.delete(user)
     await db.commit()
     return user
