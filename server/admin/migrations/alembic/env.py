@@ -9,10 +9,12 @@ from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
-from admin.src.models import Base
+from src.models import Base
 
 ADMIN_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-sys.path.insert(0, ADMIN_DIR)
+SRC_DIR = os.path.join(ADMIN_DIR, "src")
+
+sys.path.insert(0, SRC_DIR)
 
 
 load_dotenv(os.path.join(ADMIN_DIR, ".env"))
@@ -35,7 +37,7 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-target_metadata = [Base.metadata]
+target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
