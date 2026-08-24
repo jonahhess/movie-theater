@@ -16,7 +16,7 @@ db_dependency = Depends(get_admin_db)
 
 @router.get("/users", response_model=list[UserSchema])
 async def get_users(db: AsyncSession = db_dependency):
-    users = await db.scalars(select(User)).all()
+    users = (await db.scalars(select(User))).all()
     return users
 
 @router.get("/users/{user_id}", response_model=UserSchema)
