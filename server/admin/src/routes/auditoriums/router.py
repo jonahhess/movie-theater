@@ -2,10 +2,10 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import select
 from ...exceptions import NotFoundError
 from sqlalchemy.ext.asyncio import AsyncSession
-
+from sqlalchemy.orm import selectinload
 from ...database import get_admin_db
-from ...models import Auditorium
-from .schemas import AuditoriumSchema, AuditoriumWithSeats
+from ...models import Auditorium, Seat
+from .schemas import AuditoriumSchema, AuditoriumWithSeats, SeatBase, SeatResponse
 
 router = APIRouter(prefix="/auditoriums")
 
@@ -70,45 +70,72 @@ async def delete_auditorium(auditorium_id: int, db: AsyncSession = db_dependency
     await db.commit()
     return {"status": "success"}
 
-@router.get("/{auditorium_id}/seat-map", response_model=AuditoriumWithSeats)
-async def get_seat_map(auditorium_id: int, db: AsyncSession = db_dependency):
+@router.get("/{auditorium_id}/seats", response_model=AuditoriumWithSeats)
+async def get_seats(auditorium_id: int, db: AsyncSession = db_dependency):
     auditorium = await db.scalar(
-        select(Auditorium).where(Auditorium.id == auditorium_id))
+        select(Auditorium)
+        .options(selectinload(Auditorium.seats))
+        .where(Auditorium.id == auditorium_id))
 
     if auditorium is None:
         raise NotFoundError("Auditorium", auditorium_id)
 
     return auditorium
 
-
-@router.put("/{auditorium_id}/seat-map", response_model=AuditoriumWithSeats)
-async def replace_seat_map(
-    auditorium_id: int, seat_map: dict, db: AsyncSession = db_dependency):
+@router.post(
+    "/{auditorium_id}/seats",
+    response_model=SeatResponse)
+async def create_seat(
+    auditorium_id: int,
+    seat_data: SeatBase,
+    db: AsyncSession = db_dependency,
+):
     auditorium = await db.scalar(
         select(Auditorium).where(Auditorium.id == auditorium_id))
 
     if auditorium is None:
         raise NotFoundError("Auditorium", auditorium_id)
 
-    auditorium.seat_map = seat_map
+    new_seat = Seat(auditorium_id=auditorium_id, **seat_data.model_dump())
+    db.add(new_seat)
+    await db.commit()
+    await db.refresh(new_seat)
+    return new_seat
+
+@router.put("/{auditorium_id}/seats", response_model=AuditoriumWithSeats)
+async def replace_seats(
+    auditorium_id: int, seats: list[SeatBase], db: AsyncSession = db_dependency):
+    auditorium = await db.scalar(
+        select(Auditorium).where(Auditorium.id == auditorium_id))
+
+    if auditorium is None:
+        raise NotFoundError("Auditorium", auditorium_id)
+
+    auditorium.seats = [Seat(auditorium_id=auditorium_id, 
+                             **seat.model_dump()) for seat in seats]
     await db.commit()
     await db.refresh(auditorium)
     return auditorium
 
 
-@router.patch("/{auditorium_id}/seat-map", response_model=AuditoriumWithSeats)
-async def update_seat_map(
-    auditorium_id: int, seat_map: dict, db: AsyncSession = db_dependency):
+@router.patch("/{auditorium_id}/seats", response_model=AuditoriumWithSeats)
+async def update_seats(
+    auditorium_id: int, seats: list[SeatBase], db: AsyncSession = db_dependency):
     auditorium = await db.scalar(
         select(Auditorium).where(Auditorium.id == auditorium_id))
 
     if auditorium is None:
         raise NotFoundError("Auditorium", auditorium_id)
 
-    if not hasattr(auditorium, "seat_map") or auditorium.seat_map is None:
-        auditorium.seat_map = seat_map
+    if not hasattr(auditorium, "seats") or auditorium.seats is None:
+        auditorium.seats = [Seat(auditorium_id=auditorium_id, 
+                                 **seat.model_dump()) for seat in seats]
     else:
-        auditorium.seat_map.update(seat_map)
+        for seat in seats:
+            for existing_seat in auditorium.seats:
+                if existing_seat.id == seat.id:
+                    for key, value in seat.model_dump(exclude_unset=True).items():
+                        setattr(existing_seat, key, value)
     await db.commit()
     await db.refresh(auditorium)
     return auditorium
