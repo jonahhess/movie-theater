@@ -2,7 +2,7 @@ import { apiClient } from "../lib/api";
 
 export default async function HomePage() {
   // Replace "/endpoint" with your actual path string from openapi.json
-  const { data, error, response } = await apiClient.GET("/users");
+  const { data, error, response } = await apiClient.GET("/");
 
   if (error || !data) {
     // Safely grab the status code by treating response as any temporarily
