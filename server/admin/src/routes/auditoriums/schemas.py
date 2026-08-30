@@ -49,8 +49,7 @@ class AuditoriumResponse(AuditoriumBaseSchema):
     total_capacity: int
     is_accessible: bool
 
-# TODO: Consider adding a schema for updating the seat map, which would include a list of SeatMapItem objects. 
-# This would allow for batch updates to the seat map, including adding new seats, updating existing seats, and removing seats.
+# TODO: Consider adding a schema for updating the seat map all at once. 
 
 # class SeatMapItem(BaseModel):
 #     id: int | None = None

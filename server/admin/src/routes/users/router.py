@@ -4,9 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ...exceptions import NotFoundError
-
 from ...database import get_admin_db
+from ...exceptions import NotFoundError
 from ...models import User
 from .schemas import UserCreateSchema, UserResponseSchema, UserUpdateSchema
 
@@ -35,12 +34,12 @@ async def create_user(user: UserCreateSchema, db: AsyncSession = db_dependency):
     try:
         await db.commit()
         await db.refresh(new_user)
-    except:
+    except Exception as err:
         await db.rollback()
         raise HTTPException(
             status_code=409,
             detail="Email already exists",
-        )
+        ) from err
 
     return new_user
 

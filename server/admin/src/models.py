@@ -157,7 +157,8 @@ class Seat(Base):
     )
     row: Mapped[str] = mapped_column(String(5), nullable=False)
     number: Mapped[int] = mapped_column(Integer, nullable=False)
-    is_available: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("TRUE"))
+    is_available: Mapped[bool] = mapped_column(Boolean, nullable=False, 
+                                               server_default=text("TRUE"))
     is_accessible: Mapped[bool] = mapped_column(
         Boolean,
         nullable=False,

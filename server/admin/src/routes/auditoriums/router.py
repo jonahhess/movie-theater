@@ -1,13 +1,21 @@
-from unittest import result
 
 from fastapi import APIRouter, Depends
 from sqlalchemy import select
-from ...exceptions import NotFoundError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
+
 from ...database import get_admin_db
+from ...exceptions import NotFoundError
 from ...models import Auditorium, Seat
-from .schemas import *
+from .schemas import (
+    AuditoriumCreateSchema,
+    AuditoriumResponse,
+    AuditoriumUpdateSchema,
+    AuditoriumWithSeats,
+    SeatBase,
+    SeatResponse,
+    SeatUpdate,
+)
 
 router = APIRouter(prefix="/auditoriums")
 
@@ -133,7 +141,9 @@ async def get_seat(
 
 @router.patch("/{auditorium_id}/seats/{seat_id}", response_model=SeatResponse)
 async def update_seat(
-    auditorium_id: int, seat_id: int, seat_data: SeatUpdate, db: AsyncSession = db_dependency):
+    auditorium_id: int, 
+    seat_id: int, seat_data: SeatUpdate, 
+    db: AsyncSession = db_dependency):
     seat = await db.scalar(
         select(Seat)
         .where(Seat.id == seat_id, Seat.auditorium_id == auditorium_id))
@@ -192,7 +202,8 @@ async def delete_seat(
     #         for key, value in seat.model_dump(exclude_unset=True).items():
     #             setattr(existing, key, value)
     #     else:
-    #         new_seat = Seat(auditorium_id=auditorium_id, **seat.model_dump(exclude={"id"}))
+    #         new_seat = Seat(auditorium_id=auditorium_id, **seat.model_dump(
+    #                                                           exclude={"id"}))
     #         db.add(new_seat)
 
 

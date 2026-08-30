@@ -2,11 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ...exceptions import NotFoundError
-
 from ...database import get_admin_db
+from ...exceptions import NotFoundError
 from ...models import Screening
-from .schemas import ScreeningCreate, ScreeningUpdate, ScreeningResponse
+from .schemas import ScreeningCreate, ScreeningResponse, ScreeningUpdate
 
 router = APIRouter(prefix="/screenings")
 db_dependency = Depends(get_admin_db)
@@ -25,12 +24,12 @@ async def create_screening(
     try:
         await db.commit()
         await db.refresh(screening)
-    except:
+    except Exception as err:
         await db.rollback()
         raise HTTPException(
             status_code=409,
             detail="Screening already exists",
-        )
+        ) from err
     return screening
 
 @router.get("/{screening_id}", response_model=ScreeningResponse)

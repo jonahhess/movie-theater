@@ -3,11 +3,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...database import get_admin_db
-from ...models import Movie
-from .schemas import MovieCreateSchema, MovieUpdateSchema, MovieResponseSchema
-
 from ...exceptions import NotFoundError
-
+from ...models import Movie
+from .schemas import MovieCreateSchema, MovieResponseSchema, MovieUpdateSchema
 
 router = APIRouter(prefix="/movies")
 
@@ -36,12 +34,12 @@ async def create_movie(movie: MovieCreateSchema, db: AsyncSession = db_dependenc
     try:
         await db.commit()
         await db.refresh(new_movie)
-    except:
+    except Exception as err:
         await db.rollback()
         raise HTTPException(
             status_code=409,
             detail="Movie already exists",
-        )
+        ) from err
     return new_movie
 
 @router.patch("/{movie_id}", response_model=MovieResponseSchema)

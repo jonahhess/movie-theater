@@ -1,11 +1,11 @@
 from datetime import datetime
 from decimal import Decimal
-from enum import Enum
+from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict
 
 
-class ScreeningStatus(str, Enum):
+class ScreeningStatus(StrEnum):
     DRAFT = "draft"
     ON_SALE = "on_sale"
     PAST = "past"

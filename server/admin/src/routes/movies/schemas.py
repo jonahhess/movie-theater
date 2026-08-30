@@ -1,18 +1,17 @@
 from datetime import date, datetime
-from enum import Enum
-from typing import Literal
+from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict
 
 
-class MovieRating(str, Enum):
+class MovieRating(StrEnum):
     G = "G"
     PG = "PG"
     PG_13 = "PG-13"
     R = "R"
 
 
-class MovieStatus(str, Enum):
+class MovieStatus(StrEnum):
     DRAFT = "draft"
     NOW_SHOWING = "now_showing"
     ARCHIVED = "archived"
@@ -24,9 +23,9 @@ class MovieBaseSchema(BaseModel):
     title: str
     description: str | None = None
     duration_minutes: int
-    rating: Literal["G", "PG", "PG-13", "R"]
+    rating: MovieRating
     release_date: date | None = None
-    status: Literal["draft", "now_showing", "archived"]
+    status: MovieStatus
 
 
 class MovieCreateSchema(MovieBaseSchema):
@@ -36,9 +35,9 @@ class MovieUpdateSchema(MovieBaseSchema):
     title: str | None = None
     description: str | None = None
     duration_minutes: int | None = None
-    rating: Literal["G", "PG", "PG-13", "R"] | None = None
+    rating: MovieRating | None = None
     release_date: date | None = None
-    status: Literal["draft", "now_showing", "archived"] | None = None
+    status: MovieStatus | None = None
 
 class MovieResponseSchema(MovieBaseSchema):
     model_config = ConfigDict(from_attributes=True)
