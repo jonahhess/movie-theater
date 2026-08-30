@@ -1,13 +1,25 @@
 import uuid
 from datetime import datetime
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr
 
 
-class UserSchema(BaseModel):
-    # UUIDv7 is the single, direct primary key
-    id: uuid.UUID
+class UserBaseSchema(BaseModel):
     username: str
     email: EmailStr
     phone: str | None
+
+class UserCreateSchema(UserBaseSchema):
+    password: str
+
+class UserUpdateSchema(BaseModel):
+    username: str | None = None
+    email: EmailStr | None = None
+    phone: str | None = None
+    password: str | None = None
+
+class UserResponseSchema(UserCreateSchema):
+    model_config = ConfigDict(from_attributes=True)
+    
+    id: uuid.UUID
     created_at: datetime
