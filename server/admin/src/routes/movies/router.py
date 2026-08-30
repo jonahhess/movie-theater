@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...database import get_admin_db
 from ...models import Movie
-from .schemas import MovieSchema
+from .schemas import MovieCreateSchema, MovieUpdateSchema, MovieResponseSchema
 
 from ...exceptions import NotFoundError
 
@@ -13,13 +13,13 @@ router = APIRouter(prefix="/movies")
 
 db_dependency = Depends(get_admin_db)
 
-@router.get("", response_model=list[MovieSchema])
+@router.get("", response_model=list[MovieResponseSchema])
 async def list_movies(db: AsyncSession = db_dependency):
     movies = (await db.scalars(select(Movie))).all()
     return movies
 
 
-@router.get("/{movie_id}", response_model=MovieSchema)
+@router.get("/{movie_id}", response_model=MovieResponseSchema)
 async def get_movie(movie_id: int, db: AsyncSession = db_dependency):
     movie = await db.scalar(select(Movie).where(Movie.id == movie_id))
 
@@ -29,8 +29,8 @@ async def get_movie(movie_id: int, db: AsyncSession = db_dependency):
     return movie
 
 
-@router.post("", response_model=MovieSchema)
-async def create_movie(movie: MovieSchema, db: AsyncSession = db_dependency):
+@router.post("", response_model=MovieResponseSchema)
+async def create_movie(movie: MovieCreateSchema, db: AsyncSession = db_dependency):
     new_movie = Movie(**movie.model_dump(exclude_unset=True))
     db.add(new_movie)
     try:
@@ -44,9 +44,9 @@ async def create_movie(movie: MovieSchema, db: AsyncSession = db_dependency):
         )
     return new_movie
 
-@router.patch("/{movie_id}", response_model=MovieSchema)
+@router.patch("/{movie_id}", response_model=MovieResponseSchema)
 async def update_movie(
-    movie_id: int, movie: MovieSchema, db: AsyncSession = db_dependency):
+    movie_id: int, movie: MovieUpdateSchema, db: AsyncSession = db_dependency):
     existing_movie = await db.scalar(select(Movie).where(Movie.id == movie_id))
 
     if existing_movie is None:
@@ -59,7 +59,7 @@ async def update_movie(
     return existing_movie
 
 
-@router.delete("/{movie_id}")
+@router.delete("/{movie_id}", status_code=204)
 async def delete_movie(movie_id: int, db: AsyncSession = db_dependency):
     movie = await db.scalar(select(Movie).where(Movie.id == movie_id))
 
@@ -68,4 +68,4 @@ async def delete_movie(movie_id: int, db: AsyncSession = db_dependency):
 
     await db.delete(movie)
     await db.commit()
-    return movie
+    return None

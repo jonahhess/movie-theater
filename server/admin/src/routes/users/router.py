@@ -8,18 +8,18 @@ from ...exceptions import NotFoundError
 
 from ...database import get_admin_db
 from ...models import User
-from .schemas import UserSchema
+from .schemas import UserCreateSchema, UserResponseSchema, UserUpdateSchema
 
 router = APIRouter()
 db_dependency = Depends(get_admin_db)
 
 
-@router.get("/users", response_model=list[UserSchema])
+@router.get("/users", response_model=list[UserResponseSchema])
 async def get_users(db: AsyncSession = db_dependency):
     users = (await db.scalars(select(User))).all()
     return users
 
-@router.get("/users/{user_id}", response_model=UserSchema)
+@router.get("/users/{user_id}", response_model=UserResponseSchema)
 async def get_user(user_id: uuid.UUID, db: AsyncSession = db_dependency):
     user = await db.scalar(select(User).where(User.id == user_id))
 
@@ -28,8 +28,8 @@ async def get_user(user_id: uuid.UUID, db: AsyncSession = db_dependency):
 
     return user
 
-@router.post("/users", response_model=UserSchema)
-async def create_user(user: UserSchema, db: AsyncSession = db_dependency):
+@router.post("/users", response_model=UserResponseSchema)
+async def create_user(user: UserCreateSchema, db: AsyncSession = db_dependency):
     new_user = User(**user.model_dump(exclude_unset=True))
     db.add(new_user)
     try:
@@ -44,9 +44,9 @@ async def create_user(user: UserSchema, db: AsyncSession = db_dependency):
 
     return new_user
 
-@router.put("/users/{user_id}", response_model=UserSchema)
+@router.put("/users/{user_id}", response_model=UserResponseSchema)
 async def update_user(
-    user_id: uuid.UUID, user: UserSchema, db: AsyncSession = db_dependency):
+    user_id: uuid.UUID, user: UserUpdateSchema, db: AsyncSession = db_dependency):
     existing_user = await db.scalar(select(User).where(User.id == user_id))
 
     if existing_user is None:
@@ -58,7 +58,7 @@ async def update_user(
     await db.refresh(existing_user)
     return existing_user
 
-@router.delete("/users/{user_id}", response_model=UserSchema)
+@router.delete("/users/{user_id}", status_code=204)
 async def delete_user(user_id: uuid.UUID, db: AsyncSession = db_dependency):
     user = await db.scalar(select(User).where(User.id == user_id))
 
@@ -67,4 +67,4 @@ async def delete_user(user_id: uuid.UUID, db: AsyncSession = db_dependency):
 
     await db.delete(user)
     await db.commit()
-    return user
+    return None
