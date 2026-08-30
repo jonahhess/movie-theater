@@ -9,16 +9,22 @@ from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
-from src.models import Base
+# 1. Get the absolute path of the directory containing env.py (alembic/)
+current_dir = os.path.dirname(os.path.abspath(__file__))
 
-ADMIN_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-SRC_DIR = os.path.join(ADMIN_DIR, "src")
+# 2. Go up 3 levels to reach the 'server' folder
+# alembic/ -> migrations/ -> admin/ -> server/
+SERVER_DIR = os.path.abspath(os.path.join(current_dir, "..", "..", ".."))
 
-sys.path.insert(0, SRC_DIR)
+# 3. Add the 'server' directory to sys.path so Python can see 'admin'
+if SERVER_DIR not in sys.path:
+    sys.path.append(SERVER_DIR)
 
-
+# 4. Load your .env file from the 'admin' folder
+ADMIN_DIR = os.path.abspath(os.path.join(current_dir, "..", ".."))
 load_dotenv(os.path.join(ADMIN_DIR, ".env"))
 
+from admin.src.models import Base
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
