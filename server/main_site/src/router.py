@@ -41,27 +41,37 @@ async def browse_movies(
     db: AsyncSession = db_dependency,
 ):
     count_stmt = select(func.count()).select_from(MovieView)
-    list_stmt = select(MovieView).offset(offset).limit(limit)
+    list_stmt = select(MovieView)
 
     if rating is not None:
         count_stmt = count_stmt.where(MovieView.rating == rating)
         list_stmt = list_stmt.where(MovieView.rating == rating)
 
     if release_year is not None:
-        count_stmt = count_stmt.where(func.extract(
-            "year", MovieView.release_date) == release_year)
-        list_stmt = list_stmt.where(func.extract(
-            "year", MovieView.release_date) == release_year)
+        year_filter = func.extract(
+            "year", MovieView.release_date
+        ) == release_year
+
+        count_stmt = count_stmt.where(year_filter)
+        list_stmt = list_stmt.where(year_filter)
 
     total = await db.scalar(count_stmt) or 0
-    items = (await db.scalars(
-        list_stmt
-        .order_by(MovieView.release_date.desc(), MovieView.id.desc())
-        .offset(offset)
-        .limit(limit)
-    )).all()
 
-    return MoviesListResponse(total=total, limit=limit, offset=offset, items=items)
+    items = (
+        await db.scalars(
+            list_stmt
+            .order_by(MovieView.release_date.desc(), MovieView.id.desc())
+            .offset(offset)
+            .limit(limit)
+        )
+    ).all()
+
+    return MoviesListResponse(
+        total=total,
+        limit=limit,
+        offset=offset,
+        items=items,
+    )
 
 
 @router.get("/movies/{movie_id}", response_model=MovieResponse)
