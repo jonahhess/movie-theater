@@ -140,6 +140,14 @@ class Auditorium(Base):
 
 class Seat(Base):
     __tablename__ = "seats"
+    __table_args__ = (
+        UniqueConstraint(
+            "auditorium_id",
+            "row",
+            "number",
+            name="uq_seat_auditorium_row_number",
+        ),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     auditorium_id: Mapped[int] = mapped_column(
