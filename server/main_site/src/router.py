@@ -37,7 +37,7 @@ async def browse_movies(
     rating: Annotated[Literal["G", "PG", "PG-13", "R"] | None, Query()] = None,
     release_year: Annotated[int | None, Query(ge=1888)] = None,
     limit: Annotated[int, Query(ge=1, le=100)] = 20,
-    offset: Annotated[int, Query(ge=0)] = 0,
+    offset: Annotated[int, Query(ge=0, le=100)] = 0,
     db: AsyncSession = db_dependency,
 ):
     count_stmt = select(func.count()).select_from(MovieView)
@@ -92,7 +92,7 @@ async def browse_screenings(
     start_date: Annotated[date | None, Query()] = None,
     end_date: Annotated[date | None, Query()] = None,
     limit: Annotated[int, Query(ge=1, le=100)] = 20,
-    offset: Annotated[int, Query(ge=0)] = 0,
+    offset: Annotated[int, Query(ge=0, le=100)] = 0,
     db: AsyncSession = db_dependency,
 ):
     if start_date and end_date and start_date > end_date:
