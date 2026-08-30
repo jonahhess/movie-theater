@@ -5,6 +5,10 @@ from sqlalchemy.exc import DBAPIError
 
 from .exceptions import NotFoundError
 
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 def _is_schema_missing_db_error(exc: DBAPIError) -> bool:
     details = str(getattr(exc, "orig", exc)).lower()
@@ -44,7 +48,13 @@ def register_exception_handlers(app: FastAPI) -> None:
         )
 
     @app.exception_handler(Exception)
-    async def handle_unexpected_errors(_: Request, __: Exception):
+    async def handle_unexpected_errors(request: Request, exc: Exception):
+        logger.exception(
+        "Unhandled exception while processing %s %s",
+        request.method,
+        request.url.path,
+    )
+        
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={"detail": "Internal server error."},
