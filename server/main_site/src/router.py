@@ -2,6 +2,7 @@ from datetime import date, datetime, time, timedelta
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from pydantic import BeforeValidator
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -13,7 +14,7 @@ from main_site.src.schemas import (
     MoviesListResponse,
     ScreeningResponse,
     ScreeningsListResponse,
-)
+    )
 
 router = APIRouter()
 db_dependency = Depends(get_read_db)
@@ -31,15 +32,18 @@ async def home():
         },
     }
 
-
 @router.get("/movies", response_model=MoviesListResponse)
 async def browse_movies(
     rating: Annotated[Literal["G", "PG", "PG-13", "R"] | None, Query()] = None,
-    release_year: Annotated[int | None, Query(ge=1888)] = None,
+    release_year: Annotated[int | Literal["null"] | None, Query()] = None,
     limit: Annotated[int, Query(ge=1, le=100)] = 20,
     offset: Annotated[int, Query(ge=0, le=100)] = 0,
     db: AsyncSession = db_dependency,
 ):
+
+    if release_year == "null":
+        release_year = None
+
     count_stmt = select(func.count()).select_from(MovieView)
     list_stmt = select(MovieView)
 
@@ -74,7 +78,7 @@ async def browse_movies(
     )
 
 
-@router.get("/movies/{movie_id}", response_model=MovieResponse)
+@router.get("/movies/{movie_id}", response_model=MovieResponse, responses={404: {"description": "Movie not found"}})
 async def movie_details(movie_id: int, db: AsyncSession = db_dependency):
     movie = await db.scalar(select(MovieView).where(MovieView.id == movie_id))
 
@@ -89,17 +93,14 @@ async def movie_details(movie_id: int, db: AsyncSession = db_dependency):
 @router.get("/screenings", response_model=ScreeningsListResponse)
 async def browse_screenings(
     movie_id: Annotated[int | None, Query()] = None,
-    start_date: Annotated[date | None, Query()] = None,
-    end_date: Annotated[date | None, Query()] = None,
+    start_date: Annotated[date | None,  Query(), BeforeValidator(lambda v: None if v == "null" else v),
+] = None,
+    end_date: Annotated[date | None, Query(), BeforeValidator(lambda v: None if v == "null" else v),
+] = None,
     limit: Annotated[int, Query(ge=1, le=100)] = 20,
     offset: Annotated[int, Query(ge=0, le=100)] = 0,
     db: AsyncSession = db_dependency,
 ):
-    if start_date and end_date and start_date > end_date:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="start_date must be before or equal to end_date",
-        )
 
     count_stmt = select(func.count()).select_from(ScreeningView)
     list_stmt = (
@@ -121,17 +122,29 @@ async def browse_screenings(
 
     if end_date is not None:
         # Inclusive end-of-day filter by bounding to the next day.
-        end_dt_exclusive = datetime.combine(end_date + timedelta(days=1), time.min)
-        count_stmt = count_stmt.where(ScreeningView.start_time < end_dt_exclusive)
-        list_stmt = list_stmt.where(ScreeningView.start_time < end_dt_exclusive)
+        end_dt_exclusive = datetime.combine(
+            end_date + timedelta(days=1),
+            time.min,
+        )
+        count_stmt = count_stmt.where(
+            ScreeningView.start_time < end_dt_exclusive
+        )
+        list_stmt = list_stmt.where(
+            ScreeningView.start_time < end_dt_exclusive
+        )
 
     total = await db.scalar(count_stmt) or 0
     items = (await db.scalars(list_stmt)).all()
 
-    return ScreeningsListResponse(total=total, limit=limit, offset=offset, items=items)
+    return ScreeningsListResponse(
+        total=total,
+        limit=limit,
+        offset=offset,
+        items=items,
+    )
 
 
-@router.get("/screenings/{screening_id}", response_model=ScreeningResponse)
+@router.get("/screenings/{screening_id}", response_model=ScreeningResponse, responses={404: {"description": "Screening not found"}})
 async def screening_details(screening_id: int, db: AsyncSession = db_dependency):
     screening = await db.scalar(
         select(ScreeningView)
