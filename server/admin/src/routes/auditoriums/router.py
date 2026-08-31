@@ -27,7 +27,6 @@ async def list_auditoriums(db: AsyncSession = db_dependency):
     return auditoriums
 
 
-
 @router.post("", response_model=AuditoriumResponse)
 async def create_auditorium(
     auditorium: AuditoriumCreateSchema, db: AsyncSession = db_dependency):
