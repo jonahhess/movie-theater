@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Request, Response
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from server.admin.src.models import Ticket
+from tickets.src.models import Ticket
 from tickets.src.database import get_admin_db  # Import admin's local database helper
 from tickets.src.redis_client import *
 
