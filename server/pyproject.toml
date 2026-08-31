@@ -21,6 +21,7 @@ dependencies = [
 ]
 
 [tool.ruff]
+exclude = ["migrations"]
 
 [tool.ruff.lint]
 # Enable Pyflakes (F), Isort (I), and FastAPI-friendly rules
@@ -51,6 +52,12 @@ script_location = "%(here)s/alembic"
 # additional paths to be prepended to sys.path. defaults to the current working directory.
 prepend_sys_path = [
     "."
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "schemathesis>=4.25.1",
 ]
 
 # timezone to use when rendering the date within the migration file

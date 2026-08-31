@@ -304,3 +304,8 @@ alembic upgrade head
 The database/user SQL from the MySQL section should be executed during step 6.
 
 This gives new users **one Python environment, one dependency-management workflow, and a clear order for configuring the database and services**.
+
+For read user to see views:
+GRANT SELECT ON movie_theater.auditoriums_public_view TO 'movie_theater_viewer'@'localhost';
+GRANT SELECT ON movie_theater.screenings_public_view TO 'movie_theater_viewer'@'localhost';
+GRANT SELECT ON movie_theater.movies_public_view TO 'movie_theater_viewer'@'localhost';

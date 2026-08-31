@@ -3,17 +3,21 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict
 
-
 class MovieResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
     title: str
-    description: str | None
+    description: str | None = None
     duration_minutes: int
     rating: str
-    release_date: date | None
+    release_date: date | None = None
 
+class MovieListResponse(BaseModel):
+    total: int
+    limit: int
+    offset: int
+    items: list[MovieResponse]
 
 class AuditoriumResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -21,7 +25,6 @@ class AuditoriumResponse(BaseModel):
     id: int
     name: str
     is_accessible: bool
-
 
 class ScreeningResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)

@@ -23,7 +23,7 @@ from sqlalchemy import (
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from admin.src.database import Base
+from .database import Base
 
 
 class User(Base):
@@ -100,7 +100,7 @@ class Auditorium(Base):
 
     # Relationships
     seats: Mapped[list[Seat]] = relationship(
-        "admin.src.models.Seat",
+        "Seat",
         back_populates="auditorium",
         cascade="all, delete-orphan",
     )
@@ -140,9 +140,16 @@ class Auditorium(Base):
 
 class Seat(Base):
     __tablename__ = "seats"
+    __table_args__ = (
+        UniqueConstraint(
+            "auditorium_id",
+            "row",
+            "number",
+            name="uq_seat_auditorium_row_number",
+        ),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    name: Mapped[str] = mapped_column(String(100), nullable=False)
     auditorium_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("auditoriums.id", ondelete="CASCADE"),
@@ -150,7 +157,8 @@ class Seat(Base):
     )
     row: Mapped[str] = mapped_column(String(5), nullable=False)
     number: Mapped[int] = mapped_column(Integer, nullable=False)
-    is_available: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    is_available: Mapped[bool] = mapped_column(Boolean, nullable=False, 
+                                               server_default=text("TRUE"))
     is_accessible: Mapped[bool] = mapped_column(
         Boolean,
         nullable=False,
@@ -163,7 +171,7 @@ class Seat(Base):
 
     # Relationships
     auditorium: Mapped[Auditorium] = relationship(
-        "admin.src.models.Auditorium", back_populates="seats")
+        "Auditorium", back_populates="seats")
 
 
 class Screening(Base):
@@ -193,9 +201,9 @@ class Screening(Base):
     )
 
     # Relationships
-    auditorium: Mapped[Auditorium] = relationship("admin.src.models.Auditorium")
+    auditorium: Mapped[Auditorium] = relationship("Auditorium")
     screening_seats: Mapped[list[ScreeningSeat]] = relationship(
-        "admin.src.models.ScreeningSeat",
+        "ScreeningSeat",
         back_populates="screening",
         cascade="all, delete-orphan",
     )
@@ -226,10 +234,10 @@ class ScreeningSeat(Base):
 
     # Relationships
     screening: Mapped[Screening] = relationship(
-        "admin.src.models.Screening",
+        "Screening",
         back_populates="screening_seats",
     )
-    seat: Mapped[Seat] = relationship("admin.src.models.Seat")
+    seat: Mapped[Seat] = relationship("Seat")
 
 class Ticket(Base):
     __tablename__ = "tickets"
@@ -256,4 +264,4 @@ class Ticket(Base):
 
     # Relationships
     screening_seat: Mapped[ScreeningSeat] = relationship(
-                                            "admin.src.models.ScreeningSeat")
+                                            "ScreeningSeat")

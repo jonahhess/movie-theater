@@ -1,5 +1,3 @@
-from uuid import UUID
-
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,7 +16,7 @@ async def get_tickets_users(db: AsyncSession = db_dependency):
 
 @router.get("/screenings/{screening_id}/availability/stream")
 async def stream_seat_availability(
-    screening_id: UUID,
+    screening_id: int, db: AsyncSession = db_dependency
 ) -> StreamingResponse:
     return StreamingResponse(
         stream_sse_events(str(screening_id)),
@@ -27,44 +25,44 @@ async def stream_seat_availability(
 
 
 @router.get("/screenings/{screening_id}/seats")
-async def view_selected_seats(screening_id: UUID):
+async def view_selected_seats(screening_id: int, db: AsyncSession = db_dependency):
     ...
 
 
 @router.post("/screenings/{screening_id}/seats/{seat_id}/hold")
 async def hold_seat(
-    screening_id: UUID,
-    seat_id: UUID,
-):
+    screening_id: int,
+    seat_id: int,
+    db: AsyncSession = db_dependency):
     ...
 
 
 @router.post("/screenings/{screening_id}/seats/checkout")
-async def checkout_seats(screening_id: UUID):
+async def checkout_seats(screening_id: int, db: AsyncSession = db_dependency):
     ...
 
 
 @router.get("/screenings/{screening_id}/checkout/{checkout_id}")
 async def get_checkout(
-    screening_id: UUID,
-    checkout_id: UUID,
-):
+    screening_id: int,
+    checkout_id: int,
+    db: AsyncSession = db_dependency,):
     ...
 
 
 @router.post("/screenings/{screening_id}/checkout/{checkout_id}/payment")
 async def make_payment(
-    screening_id: UUID,
-    checkout_id: UUID,
-):
+    screening_id: int,
+    checkout_id: int,
+    db: AsyncSession = db_dependency,):
     ...
 
 
 @router.delete("/screenings/{screening_id}/checkout/{checkout_id}")
 async def cancel_checkout(
-    screening_id: UUID,
-    checkout_id: UUID,
-):
+    screening_id: int,
+    checkout_id: int,
+    db: AsyncSession = db_dependency,):
     ...
 
 

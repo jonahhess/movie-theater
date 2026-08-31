@@ -69,64 +69,9 @@ class AuditoriumView(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
+    is_accessible: Mapped[bool] = mapped_column(Boolean, nullable=False)
 
-    # Relationships
-    seats: Mapped[list[Seats]] = relationship(
-        "main_site.src.models.Seats",
-        back_populates="auditorium",
-        primaryjoin=lambda: AuditoriumView.id == foreign(Seats.auditorium_id),
-        viewonly=True,
-    )
-
-    # Dynamic property for accessibility (True if >= 1 seat is accessible)
-    @hybrid_property
-    def is_accessible(self):
-        return any(seat.is_accessible for seat in self.seats)
-
-    @is_accessible.inplace.expression
-    @classmethod
-    def _is_accessible_expression(cls):
-        return select(func.count(Seats.id) > 0).where(
-            Seats.auditorium_id == cls.id,
-            Seats.is_accessible,
-        ).scalar_subquery()
-
-
-# only used to decide if there are accessible seats in the auditorium
-class Seats(Base):
-    __tablename__ = "seats"
-    __table_args__ = {"extend_existing": True}
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    name: Mapped[str] = mapped_column(String(100), nullable=False)
-    auditorium_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("auditoriums.id", ondelete="CASCADE"),
-        nullable=False,
-    )
-    row: Mapped[str] = mapped_column(String(5), nullable=False)
-    number: Mapped[int] = mapped_column(Integer, nullable=False)
-    is_available: Mapped[bool] = mapped_column(Boolean, nullable=False)
-    is_accessible: Mapped[bool] = mapped_column(
-        Boolean,
-        nullable=False,
-        server_default=text("TRUE"),
-    )
-
-    x_pos: Mapped[int] = mapped_column(Integer, nullable=False)
-    y_pos: Mapped[int] = mapped_column(Integer, nullable=False)
-    angle: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-
-    # Relationships
-    auditorium: Mapped[AuditoriumView] = relationship(
-        "main_site.src.models.AuditoriumView",
-        back_populates="seats",
-        primaryjoin=lambda: foreign(Seats.auditorium_id) == AuditoriumView.id,
-        viewonly=True,
-    )
-
-
-# only show viewings based on start_time? and status=on_sale
+# only show viewings based on start_time and status=on_sale
 class ScreeningView(Base):
     __tablename__ = "screenings_public_view"
     __table_args__ = {"info": {"is_view": True}} 
