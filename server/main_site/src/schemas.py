@@ -26,7 +26,6 @@ class AuditoriumResponse(BaseModel):
     name: str
     is_accessible: bool
 
-
 class ScreeningResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
