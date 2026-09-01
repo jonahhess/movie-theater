@@ -345,6 +345,11 @@ async def clear_cache_by_prefix(
 
     return int(deleted_total)
 
+
+async def close_screening_sale(redis: Redis, screening_id: str) -> int:
+    """Remove cached seat state for a screening sale."""
+    return await clear_cache_by_prefix(redis, screening_id)
+
 async def get_user_held_seats(
         redis: Redis,
     screening_id: str,
