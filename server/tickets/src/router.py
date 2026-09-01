@@ -1,18 +1,55 @@
+import asyncio
 import io
-import qrcode
+import os
 import uuid
+from hmac import compare_digest
 
-from fastapi import APIRouter, Depends, Request, Response
+import qrcode
+from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response, status
 from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
+from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from tickets.src.database import get_admin_db
 from tickets.src.models import Ticket
-from tickets.src.database import get_admin_db  # Import admin's local database helper
-from tickets.src.redis_client import *
+from tickets.src.redis_client import get_redis
+from tickets.src.redis_seats import (
+    acquire_seats,
+    close_screening_sale,
+    extend_seat_hold,
+    get_user_held_seats,
+    release_all_seats,
+    reserve_seat,
+    seat_exists,
+    stream_sse_events,
+    warm_screening_seats,
+)
 
 router = APIRouter()
 db_dependency = Depends(get_admin_db)
 redis_dependency = Depends(get_redis)
+INTERNAL_SERVICE_TOKEN = os.getenv("INTERNAL_SERVICE_TOKEN")
+
+
+class OpenScreeningSaleRequest(BaseModel):
+    seat_ids: list[str]
+
+
+def require_internal_service(
+    x_internal_service_token: str | None = Header(default=None),
+) -> None:
+    if not INTERNAL_SERVICE_TOKEN:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Internal service token is not configured",
+        )
+
+    if not x_internal_service_token or not compare_digest(
+        x_internal_service_token,
+        INTERNAL_SERVICE_TOKEN,
+    ):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
 
 # assign uuid in http cookie
 async def get_or_create_user_uuid(request: Request, response: Response) -> str:
@@ -27,7 +64,7 @@ async def get_or_create_user_uuid(request: Request, response: Response) -> str:
         # 2. If it doesn't exist, they are a guest. Generate a fresh UUID.
         user_uuid = str(uuid.uuid7())
         
-        # 3. Set the cookie on the response so the browser remembers it for future requests
+        # 3. Set the cookie on the response so the browser remembers it
         response.set_cookie(
             key="user_uuid",
             value=user_uuid,
@@ -42,79 +79,115 @@ async def get_or_create_user_uuid(request: Request, response: Response) -> str:
         
     return user_uuid
 
-user_uuid_dependency: str = Depends(get_or_create_user_uuid)  # Use the dependency in your routes
+user_uuid_dependency: str = Depends(get_or_create_user_uuid)  
 
-# Example endpoint for tickets
 @router.get("/")
 async def tickets_welcome():
     return {"message": "Hello from tickets's isolated router endpoint!", "data": []}
 
-@router.get("/screenings/{screening_id}/availability/stream")
+
+@router.post(
+    "/internal/screenings/{screening_id}/sale/open",
+    dependencies=[Depends(require_internal_service)],
+)
+async def open_screening_sale(
+    screening_id: int,
+    payload: OpenScreeningSaleRequest,
+    redis: Redis = redis_dependency,
+):
+    await warm_screening_seats(redis, str(screening_id), payload.seat_ids)
+    return {
+        "status": "ok",
+        "screening_id": screening_id,
+        "seat_count": len(payload.seat_ids),
+    }
+
+
+@router.post(
+    "/internal/screenings/{screening_id}/sale/close",
+    dependencies=[Depends(require_internal_service)],
+)
+async def close_screening_sale_endpoint(
+    screening_id: int,
+    redis: Redis = redis_dependency,
+):
+    deleted_count = await close_screening_sale(redis, str(screening_id))
+    return {
+        "status": "ok",
+        "screening_id": screening_id,
+        "deleted_count": deleted_count,
+    }
+
+@router.get("/screenings/{screening_id}/availability/stream", 
+            response_class=StreamingResponse)
 async def stream_seat_availability(
-    screening_id: int, last_event_id: str = "$", redis: aioredis.Redis = redis_dependency
+    screening_id: int, last_event_id: str = "$", redis: Redis = redis_dependency
 ) -> StreamingResponse:
     return StreamingResponse(
-        stream_sse_events(str(screening_id), redis),
+        stream_sse_events(redis, str(screening_id), last_event_id=last_event_id),
         last_event_id=last_event_id,
         media_type="text/event-stream",
     )
 
 
-@router.get("/screenings/{screening_id}/seats")
-async def view_selected_seats(screening_id: int, user_uuid: str = user_uuid_dependency, redis: aioredis.Redis = redis_dependency):
-    my_held_seats = await get_user_held_seats(str(screening_id), user_uuid, redis)
+@router.get("/screenings/{screening_id}/seats", response_model=list[str])
+async def view_selected_seats(screening_id: int, user_uuid: str = user_uuid_dependency, 
+                              redis: Redis = redis_dependency):
+    my_held_seats = await get_user_held_seats(redis, str(screening_id), user_uuid)
 
-    return {"held_seats": my_held_seats}
+    return my_held_seats
 
 
-@router.post("/screenings/{screening_id}/seats/{seat_id}/hold")
+@router.post("/screenings/{screening_id}/seats/{seat_id}/hold", response_model=bool)
 async def hold_seat(
     screening_id: int,
-    seat_id: int,
-    redis: aioredis.Redis = redis_dependency,
+    seat_id: str,
+    redis: Redis = redis_dependency,
     user_uuid: str = user_uuid_dependency,):
 
-    success = await reserve_seat(str(screening_id), str(seat_id), user_uuid, redis)
-    return {"success": success}
+    if not await seat_exists(redis, str(screening_id), seat_id):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Seat does not exist for this screening",
+        )
+
+    success = await reserve_seat(redis, str(screening_id), seat_id, user_uuid)
+    return success
 
 
-@router.post("/screenings/{screening_id}/seats/checkout")
-async def checkout_seats(screening_id: int, redis: aioredis.Redis = redis_dependency, 
+@router.post("/screenings/{screening_id}/seats/checkout", response_model=bool)
+async def checkout_seats(screening_id: int, redis: Redis = redis_dependency, 
                          user_uuid: str = user_uuid_dependency):
-    success = await extend_seat_hold(str(screening_id), user_uuid, redis)
+    success = await extend_seat_hold(redis, str(screening_id), user_uuid)
 
-    if success:
-        new_checkout_id = str(uuid.uuid7())
-        return {"status": success, "checkout_id": new_checkout_id}
-    
-    return {"status": success, "message": "Failed to extend seat hold. Please try again."}
+    return success
 
-@router.get("/screenings/{screening_id}/checkout/{checkout_id}")
+@router.get("/screenings/{screening_id}/checkout/", response_model=list[str])
 async def get_checkout(
     screening_id: int,
-    checkout_id: str,
     user_uuid: str = user_uuid_dependency,
-    redis: aioredis.Redis = redis_dependency):
+    redis: Redis = redis_dependency):
     # Retrieve the held seats for the user
-    held_seats = await get_user_held_seats(str(screening_id), user_uuid, redis)
-    return {"held_seats": held_seats}
+    held_seats = await get_user_held_seats(redis, str(screening_id), user_uuid)
+    return held_seats
 
 
-@router.post("/screenings/{screening_id}/checkout/{checkout_id}/payment")
+@router.post("/screenings/{screening_id}/checkout/{checkout_id}/payment", 
+             response_model=bool)
 async def make_payment(
     screening_id: int,
     checkout_id: str,
     user_uuid: str = user_uuid_dependency,
-    redis: aioredis.Redis = redis_dependency,
+    redis: Redis = redis_dependency,
     db: AsyncSession = db_dependency,
-    contact_info: dict = None):  # Expecting a dictionary with 'email' and 'phone' keys):
+    contact_info: dict = None):  # Expecting dictionary with 'email' and 'phone' keys):
 
     # For demonstration, we'll assume payment is always successful
-    success = await acquire_seats(str(screening_id), user_uuid, redis)
+    success = await acquire_seats(redis, str(screening_id), user_uuid)
 
     # update the database with the payment info and finalize the checkout
     if success:
-        held_seats = await get_user_held_seats(str(screening_id), user_uuid, redis)
+        held_seats = await get_user_held_seats(redis, str(screening_id), user_uuid)
         tickets_to_add = []
         for seat_id in held_seats:
             ticket = Ticket(
@@ -129,20 +202,20 @@ async def make_payment(
         await asyncio.gather(*[db.add(ticket) for ticket in tickets_to_add])
         await db.commit()
 
-    return {"status": success, "message": "Payment successful and checkout finalized." if success else "Payment failed. Please try again."}
+    return success
 
 
-@router.delete("/screenings/{screening_id}/checkout/{checkout_id}")
+@router.delete("/screenings/{screening_id}/checkout/", response_model=bool)
 async def cancel_checkout(
     screening_id: int,
     user_uuid: str = user_uuid_dependency,
-    redis: aioredis.Redis = redis_dependency):
+    redis: Redis = redis_dependency):
 
     # Cancel the checkout and release held seats
-    success = await release_all_seats(str(screening_id), user_uuid, redis)
-    return {"status": success, "message": "Checkout canceled and held seats released." if success else "Failed to cancel checkout. Please try again."}
+    success = await release_all_seats(redis, str(screening_id), user_uuid)
+    return success
 
-@router.get("/qrcode/{receipt_number}")
+@router.get("/qrcode/{receipt_number}", response_class=StreamingResponse)
 def get_qr_code(receipt_number: str):
     # Create QR code image from the string
     img = qrcode.make(receipt_number)
@@ -155,6 +228,7 @@ def get_qr_code(receipt_number: str):
     # Return stream as an image response
     return StreamingResponse(buf, media_type="image/png")
 
-@router.post("/payments/webhook", responses={200: {"description": "Payment webhook received successfully"}})
+@router.post("/payments/webhook", response_model=dict, 
+    responses={200: {"description": "Payment webhook received successfully"}})
 async def payment_webhook():
     return {"status": "success"}

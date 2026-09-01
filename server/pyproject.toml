@@ -19,10 +19,11 @@ dependencies = [
     "aiomysql>=0.3.2",
     "cryptography>=50.0.0",
     "qrcode[pil]>=8.2",
+    "httpx>=0.28.1",
 ]
 
 [tool.ruff]
-exclude = ["migrations"]
+exclude = ["migrations", "alembic"]
 
 [tool.ruff.lint]
 # Enable Pyflakes (F), Isort (I), and FastAPI-friendly rules
