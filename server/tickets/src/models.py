@@ -8,12 +8,12 @@ from sqlalchemy import (
     ForeignKey,
     Integer,
     String,
-
     text,
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .database import Base
+
 
 class Ticket(Base):
     __tablename__ = "tickets"
