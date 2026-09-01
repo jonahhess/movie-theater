@@ -16,6 +16,7 @@ from tickets.src.models import Ticket
 from tickets.src.redis_client import get_redis
 from tickets.src.redis_seats import (
     acquire_seats,
+    close_screening_sale,
     extend_seat_hold,
     get_user_held_seats,
     release_all_seats,
@@ -99,6 +100,22 @@ async def open_screening_sale(
         "status": "ok",
         "screening_id": screening_id,
         "seat_count": len(payload.seat_ids),
+    }
+
+
+@router.post(
+    "/internal/screenings/{screening_id}/sale/close",
+    dependencies=[Depends(require_internal_service)],
+)
+async def close_screening_sale_endpoint(
+    screening_id: int,
+    redis: Redis = redis_dependency,
+):
+    deleted_count = await close_screening_sale(redis, str(screening_id))
+    return {
+        "status": "ok",
+        "screening_id": screening_id,
+        "deleted_count": deleted_count,
     }
 
 @router.get("/screenings/{screening_id}/availability/stream", 
