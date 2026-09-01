@@ -65,15 +65,22 @@ async def update_screening(
 
 @router.post("/{screening_id}/sale/open", response_model=ScreeningResponse)
 async def open_screening_sale(screening_id: int, db: AsyncSession = db_dependency):
-    screening = await db.scalar(select(Screening).where(Screening.id == screening_id))
-
-    if screening is None:
-        raise NotFoundError("Screening", screening_id)
 
     if not INTERNAL_SERVICE_TOKEN:
         raise HTTPException(
             status_code=503,
             detail="Internal service token is not configured",
+        )
+
+    screening = await db.scalar(select(Screening).where(Screening.id == screening_id))
+
+    if screening is None:
+        raise NotFoundError("Screening", screening_id)
+
+    if screening.status == "on_sale":
+        raise HTTPException(
+            status_code=409,
+            detail="Screening sale is already open",
         )
 
     screening_seats = (
@@ -128,6 +135,47 @@ async def open_screening_sale(screening_id: int, db: AsyncSession = db_dependenc
         ) from err
 
     screening.status = "on_sale"
+    await db.commit()
+    await db.refresh(screening)
+    return screening
+
+
+@router.post("/{screening_id}/sale/close", response_model=ScreeningResponse)
+async def close_screening_sale(screening_id: int, db: AsyncSession = db_dependency):
+
+    if not INTERNAL_SERVICE_TOKEN:
+        raise HTTPException(
+            status_code=503,
+            detail="Internal service token is not configured",
+        )
+
+    screening = await db.scalar(select(Screening).where(Screening.id == screening_id))
+
+    if screening is None:
+        raise NotFoundError("Screening", screening_id)
+
+    if screening.status != "on_sale":
+        raise HTTPException(
+            status_code=409,
+            detail="Screening sale is not open",
+        )
+
+    try:
+        async with httpx.AsyncClient(base_url=TICKETS_BASE_URL) as client:
+            response = await client.post(
+                f"/internal/screenings/{screening_id}/sale/close",
+                headers={"X-Internal-Service-Token": INTERNAL_SERVICE_TOKEN},
+                timeout=5.0,
+            )
+            response.raise_for_status()
+    except httpx.HTTPError as err:
+        await db.rollback()
+        raise HTTPException(
+            status_code=502,
+            detail="Tickets service failed to close screening sale",
+        ) from err
+
+    screening.status = "past"
     await db.commit()
     await db.refresh(screening)
     return screening
