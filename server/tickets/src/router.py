@@ -3,7 +3,7 @@ import io
 import uuid
 
 import qrcode
-from fastapi import APIRouter, Depends, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.responses import StreamingResponse
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -17,6 +17,7 @@ from tickets.src.redis_seats import (
     get_user_held_seats,
     release_all_seats,
     reserve_seat,
+    seat_exists,
     stream_sse_events,
 )
 
@@ -81,11 +82,17 @@ async def view_selected_seats(screening_id: int, user_uuid: str = user_uuid_depe
 @router.post("/screenings/{screening_id}/seats/{seat_id}/hold", response_model=bool)
 async def hold_seat(
     screening_id: int,
-    seat_id: int,
+    seat_id: str,
     redis: Redis = redis_dependency,
     user_uuid: str = user_uuid_dependency,):
 
-    success = await reserve_seat(redis, str(screening_id), str(seat_id), user_uuid)
+    if not await seat_exists(redis, str(screening_id), seat_id):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Seat does not exist for this screening",
+        )
+
+    success = await reserve_seat(redis, str(screening_id), seat_id, user_uuid)
     return success
 
 
