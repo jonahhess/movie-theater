@@ -176,6 +176,9 @@ def test_reserve_seat_sets_temporary_lock_and_rejects_duplicate_holder():
         assert second_attempt is False
         assert await redis.get("screening:10::A1") == "user-1"
         assert await redis.ttl("screening:10::A1") == 60
+        assert redis.streams == {
+            "stream:screening:10": [("1-0", {"seat_id": "A1", "status": "locked"})]
+        }
 
     run(scenario())
 
@@ -185,11 +188,21 @@ def test_release_seat_only_deletes_matching_user_lock():
         redis = FakeRedis()
         await redis.set("screening:10::A1", "user-1", ex=60)
 
-        await redis_seats.release_seat(redis, "10", "A1", "user-2")
+        released_by_other_user = await redis_seats.release_seat(
+            redis, "10", "A1", "user-2"
+        )
+        assert released_by_other_user is False
         assert await redis.get("screening:10::A1") == "user-1"
+        assert redis.streams == {}
 
-        await redis_seats.release_seat(redis, "10", "A1", "user-1")
+        released_by_owner = await redis_seats.release_seat(redis, "10", "A1", "user-1")
+        assert released_by_owner is True
         assert await redis.get("screening:10::A1") is None
+        assert redis.streams == {
+            "stream:screening:10": [
+                ("1-0", {"seat_id": "A1", "status": "available"})
+            ]
+        }
 
     run(scenario())
 
@@ -241,6 +254,12 @@ def test_acquire_seats_persists_owned_locks():
         assert await redis.ttl("screening:10::A1") == -1
         assert await redis.ttl("screening:10::A2") == -1
         assert await redis.ttl("screening:10::A3") == 60
+        assert redis.streams == {
+            "stream:screening:10": [
+                ("1-0", {"seat_id": "A1", "status": "purchased"}),
+                ("1-0", {"seat_id": "A2", "status": "purchased"}),
+            ]
+        }
 
     run(scenario())
 
@@ -258,6 +277,12 @@ def test_release_all_seats_deletes_only_matching_user_locks():
         assert await redis.get("screening:10::A1") is None
         assert await redis.get("screening:10::A2") is None
         assert await redis.get("screening:10::A3") == "user-2"
+        assert redis.streams == {
+            "stream:screening:10": [
+                ("1-0", {"seat_id": "A1", "status": "available"}),
+                ("1-0", {"seat_id": "A2", "status": "available"}),
+            ]
+        }
 
     run(scenario())
 
