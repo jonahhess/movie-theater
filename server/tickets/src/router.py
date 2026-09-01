@@ -1,10 +1,13 @@
 import asyncio
 import io
+import os
 import uuid
+from hmac import compare_digest
 
 import qrcode
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response, status
 from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -19,11 +22,33 @@ from tickets.src.redis_seats import (
     reserve_seat,
     seat_exists,
     stream_sse_events,
+    warm_screening_seats,
 )
 
 router = APIRouter()
 db_dependency = Depends(get_admin_db)
 redis_dependency = Depends(get_redis)
+INTERNAL_SERVICE_TOKEN = os.getenv("INTERNAL_SERVICE_TOKEN")
+
+
+class OpenScreeningSaleRequest(BaseModel):
+    seat_ids: list[str]
+
+
+def require_internal_service(
+    x_internal_service_token: str | None = Header(default=None),
+) -> None:
+    if not INTERNAL_SERVICE_TOKEN:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Internal service token is not configured",
+        )
+
+    if not x_internal_service_token or not compare_digest(
+        x_internal_service_token,
+        INTERNAL_SERVICE_TOKEN,
+    ):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
 
 # assign uuid in http cookie
 async def get_or_create_user_uuid(request: Request, response: Response) -> str:
@@ -58,6 +83,23 @@ user_uuid_dependency: str = Depends(get_or_create_user_uuid)
 @router.get("/")
 async def tickets_welcome():
     return {"message": "Hello from tickets's isolated router endpoint!", "data": []}
+
+
+@router.post(
+    "/internal/screenings/{screening_id}/sale/open",
+    dependencies=[Depends(require_internal_service)],
+)
+async def open_screening_sale(
+    screening_id: int,
+    payload: OpenScreeningSaleRequest,
+    redis: Redis = redis_dependency,
+):
+    await warm_screening_seats(redis, str(screening_id), payload.seat_ids)
+    return {
+        "status": "ok",
+        "screening_id": screening_id,
+        "seat_count": len(payload.seat_ids),
+    }
 
 @router.get("/screenings/{screening_id}/availability/stream", 
             response_class=StreamingResponse)
