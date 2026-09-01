@@ -7,6 +7,39 @@ from redis.exceptions import RedisError
 
 # --- PURPOSE 1: HIGH CONTENTION SEAT RESERVATION (SET NX EX) ---
 
+def _seat_id_from_key(key: str) -> str:
+    return key.rsplit("::", maxsplit=1)[-1]
+
+
+async def _get_user_seat_keys(
+    redis: Redis,
+    screening_id: str,
+    user_uuid: str,
+    temporary_only: bool = False,
+) -> list[str]:
+    pattern = f"screening:{screening_id}::*"
+    keys: list[str] = [key async for key in redis.scan_iter(match=pattern, count=500)]
+    if not keys:
+        return []
+
+    async with redis.pipeline(transaction=False) as pipe:
+        for key in keys:
+            pipe.get(key)
+            if temporary_only:
+                pipe.ttl(key)
+        pipeline_results = await pipe.execute()
+
+    user_keys = []
+    step = 2 if temporary_only else 1
+    for index, key in enumerate(keys):
+        stored_user = pipeline_results[index * step]
+        ttl = pipeline_results[(index * step) + 1] if temporary_only else None
+        if stored_user == user_uuid and (ttl is None or ttl > 0):
+            user_keys.append(key)
+
+    return user_keys
+
+
 async def reserve_seat(redis: Redis, screening_id:str, seat_id: str, user_uuid: str,
                        lock_ttl_seconds: int = 600, 
                        ) -> bool:
@@ -19,6 +52,9 @@ async def reserve_seat(redis: Redis, screening_id:str, seat_id: str, user_uuid: 
     # ex=lock_ttl_seconds ensures the reservation expires if they don't check out
 
     success = await redis.set(key, user_uuid, nx=True, ex=lock_ttl_seconds)
+    if success:
+        await publish_seat_update(redis, screening_id, seat_id, "locked")
+
     return bool(success)
 
 async def release_seat(
@@ -26,11 +62,15 @@ async def release_seat(
     screening_id: str,
     seat_id: str,
     user_uuid: str,
-) -> None:
+) -> bool:
     """Removes the seat reservation explicitly (e.g., if checkout fails)."""
     # delex executes a conditional delete operation using Redis's CAD.
     # It safely deletes a seat reservation only if it belongs to the specified user.
-    await redis.delex(f"screening:{screening_id}::{seat_id}", ifeq=user_uuid)
+    deleted = await redis.delex(f"screening:{screening_id}::{seat_id}", ifeq=user_uuid)
+    if deleted:
+        await publish_seat_update(redis, screening_id, seat_id, "available")
+
+    return bool(deleted)
 
 # Optimized Lua script that handles multiple specific keys at once
 EXTEND_SEATS_SCRIPT = """
@@ -125,6 +165,13 @@ async def acquire_seats(redis: Redis, screening_id: str, user_uuid: str) -> bool
     if not keys:
         return False
 
+    purchased_keys = await _get_user_seat_keys(
+        redis,
+        screening_id,
+        user_uuid,
+        temporary_only=True,
+    )
+
     try:
         # 2. Execute everything in a single atomic batch trip to Redis
         # Pass all keys as a list, and user_uuid as the single ARGV argument
@@ -136,7 +183,17 @@ async def acquire_seats(redis: Redis, screening_id: str, user_uuid: str) -> bool
         )
         
         # Returns True only if owned keys were successfully finalized
-        return owned > 0 and finalized == owned
+        success = owned > 0 and finalized == owned
+        if success:
+            for key in purchased_keys:
+                await publish_seat_update(
+                    redis,
+                    screening_id,
+                    _seat_id_from_key(key),
+                    "purchased",
+                )
+
+        return success
 
     except RedisError as e:
         # Log or handle engine execution exceptions
@@ -176,6 +233,8 @@ async def release_all_seats(
     if not keys:
         return 0
 
+    releasable_keys = await _get_user_seat_keys(redis, screening_id, user_uuid)
+
     try:
         # 2. Run the atomic conditional delete loop inside Redis
         deleted_count = await redis.eval(
@@ -184,6 +243,14 @@ async def release_all_seats(
             *keys, 
             user_uuid
         )
+        for key in releasable_keys[:int(deleted_count)]:
+            await publish_seat_update(
+                redis,
+                screening_id,
+                _seat_id_from_key(key),
+                "available",
+            )
+
         return int(deleted_count)
         
     except RedisError as e:
