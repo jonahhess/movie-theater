@@ -4,13 +4,12 @@ from typing import Any
 
 from redis.asyncio import Redis
 from redis.exceptions import RedisError
-from server.tickets.src import redis_client
 
 # --- PURPOSE 1: HIGH CONTENTION SEAT RESERVATION (SET NX EX) ---
 
-async def reserve_seat(screening_id:str, seat_id: str, user_uuid: str, 
+async def reserve_seat(redis: Redis, screening_id:str, seat_id: str, user_uuid: str,
                        lock_ttl_seconds: int = 600, 
-                       redis: Redis = redis_client) -> bool:
+                       ) -> bool:
     """
     Attempts to reserve a specific seat atomically.
     Returns True if the reservation succeeded, False if already reserved.
@@ -18,11 +17,16 @@ async def reserve_seat(screening_id:str, seat_id: str, user_uuid: str,
     key = f"screening:{screening_id}::{seat_id}"
     # nx=True makes it atomic (SET if Not Exists)
     # ex=lock_ttl_seconds ensures the reservation expires if they don't check out
+
     success = await redis.set(key, user_uuid, nx=True, ex=lock_ttl_seconds)
     return bool(success)
 
-async def release_seat(screening_id:str, seat_id: str, user_uuid: str, 
-                       redis: Redis = redis_client) -> None:
+async def release_seat(
+    redis: Redis,
+    screening_id: str,
+    seat_id: str,
+    user_uuid: str,
+) -> None:
     """Removes the seat reservation explicitly (e.g., if checkout fails)."""
     # delex executes a conditional delete operation using Redis's CAD.
     # It safely deletes a seat reservation only if it belongs to the specified user.
@@ -48,9 +52,9 @@ return extended_count
 """
 
 async def extend_seat_hold(
+    redis: Redis,
     screening_id: str, 
     user_uuid: str, 
-    redis: Redis,  # Use the injected dependency client passed here
     ttl_seconds: int = 300
 ) -> bool:
     """
@@ -109,7 +113,7 @@ end
 return {owned_count, finalized_count}
 """
 
-async def acquire_seats(screening_id: str, user_uuid: str, redis: Redis) -> bool:
+async def acquire_seats(redis: Redis, screening_id: str, user_uuid: str) -> bool:
     """
     If payment goes through, call this function to persist ownership of all tickets 
         reserved under user_uuid which have expiration.
@@ -143,7 +147,7 @@ async def acquire_seats(screening_id: str, user_uuid: str, redis: Redis) -> bool
 # Lua script to atomically delete multiple keys if they match the user_uuid
 RELEASE_ALL_SCRIPT = """
 local deleted_count = 0
-local target_user = ARGV
+local target_user = ARGV[1]
 
 for i, key in ipairs(KEYS) do
     local current = redis.call('GET', key)
@@ -157,9 +161,9 @@ return deleted_count
 """
 
 async def release_all_seats(
+        redis: Redis,
     screening_id: str, 
     user_uuid: str, 
-    redis: Redis
 ) -> int:
     """
     Removes all temporary seat reservations belonging to a specific user.
@@ -189,8 +193,12 @@ async def release_all_seats(
 
 # --- PURPOSE 2: CACHE WARMING ---
 
-async def warm_screening_cache(hash_key: str, screening_data: dict[str, Any], 
-        ttl_seconds: int | None = None, redis: Redis = redis_client) -> None:
+async def warm_screening_cache(
+    redis: Redis,
+    hash_key: str,
+    screening_data: dict[str, Any],
+    ttl_seconds: int | None = None,
+) -> None:
     """Pre-populates basic screening details into a Hash structure."""
     clean_data = {k: str(v) for k, v in screening_data.items()}
     async with redis.pipeline(transaction=True) as pipe:
@@ -200,8 +208,11 @@ async def warm_screening_cache(hash_key: str, screening_data: dict[str, Any],
         await pipe.execute()
 
 
-async def clear_cache_by_prefix(screening_id: str, batch_size: int = 500, 
-                                redis: Redis = redis_client) -> int:
+async def clear_cache_by_prefix(
+    redis: Redis,
+    screening_id: str,
+    batch_size: int = 500,
+) -> int:
     """
     Deletes all Redis keys that start with the given prefix.
     Returns the number of deleted keys.
@@ -225,9 +236,9 @@ async def clear_cache_by_prefix(screening_id: str, batch_size: int = 500,
     return int(deleted_total)
 
 async def get_user_held_seats(
-    screening_id: str, 
-    user_uuid: str, 
-    redis: Redis
+        redis: Redis,
+    screening_id: str,
+    user_uuid: str,
 ) -> list[str]:
     """
     Finds all keys matching the screening ID that are currently held 
@@ -262,8 +273,12 @@ async def get_user_held_seats(
     return user_held_keys
 
 # 2. PUSH AN UPDATE TO THE STREAM (The Event Layer)
-async def publish_seat_update(screening_id: str, seat_id: str, status: str, 
-                              redis: Redis = redis_client) -> None:
+async def publish_seat_update(
+    redis: Redis,
+    screening_id: str,
+    seat_id: str,
+    status: str,
+) -> None:
     """Pushes a seat status change into the Redis Stream."""
     stream_key = f"stream:screening:{screening_id}"
     screening_data = {
@@ -281,8 +296,8 @@ async def publish_seat_update(screening_id: str, seat_id: str, status: str,
 
 # 3. READ NEW MESSAGES FROM THE STREAM (The Listening Layer)
 async def listen_to_stream(
-    screening_id: str,
     redis: Redis,
+    screening_id: str,
     last_id: str = "$",
     block_ms: int = 5000,
 ):
@@ -311,9 +326,9 @@ async def listen_to_stream(
                 yield msg_id, data
 
 
-async def stream_sse_events(screening_id: str, redis: Redis, last_event_id: str = "$"):
+async def stream_sse_events(redis: Redis, screening_id: str, last_event_id: str = "$"):
     """Convert Redis stream messages into SSE-formatted chunks."""
-    async for msg_id, data in listen_to_stream(screening_id=screening_id, 
-                                redis=redis, last_id=last_event_id):
+    async for msg_id, data in listen_to_stream(redis=redis, screening_id=screening_id, 
+                                last_id=last_event_id):
         payload = {"id": msg_id, **data}
         yield f"id: {msg_id}\nevent: seat_update\ndata: {json.dumps(payload)}\n\n"
