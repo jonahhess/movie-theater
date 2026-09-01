@@ -15,11 +15,8 @@ from sqlalchemy import (
     String,
     Text,
     Uuid,
-    func,
-    select,
     text,
 )
-from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, foreign, mapped_column, relationship
 
 from admin.src.database import Base
