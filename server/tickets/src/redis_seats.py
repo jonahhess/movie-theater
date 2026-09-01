@@ -7,8 +7,47 @@ from redis.exceptions import RedisError
 
 # --- PURPOSE 1: HIGH CONTENTION SEAT RESERVATION (SET NX EX) ---
 
+def _seat_map_key(screening_id: str) -> str:
+    return f"screening:{screening_id}:seat_map"
+
+
 def _seat_id_from_key(key: str) -> str:
     return key.rsplit("::", maxsplit=1)[-1]
+
+
+def _parse_seat_key(key: str) -> tuple[str, str] | None:
+    prefix = "screening:"
+    separator = "::"
+
+    if not key.startswith(prefix) or separator not in key:
+        return None
+
+    screening_id, seat_id = key[len(prefix):].split(separator, maxsplit=1)
+    if not screening_id or not seat_id:
+        return None
+
+    return screening_id, seat_id
+
+
+async def warm_screening_seats(
+    redis: Redis,
+    screening_id: str,
+    seat_ids: list[str],
+) -> None:
+    """Load the known auditorium seats for a screening into Redis."""
+    if not seat_ids:
+        raise ValueError("seat_ids must contain at least one seat")
+
+    seat_map = {seat_id: "available" for seat_id in seat_ids}
+    async with redis.pipeline(transaction=True) as pipe:
+        pipe.delete(_seat_map_key(screening_id))
+        pipe.hset(_seat_map_key(screening_id), mapping=seat_map)
+        await pipe.execute()
+
+
+async def seat_exists(redis: Redis, screening_id: str, seat_id: str) -> bool:
+    """Return whether a seat is part of the screening's warmed seat map."""
+    return bool(await redis.hexists(_seat_map_key(screening_id), seat_id))
 
 
 async def _get_user_seat_keys(
@@ -40,9 +79,13 @@ async def _get_user_seat_keys(
     return user_keys
 
 
-async def reserve_seat(redis: Redis, screening_id:str, seat_id: str, user_uuid: str,
-                       lock_ttl_seconds: int = 600, 
-                       ) -> bool:
+async def reserve_seat(
+    redis: Redis,
+    screening_id: str,
+    seat_id: str,
+    user_uuid: str,
+    lock_ttl_seconds: int = 600,
+) -> bool:
     """
     Attempts to reserve a specific seat atomically.
     Returns True if the reservation succeeded, False if already reserved.
@@ -360,6 +403,31 @@ async def publish_seat_update(
         maxlen=10_000,
         approximate=True,
     )
+
+
+async def listen_for_expired_seat_holds(redis: Redis) -> None:
+    pubsub = redis.pubsub()
+    channel = "__keyevent@0__:expired"
+    await pubsub.subscribe(channel)
+
+    try:
+        async for message in pubsub.listen():
+            if message.get("type") != "message":
+                continue
+
+            expired_key = message.get("data")
+            if not isinstance(expired_key, str):
+                continue
+
+            parsed = _parse_seat_key(expired_key)
+            if parsed is None:
+                continue
+
+            screening_id, seat_id = parsed
+            await publish_seat_update(redis, screening_id, seat_id, "available")
+    finally:
+        await pubsub.unsubscribe(channel)
+        await pubsub.aclose()
 
 # 3. READ NEW MESSAGES FROM THE STREAM (The Listening Layer)
 async def listen_to_stream(
