@@ -395,6 +395,23 @@ def test_clear_cache_by_prefix_deletes_matching_keys_in_batches():
     run(scenario())
 
 
+def test_close_screening_sale_removes_cached_seat_state():
+    async def scenario():
+        redis = FakeRedis()
+        await redis.hset("screening:10:seat_map", mapping={"A1": "available"})
+        await redis.set("screening:10::A1", "user-1", ex=60)
+        await redis.set("screening:11::A1", "user-1", ex=60)
+
+        deleted = await redis_seats.close_screening_sale(redis, "10")
+
+        assert deleted == 2
+        assert await redis.hgetall("screening:10:seat_map") == {}
+        assert await redis.get("screening:10::A1") is None
+        assert await redis.get("screening:11::A1") == "user-1"
+
+    run(scenario())
+
+
 def test_clear_cache_by_prefix_requires_screening_id():
     async def scenario():
         redis = FakeRedis()
