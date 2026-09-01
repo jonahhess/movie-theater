@@ -78,7 +78,8 @@ async def browse_movies(
     )
 
 
-@router.get("/movies/{movie_id}", response_model=MovieResponse, responses={404: {"description": "Movie not found"}})
+@router.get("/movies/{movie_id}", response_model=MovieResponse, 
+            responses={404: {"description": "Movie not found"}})
 async def movie_details(movie_id: int, db: AsyncSession = db_dependency):
     movie = await db.scalar(select(MovieView).where(MovieView.id == movie_id))
 
@@ -93,9 +94,11 @@ async def movie_details(movie_id: int, db: AsyncSession = db_dependency):
 @router.get("/screenings", response_model=ScreeningsListResponse)
 async def browse_screenings(
     movie_id: Annotated[int | None, Query()] = None,
-    start_date: Annotated[date | None,  Query(), BeforeValidator(lambda v: None if v == "null" else v),
+    start_date: Annotated[date | None,  Query(), 
+                          BeforeValidator(lambda v: None if v == "null" else v),
 ] = None,
-    end_date: Annotated[date | None, Query(), BeforeValidator(lambda v: None if v == "null" else v),
+    end_date: Annotated[date | None, Query(), 
+                        BeforeValidator(lambda v: None if v == "null" else v),
 ] = None,
     limit: Annotated[int, Query(ge=1, le=100)] = 20,
     offset: Annotated[int, Query(ge=0, le=100)] = 0,
@@ -106,7 +109,8 @@ async def browse_screenings(
     list_stmt = (
         select(ScreeningView)
         .options(selectinload(ScreeningView.auditorium))
-        .order_by(ScreeningView.start_time.asc(), ScreeningView.id.asc())
+        .order_by(ScreeningView.start_time.asc(), 
+                  ScreeningView.id.asc())
         .offset(offset)
         .limit(limit)
     )
@@ -144,7 +148,8 @@ async def browse_screenings(
     )
 
 
-@router.get("/screenings/{screening_id}", response_model=ScreeningResponse, responses={404: {"description": "Screening not found"}})
+@router.get("/screenings/{screening_id}", response_model=ScreeningResponse, 
+            responses={404: {"description": "Screening not found"}})
 async def screening_details(screening_id: int, db: AsyncSession = db_dependency):
     screening = await db.scalar(
         select(ScreeningView)
