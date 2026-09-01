@@ -34,6 +34,9 @@ class FakePipeline:
     def hset(self, key, mapping):
         self.commands.append(("hset", key, mapping))
 
+    def delete(self, *keys):
+        self.commands.append(("delete", keys))
+
     def expire(self, key, ttl_seconds):
         self.commands.append(("expire", key, ttl_seconds))
 
@@ -47,9 +50,32 @@ class FakePipeline:
                     results.append(await self.redis.get(key))
                 case ("hset", key, mapping):
                     results.append(await self.redis.hset(key, mapping=mapping))
+                case ("delete", keys):
+                    results.append(await self.redis.delete(*keys))
                 case ("expire", key, ttl_seconds):
                     results.append(await self.redis.expire(key, ttl_seconds))
         return results
+
+
+class FakePubSub:
+    def __init__(self, messages):
+        self.messages = messages
+        self.subscribed_channels = []
+        self.unsubscribed_channels = []
+        self.closed = False
+
+    async def subscribe(self, channel):
+        self.subscribed_channels.append(channel)
+
+    async def unsubscribe(self, channel):
+        self.unsubscribed_channels.append(channel)
+
+    async def aclose(self):
+        self.closed = True
+
+    async def listen(self):
+        for message in self.messages:
+            yield message
 
 
 class FakeRedis:
@@ -57,6 +83,8 @@ class FakeRedis:
         self.values = {}
         self.ttls = {}
         self.streams = {}
+        self.pubsub_messages = []
+        self.pubsub_instance = None
 
     async def set(self, key, value, nx=False, ex=None):
         if nx and key in self.values:
@@ -94,6 +122,9 @@ class FakeRedis:
     async def hgetall(self, key):
         return self.values.get(key, {})
 
+    async def hexists(self, key, field):
+        return int(field in self.values.get(key, {}))
+
     async def delete(self, *keys):
         deleted = 0
         for key in keys:
@@ -110,6 +141,10 @@ class FakeRedis:
 
     def pipeline(self, transaction=True):
         return FakePipeline(self)
+
+    def pubsub(self):
+        self.pubsub_instance = FakePubSub(self.pubsub_messages)
+        return self.pubsub_instance
 
     async def eval(self, script, number_of_keys, *args):
         keys = args[:number_of_keys]
@@ -291,6 +326,38 @@ def test_release_all_lua_script_reads_first_argument_as_target_user():
     assert "local target_user = ARGV[1]" in redis_seats.RELEASE_ALL_SCRIPT
 
 
+def test_warm_screening_seats_loads_valid_seats_for_screening():
+    async def scenario():
+        redis = FakeRedis()
+        await redis.hset(
+            "screening:10:seat_map",
+            mapping={"OLD": "available"},
+        )
+
+        await redis_seats.warm_screening_seats(redis, "10", ["A1", "A2", "B1"])
+
+        assert await redis.hgetall("screening:10:seat_map") == {
+            "A1": "available",
+            "A2": "available",
+            "B1": "available",
+        }
+        assert await redis_seats.seat_exists(redis, "10", "A1") is True
+        assert await redis_seats.seat_exists(redis, "10", "OLD") is False
+        assert await redis_seats.seat_exists(redis, "10", "Z9") is False
+
+    run(scenario())
+
+
+def test_warm_screening_seats_requires_at_least_one_seat():
+    async def scenario():
+        redis = FakeRedis()
+
+        with pytest.raises(ValueError, match="seat_ids"):
+            await redis_seats.warm_screening_seats(redis, "10", [])
+
+    run(scenario())
+
+
 def test_warm_screening_cache_stores_strings_and_optional_ttl():
     async def scenario():
         redis = FakeRedis()
@@ -347,6 +414,34 @@ def test_publish_seat_update_adds_stream_message():
         assert redis.streams == {
             "stream:screening:10": [("1-0", {"seat_id": "A1", "status": "locked"})]
         }
+
+    run(scenario())
+
+
+def test_expired_seat_listener_publishes_available_update_for_seat_keys():
+    async def scenario():
+        redis = FakeRedis()
+        redis.pubsub_messages = [
+            {"type": "subscribe", "data": "__keyevent@0__:expired"},
+            {"type": "message", "data": "screening:10::A1"},
+            {"type": "message", "data": "screening:10:seat_map"},
+            {"type": "message", "data": "other:10::A2"},
+        ]
+
+        await redis_seats.listen_for_expired_seat_holds(redis)
+
+        assert redis.streams == {
+            "stream:screening:10": [
+                ("1-0", {"seat_id": "A1", "status": "available"})
+            ]
+        }
+        assert redis.pubsub_instance.subscribed_channels == [
+            "__keyevent@0__:expired"
+        ]
+        assert redis.pubsub_instance.unsubscribed_channels == [
+            "__keyevent@0__:expired"
+        ]
+        assert redis.pubsub_instance.closed is True
 
     run(scenario())
 
