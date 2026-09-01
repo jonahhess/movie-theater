@@ -64,7 +64,7 @@ async def stream_seat_availability(
     screening_id: int, last_event_id: str = "$", redis: Redis = redis_dependency
 ) -> StreamingResponse:
     return StreamingResponse(
-        stream_sse_events(str(screening_id), redis),
+        stream_sse_events(redis, str(screening_id), last_event_id=last_event_id),
         last_event_id=last_event_id,
         media_type="text/event-stream",
     )
@@ -73,7 +73,7 @@ async def stream_seat_availability(
 @router.get("/screenings/{screening_id}/seats", response_model=list[str])
 async def view_selected_seats(screening_id: int, user_uuid: str = user_uuid_dependency, 
                               redis: Redis = redis_dependency):
-    my_held_seats = await get_user_held_seats(str(screening_id), user_uuid, redis)
+    my_held_seats = await get_user_held_seats(redis, str(screening_id), user_uuid)
 
     return my_held_seats
 
@@ -85,14 +85,14 @@ async def hold_seat(
     redis: Redis = redis_dependency,
     user_uuid: str = user_uuid_dependency,):
 
-    success = await reserve_seat(str(screening_id), str(seat_id), user_uuid, redis)
+    success = await reserve_seat(redis, str(screening_id), str(seat_id), user_uuid)
     return success
 
 
 @router.post("/screenings/{screening_id}/seats/checkout", response_model=bool)
 async def checkout_seats(screening_id: int, redis: Redis = redis_dependency, 
                          user_uuid: str = user_uuid_dependency):
-    success = await extend_seat_hold(str(screening_id), user_uuid, redis)
+    success = await extend_seat_hold(redis, str(screening_id), user_uuid)
 
     return success
 
@@ -102,7 +102,7 @@ async def get_checkout(
     user_uuid: str = user_uuid_dependency,
     redis: Redis = redis_dependency):
     # Retrieve the held seats for the user
-    held_seats = await get_user_held_seats(str(screening_id), user_uuid, redis)
+    held_seats = await get_user_held_seats(redis, str(screening_id), user_uuid)
     return held_seats
 
 
@@ -117,11 +117,11 @@ async def make_payment(
     contact_info: dict = None):  # Expecting dictionary with 'email' and 'phone' keys):
 
     # For demonstration, we'll assume payment is always successful
-    success = await acquire_seats(str(screening_id), user_uuid, redis)
+    success = await acquire_seats(redis, str(screening_id), user_uuid)
 
     # update the database with the payment info and finalize the checkout
     if success:
-        held_seats = await get_user_held_seats(str(screening_id), user_uuid, redis)
+        held_seats = await get_user_held_seats(redis, str(screening_id), user_uuid)
         tickets_to_add = []
         for seat_id in held_seats:
             ticket = Ticket(
@@ -146,7 +146,7 @@ async def cancel_checkout(
     redis: Redis = redis_dependency):
 
     # Cancel the checkout and release held seats
-    success = await release_all_seats(str(screening_id), user_uuid, redis)
+    success = await release_all_seats(redis, str(screening_id), user_uuid)
     return success
 
 @router.get("/qrcode/{receipt_number}", response_class=StreamingResponse)
