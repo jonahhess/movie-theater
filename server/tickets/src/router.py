@@ -126,10 +126,7 @@ async def login(
     )
 
 @router.post("/logout")
-async def logout(request: Request, response: Response, redis: Redis = redis_dependency):
-    user_uuid = request.cookies.get("user_uuid")
-    if user_uuid:
-        await release_all_seats(redis, "*", user_uuid)
+async def logout(response: Response):
     response.delete_cookie("user_uuid")
     return {"message": "Logged out successfully"}
 
