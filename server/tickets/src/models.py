@@ -56,3 +56,15 @@ class Ticket(Base):
         nullable=False,
         server_default=text("CURRENT_TIMESTAMP"),
     )
+
+class Screening(Base):
+    __tablename__ = "screenings"
+    __table_args__ = {"extend_existing": True}
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    start_time: Mapped[datetime] = mapped_column(DateTime, index=True, nullable=False)
+    status: Mapped[str] = mapped_column(
+        Enum("draft","on_sale","past", "cancelled", name="screening_status_enum"),
+        server_default="draft",
+        nullable=False,
+    )
