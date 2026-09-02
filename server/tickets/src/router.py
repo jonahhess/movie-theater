@@ -1,19 +1,14 @@
 import asyncio
-import io
-import os
+from tickets.src.token import require_internal_service
 import uuid
-from hmac import compare_digest
-
-import qrcode
-from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
 from redis.asyncio import Redis
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tickets.src.database import get_admin_db
-from tickets.src.models import Ticket, User
+from tickets.src.models import Ticket, User, Screening
 from tickets.src.redis_client import get_redis
 from tickets.src.redis_seats import (
     acquire_seats,
@@ -27,32 +22,12 @@ from tickets.src.redis_seats import (
     stream_sse_events,
     warm_screening_seats,
 )
-from tickets.src.schemas import LoginRequest, LoginResponse
+from tickets.src.schemas import LoginRequest, LoginResponse, OpenScreeningSaleRequest
+from tickets.src.receipts import get_qr_code
 
 router = APIRouter()
 db_dependency = Depends(get_admin_db)
-redis_dependency = Depends(get_redis)
-INTERNAL_SERVICE_TOKEN = os.getenv("INTERNAL_SERVICE_TOKEN")
-
-
-class OpenScreeningSaleRequest(BaseModel):
-    seat_ids: list[str]
-
-
-def require_internal_service(
-    x_internal_service_token: str | None = Header(default=None),
-) -> None:
-    if not INTERNAL_SERVICE_TOKEN:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Internal service token is not configured",
-        )
-
-    if not x_internal_service_token or not compare_digest(
-        x_internal_service_token,
-        INTERNAL_SERVICE_TOKEN,
-    ):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
+redis_dependency = Depends(get_redis)    
 
 # assign uuid in http cookie
 async def get_or_create_user_uuid(request: Request, response: Response) -> str:
@@ -139,38 +114,6 @@ async def release_seats_endpoint(
         await release_all_seats(redis, "*", user_uuid)
         await logout(response)
         return True
-
-@router.post(
-    "/internal/screenings/{screening_id}/sale/open",
-    dependencies=[Depends(require_internal_service)],
-)
-async def open_screening_sale(
-    screening_id: int,
-    payload: OpenScreeningSaleRequest,
-    redis: Redis = redis_dependency,
-):
-    await warm_screening_seats(redis, str(screening_id), payload.seat_ids)
-    return {
-        "status": "ok",
-        "screening_id": screening_id,
-        "seat_count": len(payload.seat_ids),
-    }
-
-
-@router.post(
-    "/internal/screenings/{screening_id}/sale/close",
-    dependencies=[Depends(require_internal_service)],
-)
-async def close_screening_sale_endpoint(
-    screening_id: int,
-    redis: Redis = redis_dependency,
-):
-    deleted_count = await close_screening_sale(redis, str(screening_id))
-    return {
-        "status": "ok",
-        "screening_id": screening_id,
-        "deleted_count": deleted_count,
-    }
 
 @router.get("/screenings/{screening_id}/availability/stream", 
             response_class=StreamingResponse)
@@ -269,20 +212,76 @@ async def cancel_checkout(
     success = await release_all_seats(redis, str(screening_id), user_uuid)
     return success
 
-@router.get("/qrcode/{receipt_number}", response_class=StreamingResponse)
-def get_qr_code(receipt_number: str):
-    # Create QR code image from the string
-    img = qrcode.make(receipt_number)
-    
-    # Save image to a memory buffer
-    buf = io.BytesIO()
-    img.save(buf, format="PNG")
-    buf.seek(0)
-    
-    # Return stream as an image response
-    return StreamingResponse(buf, media_type="image/png")
+@router.get("/qrcode", response_class=StreamingResponse)
+async def get_qr(token: str):
+    return await get_qr_code(token)
 
-@router.post("/payments/webhook", response_model=dict, 
+
+protected_router = APIRouter(dependencies=[Depends(require_internal_service)])
+
+@protected_router.post(
+    "/internal/screenings/{screening_id}/sale/open",
+)
+async def open_screening_sale(
+    screening_id: int,
+    payload: OpenScreeningSaleRequest,
+    redis: Redis = redis_dependency,
+):
+    await warm_screening_seats(redis, str(screening_id), payload.seat_ids)
+    return {
+        "status": "ok",
+        "screening_id": screening_id,
+        "seat_count": len(payload.seat_ids),
+    }
+
+
+@protected_router.post("/internal/screenings/{screening_id}/sale/close")
+async def close_screening_sale_endpoint(
+    screening_id: int,
+    redis: Redis = redis_dependency,
+):
+    deleted_count = await close_screening_sale(redis, str(screening_id))
+    return {
+        "status": "ok",
+        "screening_id": screening_id,
+        "deleted_count": deleted_count,
+    }
+
+@protected_router.post("/internal/{ticket_id}/redeem")
+async def invalidate_ticket(ticket_id: str, db: AsyncSession = db_dependency):
+    ticket = await db.get(Ticket, ticket_id)
+    if not ticket:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Ticket not found",
+        )
+    ticket.status = "redeemed"
+    await db.commit()
+    return {"status": "ok"}
+
+@protected_router.post("/payments/webhook", response_model=dict, 
     responses={200: {"description": "Payment webhook received successfully"}})
 async def payment_webhook():
     return {"status": "success"}
+
+@protected_router.post("/internal/cleanup", response_model=dict)
+async def cleanup_internal(db: AsyncSession = db_dependency, redis: Redis = redis_dependency):
+
+    # first change all on_sale to past for screenings that are past start_time
+    await db.execute(
+        Screening.__table__.update().where(
+            (Screening.status == "on_sale") & (Screening.start_time < func.now())
+        ).values(status="past")
+    )
+
+    # find all screenings that are past or cancelled
+    result = await db.execute(
+        select(Screening.id).where((Screening.status.in_(["past", "cancelled"])))
+    )
+
+    # next clear all the seats in redis for these screenings
+    screening_ids = set(row[0] for row in result.fetchall())
+    for screening_id in screening_ids:
+        await close_screening_sale(redis, str(screening_id))
+
+    return {"status": "ok"}
