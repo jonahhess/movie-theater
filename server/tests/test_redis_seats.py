@@ -175,11 +175,13 @@ class FakeRedis:
 
         if script == redis_seats.RELEASE_ALL_SCRIPT:
             target_user = argv[0]
-            deleted = 0
+            deleted_keys = []
             for key in keys:
                 if self.values.get(key) == target_user:
-                    deleted += await self.delete(key)
-            return deleted
+                    ttl = await self.ttl(key)
+                    if ttl > 0 and await self.delete(key):
+                        deleted_keys.append(key)
+            return deleted_keys
 
         raise AssertionError("unexpected Lua script")
 
