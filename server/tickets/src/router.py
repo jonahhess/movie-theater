@@ -6,9 +6,10 @@ from fastapi.responses import StreamingResponse
 from redis.asyncio import Redis
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from tickets.src.database import get_admin_db
-from tickets.src.models import Screening, Ticket, User
+from tickets.src.models import Auditorium, Screening, Seat, Ticket, User
 from tickets.src.receipts import get_qr_code
 from tickets.src.redis_client import get_redis
 from tickets.src.redis_seats import (
@@ -23,7 +24,7 @@ from tickets.src.redis_seats import (
     stream_sse_events,
     warm_screening_seats,
 )
-from tickets.src.schemas import LoginRequest, LoginResponse, OpenScreeningSaleRequest
+from tickets.src.schemas import LoginRequest, LoginResponse
 from tickets.src.token import require_internal_service
 
 router = APIRouter()
@@ -164,10 +165,14 @@ async def checkout_seats(screening_id: int, redis: Redis = redis_dependency,
 async def get_checkout(
     screening_id: int,
     user_uuid: str = user_uuid_dependency,
-    redis: Redis = redis_dependency):
-    # Retrieve the held seats for the user
+    redis: Redis = redis_dependency,
+    db: AsyncSession = db_dependency,):
     held_seats = await get_user_held_seats(redis, str(screening_id), user_uuid)
-    return held_seats
+    tickets = await db.execute(
+        select(Seat).where(Seat.id.in_(held_seats))
+        )
+    
+    return tickets.scalars().all()
 
 
 @router.post("/screenings/{screening_id}/checkout/{checkout_id}/payment", 
@@ -200,6 +205,12 @@ async def make_payment(
         await asyncio.gather(*[db.add(ticket) for ticket in tickets_to_add])
         await db.commit()
 
+        # TODO: Implement email sending logic here
+        # Generate a magic link for the receipt
+        # for ticket in tickets_to_add:
+        #   ticket.magic_link = generate_magic_link(ticket.receipt_number)
+        # send 1 or more emails with the order details and magic links
+
     return success
 
 
@@ -217,7 +228,6 @@ async def cancel_checkout(
 async def get_qr(token: str):
     return await get_qr_code(token)
 
-
 protected_router = APIRouter(dependencies=[Depends(require_internal_service)])
 
 @protected_router.post(
@@ -225,14 +235,34 @@ protected_router = APIRouter(dependencies=[Depends(require_internal_service)])
 )
 async def open_screening_sale(
     screening_id: int,
-    payload: OpenScreeningSaleRequest,
+    db: AsyncSession = db_dependency,
     redis: Redis = redis_dependency,
 ):
-    await warm_screening_seats(redis, str(screening_id), payload.seat_ids)
+    screening = await db.get(Screening, screening_id)
+    if not screening:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Screening not found",
+        )
+    if screening.status == "on_sale":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Screening is already on sale",
+        )
+
+    auditorium_seats = await db.execute(
+        select(Auditorium).where(
+            Auditorium.id == screening.auditorium_id).options(
+            selectinload(Auditorium.seats))
+    )
+    auditorium = auditorium_seats.scalar_one()
+    seat_ids = [seat.id for seat in auditorium.seats]
+
+    await warm_screening_seats(redis, str(screening_id), seat_ids)
     return {
         "status": "ok",
         "screening_id": screening_id,
-        "seat_count": len(payload.seat_ids),
+        "seat_count": len(seat_ids),
     }
 
 
@@ -240,7 +270,22 @@ async def open_screening_sale(
 async def close_screening_sale_endpoint(
     screening_id: int,
     redis: Redis = redis_dependency,
+    db: AsyncSession = db_dependency
 ):
+
+    screening = await db.get(Screening, screening_id)
+    if not screening:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Screening not found",
+        )
+    
+    if screening.status != "on_sale":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Screening is not currently on sale",
+        )
+    
     deleted_count = await close_screening_sale(redis, str(screening_id))
     return {
         "status": "ok",
@@ -256,6 +301,13 @@ async def invalidate_ticket(ticket_id: str, db: AsyncSession = db_dependency):
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Ticket not found",
         )
+
+    if ticket.status == "redeemed" or ticket.status == "cancelled":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Ticket is no longer valid for redemption",
+        )
+    
     ticket.status = "redeemed"
     await db.commit()
     return {"status": "ok"}
