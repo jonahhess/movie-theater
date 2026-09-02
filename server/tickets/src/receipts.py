@@ -43,3 +43,18 @@ def get_qr_code(token: str):
     
     # 4. Return stream as a secure image response
     return StreamingResponse(buf, media_type="image/png")
+
+
+def generate_magic_link(receipt_number: str):
+    """
+    Generates a secure magic link token for the given receipt number.
+    The token is valid for 7 days.
+    """
+    expiration_time = 7 * 24 * 60 * 60  # 7 days
+    payload = {
+        "sub": receipt_number,
+        "exp": jwt.datetime.utcnow() + jwt.timedelta(seconds=expiration_time)
+    }
+    
+    token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+    return token

@@ -4,6 +4,7 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import (
+    Boolean,
     DateTime,
     Enum,
     ForeignKey,
@@ -12,7 +13,7 @@ from sqlalchemy import (
     Uuid,
     text,
 )
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .database import Base
 
@@ -57,6 +58,7 @@ class Ticket(Base):
         server_default=text("CURRENT_TIMESTAMP"),
     )
 
+
 class Screening(Base):
     __tablename__ = "screenings"
     __table_args__ = {"extend_existing": True}
@@ -68,3 +70,42 @@ class Screening(Base):
         server_default="draft",
         nullable=False,
     )
+
+
+class Auditorium(Base):
+    __tablename__ = "auditoriums"
+    __table_args__ = {"extend_existing": True}
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+
+    # Relationships
+    seats: Mapped[list[Seat]] = relationship(
+        "Seat",
+        back_populates="auditorium",
+        cascade="all, delete-orphan",
+    )
+
+class Seat(Base):
+    __tablename__ = "seats"
+    __table_args__ = {"extend_existing": True}
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    auditorium_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("auditoriums.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    row: Mapped[str] = mapped_column(String(5), nullable=False)
+    number: Mapped[int] = mapped_column(Integer, nullable=False)
+    is_available: Mapped[bool] = mapped_column(Boolean, nullable=False, 
+                                               server_default=text("TRUE"))
+    is_accessible: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        server_default=text("FALSE"),
+    )
+
+    # Relationships
+    auditorium: Mapped[Auditorium] = relationship(
+        "Auditorium", back_populates="seats")

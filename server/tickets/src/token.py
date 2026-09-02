@@ -1,12 +1,15 @@
 import os
 from hmac import compare_digest
 
-from fastapi import Header, HTTPException, status
+from fastapi import Depends, HTTPException, status
+from fastapi.security import APIKeyHeader
 
 INTERNAL_SERVICE_TOKEN = os.getenv("INTERNAL_SERVICE_TOKEN")
 
-def require_internal_service(
-    x_internal_service_token: str | None = Header(default=None),
+api_key_scheme = APIKeyHeader(name="x_internal_service_token", auto_error=True)
+
+
+def require_internal_service(x_internal_service_token: str = Depends(api_key_scheme),
 ) -> None:
     if not INTERNAL_SERVICE_TOKEN:
         raise HTTPException(

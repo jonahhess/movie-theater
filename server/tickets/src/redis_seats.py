@@ -409,7 +409,7 @@ async def close_screening_sale(redis: Redis, screening_id: str) -> int:
     return await clear_cache_by_prefix(redis, screening_id)
 
 async def get_user_held_seats(
-        redis: Redis,
+    redis: Redis,
     screening_id: str,
     user_uuid: str,
 ) -> list[str]:
