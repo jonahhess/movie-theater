@@ -9,13 +9,15 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from redis.asyncio import Redis
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tickets.src.database import get_admin_db
-from tickets.src.models import Ticket
+from tickets.src.models import Ticket, User
 from tickets.src.redis_client import get_redis
 from tickets.src.redis_seats import (
     acquire_seats,
+    change_seat_owner,
     close_screening_sale,
     extend_seat_hold,
     get_user_held_seats,
@@ -25,6 +27,7 @@ from tickets.src.redis_seats import (
     stream_sse_events,
     warm_screening_seats,
 )
+from tickets.src.schemas import LoginRequest, LoginResponse
 
 router = APIRouter()
 db_dependency = Depends(get_admin_db)
@@ -84,6 +87,43 @@ user_uuid_dependency: str = Depends(get_or_create_user_uuid)
 @router.get("/")
 async def tickets_welcome():
     return {"message": "Hello from tickets's isolated router endpoint!", "data": []}
+
+
+@router.post("/login", response_model=LoginResponse)
+async def login(
+    payload: LoginRequest,
+    response: Response,
+    guest_uuid: str = user_uuid_dependency,
+    redis: Redis = redis_dependency,
+    db: AsyncSession = db_dependency,
+):
+    user = await db.scalar(select(User).where(User.email == payload.email))
+
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password",
+        )
+
+    migrated_seat_count = await change_seat_owner(
+        redis, guest_uuid, str(user.id)
+    )
+
+    response.set_cookie(
+        key="user_uuid",
+        value=str(user.id),
+        max_age=3600 * 24 * 30,
+        httponly=True,
+        samesite="lax",
+        secure=False,
+    )
+
+    return LoginResponse(
+        user_id=str(user.id),
+        email=user.email,
+        username=user.username,
+        migrated_seat_count=migrated_seat_count,
+    )
 
 
 @router.post(
