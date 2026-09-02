@@ -1,6 +1,7 @@
 import asyncio
 import uuid
 
+import bcrypt
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.responses import StreamingResponse
 from redis.asyncio import Redis
@@ -76,7 +77,9 @@ async def login(
 ):
     user = await db.scalar(select(User).where(User.email == payload.email))
 
-    if user is None:
+    if user is None or not bcrypt.checkpw(
+        payload.password.encode("utf-8"), user.password_hash.encode("utf-8")
+    ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password",
