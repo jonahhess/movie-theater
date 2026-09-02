@@ -9,3 +9,6 @@ class LoginResponse(BaseModel):
     user_id: str
     email: str
     migrated_seat_count: int
+
+class OpenScreeningSaleRequest(BaseModel):
+    seat_ids: list[str]
