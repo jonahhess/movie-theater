@@ -18,10 +18,10 @@ from tickets.src.redis_client import get_redis
 from tickets.src.redis_seats import (
     acquire_seats,
     change_seat_owner,
+    release_all_seats,
     close_screening_sale,
     extend_seat_hold,
     get_user_held_seats,
-    release_all_seats,
     reserve_seat,
     seat_exists,
     stream_sse_events,
@@ -124,6 +124,12 @@ async def login(
         username=user.username,
         migrated_seat_count=migrated_seat_count,
     )
+
+@router.post("/logout")
+async def logout(response: Response, redis: Redis = redis_dependency):
+    await release_all_seats(redis, "*", response.cookies.get("user_uuid"))
+    response.delete_cookie("user_uuid")
+    return {"message": "Logged out successfully"}
 
 
 @router.post(
