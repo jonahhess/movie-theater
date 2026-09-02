@@ -220,8 +220,8 @@ async def acquire_seats(redis: Redis, screening_id: str, user_uuid: str) -> bool
         # Pass all keys as a list, and user_uuid as the single ARGV argument
         owned, finalized = await redis.eval(
             ACQUIRE_SEATS_SCRIPT, 
-            len(keys), 
-            *keys, 
+            len(purchased_keys), 
+            *purchased_keys, 
             user_uuid
         )
         
@@ -244,7 +244,7 @@ async def acquire_seats(redis: Redis, screening_id: str, user_uuid: str) -> bool
         return False
 
 
-# Lua script to atomically delete multiple keys if they match the user_uuid
+# Lua script to atomically delete uuid owned keys with ttl (temporary)
 RELEASE_ALL_SCRIPT = """
 local deleted_keys = {}
 local target_user = ARGV[1]
@@ -252,15 +252,18 @@ local target_user = ARGV[1]
 for i, key in ipairs(KEYS) do
     local current = redis.call('GET', key)
     if current == target_user then
-        if redis.call('DEL', key) == 1 then
-            table.insert(deleted_keys, key)
+        -- Check if the key has a TTL (returns > 0 for keys with an expiration)
+        local ttl = redis.call('TTL', key)
+        if ttl > 0 then
+            if redis.call('DEL', key) == 1 then
+                table.insert(deleted_keys, key)
+            end
         end
     end
 end
 
 return deleted_keys
 """
-
 async def release_all_seats(
     redis: Redis,
     screening_id: str, 
