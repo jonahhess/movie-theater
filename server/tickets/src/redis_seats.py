@@ -246,55 +246,66 @@ async def acquire_seats(redis: Redis, screening_id: str, user_uuid: str) -> bool
 
 # Lua script to atomically delete multiple keys if they match the user_uuid
 RELEASE_ALL_SCRIPT = """
-local deleted_count = 0
+local deleted_keys = {}
 local target_user = ARGV[1]
 
 for i, key in ipairs(KEYS) do
     local current = redis.call('GET', key)
     if current == target_user then
-        -- DEL returns the number of keys removed (1)
-        deleted_count = deleted_count + redis.call('DEL', key)
+        if redis.call('DEL', key) == 1 then
+            table.insert(deleted_keys, key)
+        end
     end
 end
 
-return deleted_count
+return deleted_keys
 """
 
 async def release_all_seats(
-        redis: Redis,
+    redis: Redis,
     screening_id: str, 
     user_uuid: str, 
 ) -> int:
     """
     Removes all temporary seat reservations belonging to a specific user.
-    Returns the total number of seats released.
+    Dynamically tracks deleted keys to publish accurate UI updates.
     """
     pattern = f"screening:{screening_id}::*"
     
-    # 1. Find all potential seat keys on the Python side
-    keys = [key async for key in redis.scan_iter(match=pattern, count=500)]
+    # Grab all matching keys in a single fast pass (optimized for <= 1,000 keys)
+    keys = [key async for key in redis.scan_iter(match=pattern, count=1500)]
     if not keys:
         return 0
 
-    releasable_keys = await _get_user_seat_keys(redis, screening_id, user_uuid)
-
     try:
-        # 2. Run the atomic conditional delete loop inside Redis
-        deleted_count = await redis.eval(
+        # Run the script. It returns a list of byte strings of deleted keys.
+        deleted_keys: list[bytes] = await redis.eval(
             RELEASE_ALL_SCRIPT, 
             len(keys), 
             *keys, 
             user_uuid
         )
-        for key in releasable_keys[:int(deleted_count)]:
+        
+        # Broadcast real-time updates using the accurate context of each key
+        for byte_key in deleted_keys:
+            key_str = byte_key.decode("utf-8")
+            
+            # Using your string-slicing logic here
+            parsed = _parse_seat_key(key_str)
+            if parsed is None:
+                continue # Safely skip if a key pattern was malformed
+                
+            actual_screening_id, seat_id = parsed
+            
+            # Real-time message goes to the specific screen instead of '*'
             await publish_seat_update(
                 redis,
-                screening_id,
-                _seat_id_from_key(key),
+                actual_screening_id, 
+                seat_id,
                 "available",
             )
 
-        return int(deleted_count)
+        return len(deleted_keys)
         
     except RedisError as e:
         print(f"Failed to execute release_all script: {e}")
@@ -316,6 +327,8 @@ end
 return updated_count
 """
 
+# This function applies to all screenings, can be inefficient if we don't clear redis cache.
+# future change involves making a redis set to track all seats a user has reserved, and keep it updated.
 async def change_seat_owner(
     redis: Redis,
     old_user_uuid: str,
