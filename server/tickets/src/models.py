@@ -64,6 +64,11 @@ class Screening(Base):
     __table_args__ = {"extend_existing": True}
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    auditorium_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("auditoriums.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
     start_time: Mapped[datetime] = mapped_column(DateTime, index=True, nullable=False)
     status: Mapped[str] = mapped_column(
         Enum("draft","on_sale","past", "cancelled", name="screening_status_enum"),

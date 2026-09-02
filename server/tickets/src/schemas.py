@@ -8,4 +8,5 @@ class LoginRequest(BaseModel):
 class LoginResponse(BaseModel):
     user_id: str
     email: str
+    username: str | None = None
     migrated_seat_count: int
