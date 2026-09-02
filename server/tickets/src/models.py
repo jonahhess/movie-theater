@@ -100,6 +100,11 @@ class Seat(Base):
     number: Mapped[int] = mapped_column(Integer, nullable=False)
     is_available: Mapped[bool] = mapped_column(Boolean, nullable=False, 
                                                server_default=text("TRUE"))
+    is_accessible: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        server_default=text("FALSE"),
+    )
 
     # Relationships
     auditorium: Mapped[Auditorium] = relationship(
