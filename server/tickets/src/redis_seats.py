@@ -526,7 +526,6 @@ async def listen_to_stream(
 
 async def stream_sse_events(redis: Redis, screening_id: str, last_event_id: str = "$"):
     """Convert Redis stream messages into SSE-formatted chunks."""
-    async for msg_id, data in listen_to_stream(redis=redis, screening_id=screening_id, 
-                                last_id=last_event_id):
+    async for msg_id, data in listen_to_stream(redis, screening_id, last_event_id):
         payload = {"id": msg_id, **data}
         yield f"id: {msg_id}\nevent: seat_update\ndata: {json.dumps(payload)}\n\n"

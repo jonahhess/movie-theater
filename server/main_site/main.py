@@ -1,3 +1,4 @@
+from contextlib import AsyncExitStack, asynccontextmanager
 
 from fastapi import FastAPI
 
@@ -5,8 +6,19 @@ from admin.main import admin
 from main_site.src.error_handlers import register_exception_handlers
 from main_site.src.router import router
 from tickets.main import tickets
+from tickets.src import redis_client
 
-app = FastAPI(title="Main Root Application")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Mounted sub-apps don't receive ASGI lifespan events from the root app,
+    # so their lifespans must be entered here explicitly.
+    async with AsyncExitStack() as stack:
+        await stack.enter_async_context(redis_client.lifespan(tickets))
+        yield
+
+
+app = FastAPI(title="Main Root Application", lifespan=lifespan)
 
 register_exception_handlers(app)
 
