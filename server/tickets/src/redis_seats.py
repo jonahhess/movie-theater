@@ -281,8 +281,8 @@ async def release_all_seats(
         return 0
 
     try:
-        # Run the script. It returns a list of byte strings of deleted keys.
-        deleted_keys: list[bytes] = await redis.eval(
+        # Run the script. Keys come back as str because decode_responses=True.
+        deleted_keys: list[str] = await redis.eval(
             RELEASE_ALL_SCRIPT, 
             len(keys), 
             *keys, 
@@ -290,11 +290,9 @@ async def release_all_seats(
         )
         
         # Broadcast real-time updates using the accurate context of each key
-        for byte_key in deleted_keys:
-            key_str = byte_key.decode("utf-8")
-            
-            # Using your string-slicing logic here
+        for key_str in deleted_keys:
             parsed = _parse_seat_key(key_str)
+            
             if parsed is None:
                 continue # Safely skip if a key pattern was malformed
                 
@@ -330,8 +328,7 @@ end
 return updated_count
 """
 
-# This function applies to all screenings, can be inefficient if we don't clear redis cache.
-# future change involves making a redis set to track all seats a user has reserved, and keep it updated.
+# Scans every screening; track a per-user seat set later if this gets slow.
 async def change_seat_owner(
     redis: Redis,
     old_user_uuid: str,
@@ -342,7 +339,7 @@ async def change_seat_owner(
     Returns the number of seats successfully updated.
     """
     # 1. Gather all keys matching the old user's seats
-    pattern = f"screening:*::*"
+    pattern = "screening:*::*"
     keys = [key async for key in redis.scan_iter(match=pattern, count=500)]
     if not keys:
         return 0
