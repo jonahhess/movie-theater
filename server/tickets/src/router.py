@@ -130,6 +130,15 @@ async def logout(response: Response):
     response.delete_cookie("user_uuid")
     return {"message": "Logged out successfully"}
 
+@router.post("/release_seats", response_model=bool)
+async def release_seats_endpoint(
+    response: Response,
+    redis: Redis = redis_dependency,
+    user_uuid: str = user_uuid_dependency
+    ):
+        await release_all_seats(redis, "*", user_uuid)
+        await logout(response)
+        return True
 
 @router.post(
     "/internal/screenings/{screening_id}/sale/open",
