@@ -84,7 +84,7 @@ async def reserve_seat(
     screening_id: str,
     seat_id: str,
     user_uuid: str,
-    lock_ttl_seconds: int = 600,
+    lock_ttl_seconds: int = 300,
 ) -> bool:
     """
     Attempts to reserve a specific seat atomically.
@@ -119,7 +119,7 @@ async def release_seat(
 EXTEND_SEATS_SCRIPT = """
 local extended_count = 0
 local target_user = ARGV[1]
-local new_ttl = ARGV[2]
+local new_ttl = tonumber(ARGV[2])
 
 for i, key in ipairs(KEYS) do
     local current = redis.call('GET', key)
@@ -138,7 +138,7 @@ async def extend_seat_hold(
     redis: Redis,
     screening_id: str, 
     user_uuid: str, 
-    ttl_seconds: int = 300
+    ttl_seconds: int = 600
 ) -> bool:
     """
     Atomically adds more time to ALL temporary reservations held by a specific user 
@@ -300,6 +300,51 @@ async def release_all_seats(
         print(f"Failed to execute release_all script: {e}")
         return 0
 
+CHANGE_OWNER_SCRIPT = """
+local updated_count = 0
+local old_user = ARGV[1]
+local new_user = ARGV[2]
+
+for i, key in ipairs(KEYS) do
+    local current = redis.call('GET', key)
+    if current == old_user then
+        redis.call('SET', key, new_user, 'KEEPTTL')
+        updated_count = updated_count + 1
+    end
+end
+
+return updated_count
+"""
+
+async def change_seat_owner(
+    redis: Redis,
+    old_user_uuid: str,
+    new_user_uuid: str,
+) -> int:
+    """
+    Changes the ownership of all seats held by old_user_uuid to new_user_uuid.
+    Returns the number of seats successfully updated.
+    """
+    # 1. Gather all keys matching the old user's seats
+    pattern = f"screening:*::*"
+    keys = [key async for key in redis.scan_iter(match=pattern, count=500)]
+    if not keys:
+        return 0
+
+    try:
+        # 2. Execute the ownership change in a single atomic operation
+        updated_count = await redis.eval(
+            CHANGE_OWNER_SCRIPT, 
+            len(keys), 
+            *keys, 
+            old_user_uuid, 
+            new_user_uuid
+        )
+        return int(updated_count)
+        
+    except RedisError as e:
+        print(f"Failed to execute change_owner script: {e}")
+        return 0
 
 # --- PURPOSE 2: CACHE WARMING ---
 
