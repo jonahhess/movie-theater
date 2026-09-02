@@ -84,7 +84,7 @@ async def reserve_seat(
     screening_id: str,
     seat_id: str,
     user_uuid: str,
-    lock_ttl_seconds: int = 600,
+    lock_ttl_seconds: int = 300,
 ) -> bool:
     """
     Attempts to reserve a specific seat atomically.
@@ -119,7 +119,7 @@ async def release_seat(
 EXTEND_SEATS_SCRIPT = """
 local extended_count = 0
 local target_user = ARGV[1]
-local new_ttl = ARGV[2]
+local new_ttl = tonumber(ARGV[2])
 
 for i, key in ipairs(KEYS) do
     local current = redis.call('GET', key)
@@ -138,7 +138,7 @@ async def extend_seat_hold(
     redis: Redis,
     screening_id: str, 
     user_uuid: str, 
-    ttl_seconds: int = 300
+    ttl_seconds: int = 600
 ) -> bool:
     """
     Atomically adds more time to ALL temporary reservations held by a specific user 
@@ -220,8 +220,8 @@ async def acquire_seats(redis: Redis, screening_id: str, user_uuid: str) -> bool
         # Pass all keys as a list, and user_uuid as the single ARGV argument
         owned, finalized = await redis.eval(
             ACQUIRE_SEATS_SCRIPT, 
-            len(keys), 
-            *keys, 
+            len(purchased_keys), 
+            *purchased_keys, 
             user_uuid
         )
         
@@ -244,62 +244,120 @@ async def acquire_seats(redis: Redis, screening_id: str, user_uuid: str) -> bool
         return False
 
 
-# Lua script to atomically delete multiple keys if they match the user_uuid
+# Lua script to atomically delete uuid owned keys with ttl (temporary)
 RELEASE_ALL_SCRIPT = """
-local deleted_count = 0
+local deleted_keys = {}
 local target_user = ARGV[1]
 
 for i, key in ipairs(KEYS) do
     local current = redis.call('GET', key)
     if current == target_user then
-        -- DEL returns the number of keys removed (1)
-        deleted_count = deleted_count + redis.call('DEL', key)
+        -- Check if the key has a TTL (returns > 0 for keys with an expiration)
+        local ttl = redis.call('TTL', key)
+        if ttl > 0 then
+            if redis.call('DEL', key) == 1 then
+                table.insert(deleted_keys, key)
+            end
+        end
     end
 end
 
-return deleted_count
+return deleted_keys
 """
-
 async def release_all_seats(
-        redis: Redis,
+    redis: Redis,
     screening_id: str, 
     user_uuid: str, 
 ) -> int:
     """
     Removes all temporary seat reservations belonging to a specific user.
-    Returns the total number of seats released.
+    Dynamically tracks deleted keys to publish accurate UI updates.
     """
     pattern = f"screening:{screening_id}::*"
     
-    # 1. Find all potential seat keys on the Python side
-    keys = [key async for key in redis.scan_iter(match=pattern, count=500)]
+    # Grab all matching keys in a single fast pass (optimized for <= 1,000 keys)
+    keys = [key async for key in redis.scan_iter(match=pattern, count=1500)]
     if not keys:
         return 0
 
-    releasable_keys = await _get_user_seat_keys(redis, screening_id, user_uuid)
-
     try:
-        # 2. Run the atomic conditional delete loop inside Redis
-        deleted_count = await redis.eval(
+        # Run the script. Keys come back as str because decode_responses=True.
+        deleted_keys: list[str] = await redis.eval(
             RELEASE_ALL_SCRIPT, 
             len(keys), 
             *keys, 
             user_uuid
         )
-        for key in releasable_keys[:int(deleted_count)]:
+        
+        # Broadcast real-time updates using the accurate context of each key
+        for key_str in deleted_keys:
+            parsed = _parse_seat_key(key_str)
+            
+            if parsed is None:
+                continue # Safely skip if a key pattern was malformed
+                
+            actual_screening_id, seat_id = parsed
+            
+            # Real-time message goes to the specific screen instead of '*'
             await publish_seat_update(
                 redis,
-                screening_id,
-                _seat_id_from_key(key),
+                actual_screening_id, 
+                seat_id,
                 "available",
             )
 
-        return int(deleted_count)
+        return len(deleted_keys)
         
     except RedisError as e:
         print(f"Failed to execute release_all script: {e}")
         return 0
 
+CHANGE_OWNER_SCRIPT = """
+local updated_count = 0
+local old_user = ARGV[1]
+local new_user = ARGV[2]
+
+for i, key in ipairs(KEYS) do
+    local current = redis.call('GET', key)
+    if current == old_user then
+        redis.call('SET', key, new_user, 'KEEPTTL')
+        updated_count = updated_count + 1
+    end
+end
+
+return updated_count
+"""
+
+# Scans every screening; track a per-user seat set later if this gets slow.
+async def change_seat_owner(
+    redis: Redis,
+    old_user_uuid: str,
+    new_user_uuid: str,
+) -> int:
+    """
+    Changes the ownership of all seats held by old_user_uuid to new_user_uuid.
+    Returns the number of seats successfully updated.
+    """
+    # 1. Gather all keys matching the old user's seats
+    pattern = "screening:*::*"
+    keys = [key async for key in redis.scan_iter(match=pattern, count=500)]
+    if not keys:
+        return 0
+
+    try:
+        # 2. Execute the ownership change in a single atomic operation
+        updated_count = await redis.eval(
+            CHANGE_OWNER_SCRIPT, 
+            len(keys), 
+            *keys, 
+            old_user_uuid, 
+            new_user_uuid
+        )
+        return int(updated_count)
+        
+    except RedisError as e:
+        print(f"Failed to execute change_owner script: {e}")
+        return 0
 
 # --- PURPOSE 2: CACHE WARMING ---
 
