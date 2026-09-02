@@ -1,6 +1,6 @@
 import asyncio
-from tickets.src.token import require_internal_service
 import uuid
+
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.responses import StreamingResponse
 from redis.asyncio import Redis
@@ -8,7 +8,8 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tickets.src.database import get_admin_db
-from tickets.src.models import Ticket, User, Screening
+from tickets.src.models import Screening, Ticket, User
+from tickets.src.receipts import get_qr_code
 from tickets.src.redis_client import get_redis
 from tickets.src.redis_seats import (
     acquire_seats,
@@ -23,7 +24,7 @@ from tickets.src.redis_seats import (
     warm_screening_seats,
 )
 from tickets.src.schemas import LoginRequest, LoginResponse, OpenScreeningSaleRequest
-from tickets.src.receipts import get_qr_code
+from tickets.src.token import require_internal_service
 
 router = APIRouter()
 db_dependency = Depends(get_admin_db)
@@ -265,7 +266,8 @@ async def payment_webhook():
     return {"status": "success"}
 
 @protected_router.post("/internal/cleanup", response_model=dict)
-async def cleanup_internal(db: AsyncSession = db_dependency, redis: Redis = redis_dependency):
+async def cleanup_internal(
+    db: AsyncSession = db_dependency, redis: Redis = redis_dependency):
 
     # first change all on_sale to past for screenings that are past start_time
     await db.execute(
@@ -276,7 +278,7 @@ async def cleanup_internal(db: AsyncSession = db_dependency, redis: Redis = redi
 
     # find all screenings that are past or cancelled
     result = await db.execute(
-        select(Screening.id).where((Screening.status.in_(["past", "cancelled"])))
+        select(Screening.id).where(Screening.status.in_(["past", "cancelled"]))
     )
 
     # next clear all the seats in redis for these screenings

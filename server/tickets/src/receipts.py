@@ -1,11 +1,11 @@
-import os
 import io
-import qrcode
-from fastapi.responses import StreamingResponse
-import jwt
-from jwt import ExpiredSignatureError, InvalidTokenError
-from fastapi import HTTPException, status
+import os
 
+import jwt
+import qrcode
+from fastapi import HTTPException, status
+from fastapi.responses import StreamingResponse
+from jwt import ExpiredSignatureError, InvalidTokenError
 
 SECRET_KEY = os.getenv("MAGIC_LINK_SECRET_KEY", "your-very-secret-key")
 ALGORITHM = os.getenv("MAGIC_LINK_ALGORITHM", "HS256")
@@ -26,11 +26,11 @@ def get_qr_code(token: str):
                 detail="Invalid token data"
             )
             
-    except (ExpiredSignatureError, InvalidTokenError):
+    except (ExpiredSignatureError, InvalidTokenError) as err:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, 
             detail="Expired or altered magic link token"
-        )
+        ) from err
 
     # 2. Generate the QR code using the verified receipt number
     # (Optional) You can encode the actual view URL inside the QR code instead

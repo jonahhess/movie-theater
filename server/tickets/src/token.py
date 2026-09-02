@@ -1,6 +1,7 @@
-from fastapi import Header, HTTPException, status
-from hmac import compare_digest
 import os
+from hmac import compare_digest
+
+from fastapi import Header, HTTPException, status
 
 INTERNAL_SERVICE_TOKEN = os.getenv("INTERNAL_SERVICE_TOKEN")
 
