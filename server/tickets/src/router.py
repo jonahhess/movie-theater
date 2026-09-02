@@ -126,8 +126,7 @@ async def stream_seat_availability(
     screening_id: int, last_event_id: str = "$", redis: Redis = redis_dependency
 ) -> StreamingResponse:
     return StreamingResponse(
-        stream_sse_events(redis, str(screening_id), last_event_id=last_event_id),
-        last_event_id=last_event_id,
+        stream_sse_events(redis, str(screening_id), last_event_id),
         media_type="text/event-stream",
     )
 
