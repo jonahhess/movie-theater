@@ -252,6 +252,11 @@ class Ticket(Base):
     phone: Mapped[str | None] = mapped_column(String(20), nullable=True)
     receipt_number: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
     checkout_id: Mapped[str] = mapped_column(String(50), nullable=True)
+    purchaser_uuid: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid,
+        index=True,
+        nullable=True,
+    )
     status: Mapped[str] = mapped_column(
         Enum("confirmed", "cancelled","redeemed", name="ticket_status_enum"),
         server_default="confirmed",
