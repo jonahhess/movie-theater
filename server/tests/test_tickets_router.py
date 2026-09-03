@@ -10,7 +10,7 @@ from pathlib import Path
 import bcrypt
 import pytest
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy import Column, Integer, Table
+from sqlalchemy import Column, Integer, Table, select
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -22,7 +22,7 @@ os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
 from tickets.main import tickets
 from tickets.src import token as token_module
 from tickets.src.database import Base, get_admin_db
-from tickets.src.models import Auditorium, Screening, Seat, Ticket, User
+from tickets.src.models import Auditorium, Screening, ScreeningSeat, Seat, Ticket, User
 from tickets.src.redis_client import get_redis
 from tickets.src.router import get_or_create_user_uuid
 
@@ -161,7 +161,7 @@ class FakeRedis:
             return extended
 
         if script == redis_seats.ACQUIRE_SEATS_SCRIPT:
-            target_user = argv[0]
+            target_user, receipt_id = argv
             owned = finalized = 0
             for key in keys:
                 if self.values.get(key) == target_user:
@@ -169,8 +169,7 @@ class FakeRedis:
                     ttl = await self.ttl(key)
                     if ttl > 0:
                         self.ttls.pop(key, None)
-                        finalized += 1
-                    elif ttl == -1:
+                        self.values[key] = receipt_id
                         finalized += 1
             return [owned, finalized]
 
@@ -331,6 +330,108 @@ def test_release_seats_endpoint_releases_and_logs_out(monkeypatch):
             response = await client.post("/release_seats")
             assert response.status_code == 200
             assert "user_uuid" not in response.cookies
+
+    run(scenario())
+
+
+def test_make_payment_creates_tickets_for_held_seats(monkeypatch):
+    async def scenario():
+        async with make_client(monkeypatch) as (client, session_factory, redis):
+            async with session_factory() as session:
+                auditorium = Auditorium(is_active=True)
+                auditorium.seats = [Seat(row="A", number=1), Seat(row="A", number=2)]
+                session.add(auditorium)
+                await session.flush()
+
+                screening = Screening(
+                    auditorium_id=auditorium.id,
+                    start_time=datetime.now(),
+                    status="on_sale",
+                )
+                session.add(screening)
+                await session.flush()
+                screening_id = screening.id
+                seat_ids = [seat.id for seat in auditorium.seats]
+                await session.commit()
+
+            for seat_id in seat_ids:
+                await redis.set(
+                    f"screening:{screening_id}::{seat_id}",
+                    TEST_USER_UUID,
+                    ex=60,
+                )
+
+            response = await client.post(
+                f"/screenings/{screening_id}/checkout/checkout-1/payment",
+                json={"email": "fan@example.com", "phone": "555-0100"},
+            )
+
+            assert response.status_code == 200
+            assert response.json() is True
+
+            async with session_factory() as session:
+                tickets = (await session.execute(select(Ticket))).scalars().all()
+                screening_seats = (
+                    await session.execute(select(ScreeningSeat))
+                ).scalars().all()
+
+            assert len(screening_seats) == 2
+            assert len(tickets) == 2
+            assert {ticket.email for ticket in tickets} == {"fan@example.com"}
+            assert {ticket.checkout_id for ticket in tickets} == {"checkout-1"}
+            assert {ticket.screening_seat_id for ticket in tickets} == {
+                screening_seat.id for screening_seat in screening_seats
+            }
+            finalized_ttls = [
+                await redis.ttl(f"screening:{screening_id}::{seat_id}")
+                for seat_id in seat_ids
+            ]
+            assert finalized_ttls == [-1, -1]
+            finalized_owners = [
+                await redis.get(f"screening:{screening_id}::{seat_id}")
+                for seat_id in seat_ids
+            ]
+            assert finalized_owners == ["checkout-1", "checkout-1"]
+
+    run(scenario())
+
+
+def test_make_payment_releases_acquired_seats_when_ticket_creation_fails(monkeypatch):
+    async def scenario():
+        async with make_client(monkeypatch) as (client, session_factory, redis):
+            await redis.set("screening:10::A1", TEST_USER_UUID, ex=60)
+
+            response = await client.post(
+                "/screenings/10/checkout/checkout-1/payment",
+                json={"email": "fan@example.com"},
+            )
+
+            assert response.status_code == 503
+            assert await redis.get("screening:10::A1") is None
+            async with session_factory() as session:
+                ticket_count = len(
+                    (await session.execute(select(Ticket))).scalars().all()
+                )
+            assert ticket_count == 0
+
+    run(scenario())
+
+
+def test_make_payment_failure_releases_only_current_checkout(monkeypatch):
+    async def scenario():
+        async with make_client(monkeypatch) as (client, _session_factory, redis):
+            await redis.set("screening:10::A1", "previous-checkout")
+            await redis.set("screening:10::A2", TEST_USER_UUID, ex=60)
+
+            response = await client.post(
+                "/screenings/10/checkout/checkout-2/payment",
+                json={"email": "fan@example.com"},
+            )
+
+            assert response.status_code == 503
+            assert await redis.get("screening:10::A1") == "previous-checkout"
+            assert await redis.ttl("screening:10::A1") == -1
+            assert await redis.get("screening:10::A2") is None
 
     run(scenario())
 

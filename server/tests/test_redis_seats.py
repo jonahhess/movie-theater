@@ -159,7 +159,7 @@ class FakeRedis:
             return extended
 
         if script == redis_seats.ACQUIRE_SEATS_SCRIPT:
-            target_user = argv[0]
+            target_user, receipt_id = argv
             owned = 0
             finalized = 0
             for key in keys:
@@ -168,8 +168,7 @@ class FakeRedis:
                     ttl = await self.ttl(key)
                     if ttl > 0:
                         self.ttls.pop(key, None)
-                        finalized += 1
-                    elif ttl == -1:
+                        self.values[key] = receipt_id
                         finalized += 1
             return [owned, finalized]
 
@@ -285,12 +284,17 @@ def test_acquire_seats_persists_owned_locks():
         await redis.set("screening:10::A2", "user-1", ex=60)
         await redis.set("screening:10::A3", "user-2", ex=60)
 
-        acquired = await redis_seats.acquire_seats(redis, "10", "user-1")
+        acquired = await redis_seats.acquire_seats(
+            redis, "10", "user-1", "receipt-1"
+        )
 
         assert acquired is True
         assert await redis.ttl("screening:10::A1") == -1
         assert await redis.ttl("screening:10::A2") == -1
         assert await redis.ttl("screening:10::A3") == 60
+        assert await redis.get("screening:10::A1") == "receipt-1"
+        assert await redis.get("screening:10::A2") == "receipt-1"
+        assert await redis.get("screening:10::A3") == "user-2"
         assert redis.streams == {
             "stream:screening:10": [
                 ("1-0", {"seat_id": "A1", "status": "purchased"}),

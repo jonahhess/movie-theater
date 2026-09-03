@@ -1,4 +1,3 @@
-import asyncio
 import uuid
 
 import bcrypt
@@ -10,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from tickets.src.database import get_admin_db
-from tickets.src.models import Auditorium, Screening, Seat, Ticket, User
+from tickets.src.models import Auditorium, Screening, ScreeningSeat, Seat, Ticket, User
 from tickets.src.receipts import get_qr_code
 from tickets.src.redis_client import get_redis
 from tickets.src.redis_seats import (
@@ -19,9 +18,11 @@ from tickets.src.redis_seats import (
     close_screening_sale,
     extend_seat_hold,
     get_user_held_seats,
+    release_acquired_seats,
     release_all_seats,
     reserve_seat,
     seat_exists,
+    seat_id_from_key,
     stream_sse_events,
     warm_screening_seats,
 )
@@ -187,25 +188,55 @@ async def make_payment(
     db: AsyncSession = db_dependency,
     contact_info: dict = None):  # Expecting dictionary with 'email' and 'phone' keys):
 
-    # For demonstration, we'll assume payment is always successful
-    success = await acquire_seats(redis, str(screening_id), user_uuid)
+    if contact_info is None or not contact_info.get("email"):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Email is required to complete checkout",
+        )
 
-    # update the database with the payment info and finalize the checkout
+    held_seat_keys = await get_user_held_seats(redis, str(screening_id), user_uuid)
+    if not held_seat_keys:
+        return False
+
+    # For demonstration, we'll assume payment is always successful.
+    success = await acquire_seats(redis, str(screening_id), user_uuid, checkout_id)
+
     if success:
-        held_seats = await get_user_held_seats(redis, str(screening_id), user_uuid)
-        tickets_to_add = []
-        for seat_id in held_seats:
-            ticket = Ticket(
-                screening_seat_id=seat_id,
-                email=contact_info.get('email'),
-                phone=contact_info.get('phone'),
-                receipt_number=str(uuid.uuid7()),
-                status='confirmed',
-                checkout_id=checkout_id
-            )
-            tickets_to_add.append(ticket)
-        await asyncio.gather(*[db.add(ticket) for ticket in tickets_to_add])
-        await db.commit()
+        transaction_receipt_id = str(uuid.uuid7())
+        try:
+            async with db.begin():
+                screening_seats = [
+                    ScreeningSeat(
+                        screening_id=screening_id,
+                        seat_id=int(seat_id_from_key(seat_key)),
+                        is_taken=True,
+                    )
+                    for seat_key in held_seat_keys
+                ]
+                db.add_all(screening_seats)
+                await db.flush()
+
+                tickets_to_add = [
+                    Ticket(
+                        screening_seat_id=screening_seat.id,
+                        email=contact_info.get("email"),
+                        phone=contact_info.get("phone"),
+                        receipt_number=transaction_receipt_id,
+                        status="confirmed",
+                        checkout_id=checkout_id,
+                    )
+                    for screening_seat in screening_seats
+                ]
+                db.add_all(tickets_to_add)
+        except Exception as exc:
+            await release_acquired_seats(redis, str(screening_id), checkout_id)
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=(
+                    "Payment was accepted, but ticket creation failed. "
+                    "Seats were released."
+                ),
+            ) from exc
 
         # TODO: Implement email sending logic here
         # Generate a magic link for the receipt
@@ -225,6 +256,29 @@ async def cancel_checkout(
     # Cancel the checkout and release held seats
     success = await release_all_seats(redis, str(screening_id), user_uuid)
     return success
+
+@router.get("/tickets/all", response_model=list[Ticket])
+async def get_tickets(
+    user_uuid: str = user_uuid_dependency,
+    db: AsyncSession = db_dependency,
+):
+    # Fetch all users tickets from the database based on held seats
+    tickets = await db.execute(select(Ticket).where(Ticket.user_uuid == user_uuid))
+    return tickets.scalars().all()
+
+@router.get("/tickets/{ticket_id}", response_model=Ticket)
+async def get_ticket(
+    ticket_id: str,
+    user_uuid: str = user_uuid_dependency,
+    db: AsyncSession = db_dependency,
+):
+    ticket = await db.get(Ticket, ticket_id)
+    if not ticket or ticket.user_uuid != user_uuid:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Ticket not found",
+        )
+    return ticket
 
 @router.get("/qrcode", response_class=StreamingResponse)
 async def get_qr(token: str):
