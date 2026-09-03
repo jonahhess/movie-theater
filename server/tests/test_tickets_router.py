@@ -36,7 +36,7 @@ if "screening_seats" not in Base.metadata.tables:
         Column("id", Integer, primary_key=True),
     )
 
-TEST_USER_UUID = "test-user-uuid"
+TEST_USER_UUID = "0198f8db-cb17-75e8-9f80-0e18e015d741"
 
 
 def run(coro):
@@ -362,7 +362,7 @@ def test_make_payment_creates_tickets_for_held_seats(monkeypatch):
                 )
 
             response = await client.post(
-                f"/screenings/{screening_id}/checkout/checkout-1/payment",
+                f"/screenings/{screening_id}/checkout/payment",
                 json={"email": "fan@example.com", "phone": "555-0100"},
             )
 
@@ -378,7 +378,13 @@ def test_make_payment_creates_tickets_for_held_seats(monkeypatch):
             assert len(screening_seats) == 2
             assert len(tickets) == 2
             assert {ticket.email for ticket in tickets} == {"fan@example.com"}
-            assert {ticket.checkout_id for ticket in tickets} == {"checkout-1"}
+            checkout_ids = {ticket.checkout_id for ticket in tickets}
+            assert len(checkout_ids) == 1
+            checkout_id = checkout_ids.pop()
+            assert checkout_id is not None
+            assert {str(ticket.purchaser_uuid) for ticket in tickets} == {
+                TEST_USER_UUID
+            }
             assert {ticket.screening_seat_id for ticket in tickets} == {
                 screening_seat.id for screening_seat in screening_seats
             }
@@ -391,7 +397,7 @@ def test_make_payment_creates_tickets_for_held_seats(monkeypatch):
                 await redis.get(f"screening:{screening_id}::{seat_id}")
                 for seat_id in seat_ids
             ]
-            assert finalized_owners == ["checkout-1", "checkout-1"]
+            assert finalized_owners == [checkout_id, checkout_id]
 
     run(scenario())
 
@@ -402,7 +408,7 @@ def test_make_payment_releases_acquired_seats_when_ticket_creation_fails(monkeyp
             await redis.set("screening:10::A1", TEST_USER_UUID, ex=60)
 
             response = await client.post(
-                "/screenings/10/checkout/checkout-1/payment",
+                "/screenings/10/checkout/payment",
                 json={"email": "fan@example.com"},
             )
 
@@ -424,7 +430,7 @@ def test_make_payment_failure_releases_only_current_checkout(monkeypatch):
             await redis.set("screening:10::A2", TEST_USER_UUID, ex=60)
 
             response = await client.post(
-                "/screenings/10/checkout/checkout-2/payment",
+                "/screenings/10/checkout/payment",
                 json={"email": "fan@example.com"},
             )
 
