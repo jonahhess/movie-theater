@@ -1,4 +1,5 @@
 from datetime import datetime
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr
 
@@ -23,5 +24,6 @@ class TicketResponse(BaseModel):
     phone: str | None = None
     receipt_number: str
     checkout_id: str | None = None
+    purchaser_uuid: UUID | None = None
     status: str
     created_at: datetime
