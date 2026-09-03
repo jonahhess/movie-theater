@@ -10,6 +10,7 @@ from sqlalchemy import (
     ForeignKey,
     Integer,
     String,
+    UniqueConstraint,
     Uuid,
     text,
 )
@@ -117,7 +118,10 @@ class Seat(Base):
 
 class ScreeningSeat(Base):
     __tablename__ = "screening_seats"
-    __table_args__ = {"extend_existing": True}
+    __table_args__ = (
+        UniqueConstraint("screening_id", "seat_id", name="unique_seat_per_screening"),
+        {"extend_existing": True},
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     screening_id: Mapped[int] = mapped_column(
