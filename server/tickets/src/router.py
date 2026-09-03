@@ -202,6 +202,7 @@ async def make_payment(
     success = await acquire_seats(redis, str(screening_id), user_uuid, checkout_id)
 
     if success:
+        transaction_receipt_id = str(uuid.uuid7())
         try:
             async with db.begin():
                 screening_seats = [
@@ -220,7 +221,7 @@ async def make_payment(
                         screening_seat_id=screening_seat.id,
                         email=contact_info.get("email"),
                         phone=contact_info.get("phone"),
-                        receipt_number=str(uuid.uuid7()),
+                        receipt_number=transaction_receipt_id,
                         status="confirmed",
                         checkout_id=checkout_id,
                     )
