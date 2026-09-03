@@ -26,7 +26,7 @@ from tickets.src.redis_seats import (
     stream_sse_events,
     warm_screening_seats,
 )
-from tickets.src.schemas import LoginRequest, LoginResponse
+from tickets.src.schemas import LoginRequest, LoginResponse, TicketResponse
 from tickets.src.token import require_internal_service
 
 router = APIRouter()
@@ -178,11 +178,10 @@ async def get_checkout(
     return tickets.scalars().all()
 
 
-@router.post("/screenings/{screening_id}/checkout/{checkout_id}/payment", 
+@router.post("/screenings/{screening_id}/checkout/payment", 
              response_model=bool)
 async def make_payment(
     screening_id: int,
-    checkout_id: str,
     user_uuid: str = user_uuid_dependency,
     redis: Redis = redis_dependency,
     db: AsyncSession = db_dependency,
@@ -197,12 +196,13 @@ async def make_payment(
     held_seat_keys = await get_user_held_seats(redis, str(screening_id), user_uuid)
     if not held_seat_keys:
         return False
+    
+    checkout_id: str = str(uuid.uuid7())  # Generate a unique checkout ID for this transaction
 
     # For demonstration, we'll assume payment is always successful.
     success = await acquire_seats(redis, str(screening_id), user_uuid, checkout_id)
 
     if success:
-        transaction_receipt_id = str(uuid.uuid7())
         try:
             async with db.begin():
                 screening_seats = [
@@ -221,7 +221,7 @@ async def make_payment(
                         screening_seat_id=screening_seat.id,
                         email=contact_info.get("email"),
                         phone=contact_info.get("phone"),
-                        receipt_number=transaction_receipt_id,
+                        receipt_number=str(uuid.uuid7()),
                         status="confirmed",
                         checkout_id=checkout_id,
                     )
@@ -257,7 +257,7 @@ async def cancel_checkout(
     success = await release_all_seats(redis, str(screening_id), user_uuid)
     return success
 
-@router.get("/tickets/all", response_model=list[Ticket])
+@router.get("/tickets/all", response_model=list[TicketResponse])
 async def get_tickets(
     user_uuid: str = user_uuid_dependency,
     db: AsyncSession = db_dependency,
@@ -266,14 +266,16 @@ async def get_tickets(
     tickets = await db.execute(select(Ticket).where(Ticket.user_uuid == user_uuid))
     return tickets.scalars().all()
 
-@router.get("/tickets/{ticket_id}", response_model=Ticket)
+
+@router.get("/tickets/{ticket_id}", response_model=TicketResponse)
 async def get_ticket(
     ticket_id: str,
     user_uuid: str = user_uuid_dependency,
     db: AsyncSession = db_dependency,
 ):
-    ticket = await db.get(Ticket, ticket_id)
-    if not ticket or ticket.user_uuid != user_uuid:
+    result = await db.execute(select(Ticket).where(Ticket.id == ticket_id, Ticket.user_uuid == user_uuid))
+    ticket = result.scalar_one_or_none()    
+    if not ticket:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Ticket not found",
