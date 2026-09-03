@@ -1,4 +1,6 @@
-from pydantic import BaseModel, EmailStr
+from datetime import datetime
+
+from pydantic import BaseModel, ConfigDict, EmailStr
 
 
 class LoginRequest(BaseModel):
@@ -10,3 +12,16 @@ class LoginResponse(BaseModel):
     email: str
     username: str | None = None
     migrated_seat_count: int
+
+
+class TicketResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    screening_seat_id: int
+    email: str
+    phone: str | None = None
+    receipt_number: str
+    checkout_id: str | None = None
+    status: str
+    created_at: datetime
