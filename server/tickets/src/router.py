@@ -196,8 +196,8 @@ async def make_payment(
     held_seat_keys = await get_user_held_seats(redis, str(screening_id), user_uuid)
     if not held_seat_keys:
         return False
-    
-    checkout_id: str = str(uuid.uuid7())  # Generate a unique checkout ID for this transaction
+
+    checkout_id = str(uuid.uuid7())
 
     # For demonstration, we'll assume payment is always successful.
     success = await acquire_seats(redis, str(screening_id), user_uuid, checkout_id)
@@ -224,6 +224,7 @@ async def make_payment(
                         receipt_number=str(uuid.uuid7()),
                         status="confirmed",
                         checkout_id=checkout_id,
+                        purchaser_uuid=uuid.UUID(user_uuid),
                     )
                     for screening_seat in screening_seats
                 ]
@@ -263,18 +264,27 @@ async def get_tickets(
     db: AsyncSession = db_dependency,
 ):
     # Fetch all users tickets from the database based on held seats
-    tickets = await db.execute(select(Ticket).where(Ticket.user_uuid == user_uuid))
+    purchaser_uuid = uuid.UUID(user_uuid)
+    tickets = await db.execute(
+        select(Ticket).where(Ticket.purchaser_uuid == purchaser_uuid)
+    )
     return tickets.scalars().all()
 
 
 @router.get("/tickets/{ticket_id}", response_model=TicketResponse)
 async def get_ticket(
-    ticket_id: str,
+    ticket_id: int,
     user_uuid: str = user_uuid_dependency,
     db: AsyncSession = db_dependency,
 ):
-    result = await db.execute(select(Ticket).where(Ticket.id == ticket_id, Ticket.user_uuid == user_uuid))
-    ticket = result.scalar_one_or_none()    
+    purchaser_uuid = uuid.UUID(user_uuid)
+    result = await db.execute(
+        select(Ticket).where(
+            Ticket.id == ticket_id,
+            Ticket.purchaser_uuid == purchaser_uuid,
+        )
+    )
+    ticket = result.scalar_one_or_none()
     if not ticket:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
