@@ -114,3 +114,25 @@ class Seat(Base):
     # Relationships
     auditorium: Mapped[Auditorium] = relationship(
         "Auditorium", back_populates="seats")
+
+class ScreeningSeat(Base):
+    __tablename__ = "screening_seats"
+    __table_args__ = {"extend_existing": True}
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    screening_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("screenings.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    seat_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("seats.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    is_taken: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=False,
+        server_default=text("CURRENT_TIMESTAMP"),
+    )
