@@ -11,190 +11,317 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Admin Home */
-        get: operations["admin_home__get"];
-        put?: never;
-        /** Admin Login */
-        post: operations["admin_login__post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/users": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Admin Users */
-        get: operations["get_admin_users_users_get"];
-        put?: never;
-        /** Create Admin User */
-        post: operations["create_admin_user_users_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/users/{user_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Admin User */
-        get: operations["get_admin_user_users__user_id__get"];
-        /** Update Admin User */
-        put: operations["update_admin_user_users__user_id__put"];
-        post?: never;
-        /** Delete Admin User */
-        delete: operations["delete_admin_user_users__user_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/movies": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List Movies */
-        get: operations["list_movies_movies_get"];
-        put?: never;
-        /** Create Movie */
-        post: operations["create_movie_movies_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/movies/{movie_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Movie */
-        get: operations["get_movie_movies__movie_id__get"];
+        /** Tickets Welcome */
+        get: operations["tickets_welcome__get"];
         put?: never;
         post?: never;
-        /** Delete Movie */
-        delete: operations["delete_movie_movies__movie_id__delete"];
-        options?: never;
-        head?: never;
-        /** Update Movie */
-        patch: operations["update_movie_movies__movie_id__patch"];
-        trace?: never;
-    };
-    "/screenings": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List Screenings */
-        get: operations["list_screenings_screenings_get"];
-        put?: never;
-        /** Create Screening */
-        post: operations["create_screening_screenings_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/screenings/{screening_id}": {
+    "/login": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Get Screening */
-        get: operations["get_screening_screenings__screening_id__get"];
+        get?: never;
         put?: never;
-        post?: never;
-        /** Delete Screening */
-        delete: operations["delete_screening_screenings__screening_id__delete"];
-        options?: never;
-        head?: never;
-        /** Update Screening */
-        patch: operations["update_screening_screenings__screening_id__patch"];
-        trace?: never;
-    };
-    "/auditoriums": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List Auditoriums */
-        get: operations["list_auditoriums_auditoriums_get"];
-        put?: never;
-        /** Create Auditorium */
-        post: operations["create_auditorium_auditoriums_post"];
+        /** Login */
+        post: operations["login_login_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/auditoriums/{auditorium_id}": {
+    "/logout": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Get Auditorium */
-        get: operations["get_auditorium_auditoriums__auditorium_id__get"];
+        get?: never;
         put?: never;
-        post?: never;
-        /** Delete Auditorium */
-        delete: operations["delete_auditorium_auditoriums__auditorium_id__delete"];
+        /** Logout */
+        post: operations["logout_logout_post"];
+        delete?: never;
         options?: never;
         head?: never;
-        /** Update Auditorium */
-        patch: operations["update_auditorium_auditoriums__auditorium_id__patch"];
+        patch?: never;
         trace?: never;
     };
-    "/auditoriums/{auditorium_id}/seat-map": {
+    "/release_seats": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Get Seat Map */
-        get: operations["get_seat_map_auditoriums__auditorium_id__seat_map_get"];
-        /** Replace Seat Map */
-        put: operations["replace_seat_map_auditoriums__auditorium_id__seat_map_put"];
+        get?: never;
+        put?: never;
+        /** Release Seats Endpoint */
+        post: operations["release_seats_endpoint_release_seats_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/screenings/{screening_id}/availability/stream": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Stream Seat Availability */
+        get: operations["stream_seat_availability_screenings__screening_id__availability_stream_get"];
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        /** Update Seat Map */
-        patch: operations["update_seat_map_auditoriums__auditorium_id__seat_map_patch"];
+        patch?: never;
+        trace?: never;
+    };
+    "/screenings/{screening_id}/seats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** View Selected Seats */
+        get: operations["view_selected_seats_screenings__screening_id__seats_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/screenings/{screening_id}/seats/{seat_id}/hold": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Hold Seat */
+        post: operations["hold_seat_screenings__screening_id__seats__seat_id__hold_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/screenings/{screening_id}/seats/checkout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Checkout Seats */
+        post: operations["checkout_seats_screenings__screening_id__seats_checkout_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/screenings/{screening_id}/checkout/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Checkout */
+        get: operations["get_checkout_screenings__screening_id__checkout__get"];
+        put?: never;
+        post?: never;
+        /** Cancel Checkout */
+        delete: operations["cancel_checkout_screenings__screening_id__checkout__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/screenings/{screening_id}/checkout/{checkout_id}/payment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Make Payment */
+        post: operations["make_payment_screenings__screening_id__checkout__checkout_id__payment_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tickets/all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Tickets */
+        get: operations["get_tickets_tickets_all_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tickets/{ticket_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Ticket */
+        get: operations["get_ticket_tickets__ticket_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/qrcode": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Qr */
+        get: operations["get_qr_qrcode_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/internal/screenings/{screening_id}/sale/open": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Open Screening Sale */
+        post: operations["open_screening_sale_internal_screenings__screening_id__sale_open_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/internal/screenings/{screening_id}/sale/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Close Screening Sale Endpoint */
+        post: operations["close_screening_sale_endpoint_internal_screenings__screening_id__sale_close_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/internal/{ticket_id}/redeem": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Invalidate Ticket */
+        post: operations["invalidate_ticket_internal__ticket_id__redeem_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/payments/webhook": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Payment Webhook */
+        post: operations["payment_webhook_payments_webhook_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/internal/cleanup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cleanup Internal */
+        post: operations["cleanup_internal_internal_cleanup_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        /** AdminLoginRequest */
-        AdminLoginRequest: {
+        /** HTTPValidationError */
+        HTTPValidationError: {
+            /** Detail */
+            detail?: components["schemas"]["ValidationError"][];
+        };
+        /** LoginRequest */
+        LoginRequest: {
             /**
              * Email
              * Format: email
@@ -203,123 +330,33 @@ export interface components {
             /** Password */
             password: string;
         };
-        /** AdminLoginResponse */
-        AdminLoginResponse: {
-            /** Access Token */
-            access_token: string;
-            /**
-             * Token Type
-             * @default bearer
-             */
-            token_type: string;
-            /** Expires In Seconds */
-            expires_in_seconds: number;
-        };
-        /** AuditoriumSchema */
-        AuditoriumSchema: {
-            /** Id */
-            id: number;
-            /** Name */
-            name: string;
-            /** Is Active */
-            is_active: boolean;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-        };
-        /** AuditoriumWithSeats */
-        AuditoriumWithSeats: {
-            /** Id */
-            id: number;
-            /** Name */
-            name: string;
-            /** Is Active */
-            is_active: boolean;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /**
-             * Seats
-             * @default []
-             */
-            seats: components["schemas"]["SeatBase"][];
-        };
-        /** HTTPValidationError */
-        HTTPValidationError: {
-            /** Detail */
-            detail?: components["schemas"]["ValidationError"][];
-        };
-        /** MovieSchema */
-        MovieSchema: {
-            /** Id */
-            id: number;
-            /** Title */
-            title: string;
-            /** Description */
-            description: string | null;
-            /** Duration Minutes */
-            duration_minutes: number;
-            /** Rating */
-            rating: string;
-            /** Release Date */
-            release_date: string | null;
-            /** Status */
-            status: string;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-        };
-        /** ScreeningSchema */
-        ScreeningSchema: {
-            /** Id */
-            id: number;
-            /** Movie Id */
-            movie_id: number;
-            /** Auditorium Id */
-            auditorium_id: number;
-            /** Start Time */
-            start_time: string;
-            /** Price */
-            price: number;
-            /** Status */
-            status: string;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-        };
-        /** SeatBase */
-        SeatBase: {
-            /** Id */
-            id: number;
-            /** Auditorium Id */
-            auditorium_id: number;
-            /** Seat Number */
-            seat_number: string;
-        };
-        /** UserSchema */
-        UserSchema: {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
+        /** LoginResponse */
+        LoginResponse: {
+            /** User Id */
+            user_id: string;
+            /** Email */
+            email: string;
             /** Username */
-            username: string;
-            /**
-             * Email
-             * Format: email
-             */
+            username?: string | null;
+            /** Migrated Seat Count */
+            migrated_seat_count: number;
+        };
+        /** TicketResponse */
+        TicketResponse: {
+            /** Id */
+            id: number;
+            /** Screening Seat Id */
+            screening_seat_id: number;
+            /** Email */
             email: string;
             /** Phone */
-            phone: string | null;
+            phone?: string | null;
+            /** Receipt Number */
+            receipt_number: string;
+            /** Checkout Id */
+            checkout_id?: string | null;
+            /** Status */
+            status: string;
             /**
              * Created At
              * Format: date-time
@@ -348,7 +385,7 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    admin_home__get: {
+    tickets_welcome__get: {
         parameters: {
             query?: never;
             header?: never;
@@ -368,7 +405,7 @@ export interface operations {
             };
         };
     };
-    admin_login__post: {
+    login_login_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -377,7 +414,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["AdminLoginRequest"];
+                "application/json": components["schemas"]["LoginRequest"];
             };
         };
         responses: {
@@ -387,7 +424,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AdminLoginResponse"];
+                    "application/json": components["schemas"]["LoginResponse"];
                 };
             };
             /** @description Validation Error */
@@ -401,247 +438,11 @@ export interface operations {
             };
         };
     };
-    get_admin_users_users_get: {
+    logout_logout_post: {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserSchema"][];
-                };
-            };
-        };
-    };
-    create_admin_user_users_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UserSchema"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserSchema"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_admin_user_users__user_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                user_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserSchema"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_admin_user_users__user_id__put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                user_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UserSchema"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserSchema"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_admin_user_users__user_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                user_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserSchema"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_movies_movies_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MovieSchema"][];
-                };
-            };
-        };
-    };
-    create_movie_movies_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["MovieSchema"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MovieSchema"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_movie_movies__movie_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                movie_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MovieSchema"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_movie_movies__movie_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                movie_id: string;
-            };
             cookie?: never;
         };
         requestBody?: never;
@@ -655,53 +456,9 @@ export interface operations {
                     "application/json": unknown;
                 };
             };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
         };
     };
-    update_movie_movies__movie_id__patch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                movie_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["MovieSchema"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MovieSchema"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_screenings_screenings_get: {
+    release_seats_endpoint_release_seats_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -716,32 +473,30 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ScreeningSchema"][];
+                    "application/json": boolean;
                 };
             };
         };
     };
-    create_screening_screenings_post: {
+    stream_seat_availability_screenings__screening_id__availability_stream_get: {
         parameters: {
-            query?: never;
+            query?: {
+                last_event_id?: string;
+            };
             header?: never;
-            path?: never;
+            path: {
+                screening_id: number;
+            };
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ScreeningSchema"];
-            };
-        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": components["schemas"]["ScreeningSchema"];
-                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
@@ -754,7 +509,7 @@ export interface operations {
             };
         };
     };
-    get_screening_screenings__screening_id__get: {
+    view_selected_seats_screenings__screening_id__seats_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -771,7 +526,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ScreeningSchema"];
+                    "application/json": string[];
                 };
             };
             /** @description Validation Error */
@@ -785,7 +540,39 @@ export interface operations {
             };
         };
     };
-    delete_screening_screenings__screening_id__delete: {
+    hold_seat_screenings__screening_id__seats__seat_id__hold_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                screening_id: number;
+                seat_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": boolean;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    checkout_seats_screenings__screening_id__seats_checkout_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -802,7 +589,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": boolean;
                 };
             };
             /** @description Validation Error */
@@ -816,7 +603,7 @@ export interface operations {
             };
         };
     };
-    update_screening_screenings__screening_id__patch: {
+    get_checkout_screenings__screening_id__checkout__get: {
         parameters: {
             query?: never;
             header?: never;
@@ -825,39 +612,6 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ScreeningSchema"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ScreeningSchema"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_auditoriums_auditoriums_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
         requestBody?: never;
         responses: {
             /** @description Successful Response */
@@ -866,31 +620,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AuditoriumSchema"][];
-                };
-            };
-        };
-    };
-    create_auditorium_auditoriums_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AuditoriumSchema"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AuditoriumSchema"];
+                    "application/json": string[];
                 };
             };
             /** @description Validation Error */
@@ -904,12 +634,12 @@ export interface operations {
             };
         };
     };
-    get_auditorium_auditoriums__auditorium_id__get: {
+    cancel_checkout_screenings__screening_id__checkout__delete: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                auditorium_id: string;
+                screening_id: number;
             };
             cookie?: never;
         };
@@ -921,7 +651,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AuditoriumSchema"];
+                    "application/json": boolean;
                 };
             };
             /** @description Validation Error */
@@ -935,113 +665,17 @@ export interface operations {
             };
         };
     };
-    delete_auditorium_auditoriums__auditorium_id__delete: {
+    make_payment_screenings__screening_id__checkout__checkout_id__payment_post: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                auditorium_id: string;
+                screening_id: number;
+                checkout_id: string;
             };
             cookie?: never;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_auditorium_auditoriums__auditorium_id__patch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                auditorium_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AuditoriumSchema"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AuditoriumSchema"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_seat_map_auditoriums__auditorium_id__seat_map_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                auditorium_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AuditoriumWithSeats"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    replace_seat_map_auditoriums__auditorium_id__seat_map_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                auditorium_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
+        requestBody?: {
             content: {
                 "application/json": {
                     [key: string]: unknown;
@@ -1055,7 +689,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AuditoriumWithSeats"];
+                    "application/json": boolean;
                 };
             };
             /** @description Validation Error */
@@ -1069,22 +703,14 @@ export interface operations {
             };
         };
     };
-    update_seat_map_auditoriums__auditorium_id__seat_map_patch: {
+    get_tickets_tickets_all_get: {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                auditorium_id: string;
-            };
+            path?: never;
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": {
-                    [key: string]: unknown;
-                };
-            };
-        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {
@@ -1092,7 +718,29 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AuditoriumWithSeats"];
+                    "application/json": components["schemas"]["TicketResponse"][];
+                };
+            };
+        };
+    };
+    get_ticket_tickets__ticket_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ticket_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TicketResponse"];
                 };
             };
             /** @description Validation Error */
@@ -1102,6 +750,172 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_qr_qrcode_get: {
+        parameters: {
+            query: {
+                token: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    open_screening_sale_internal_screenings__screening_id__sale_open_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                screening_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    close_screening_sale_endpoint_internal_screenings__screening_id__sale_close_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                screening_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    invalidate_ticket_internal__ticket_id__redeem_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ticket_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    payment_webhook_payments_webhook_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Payment webhook received successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    cleanup_internal_internal_cleanup_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
                 };
             };
         };
