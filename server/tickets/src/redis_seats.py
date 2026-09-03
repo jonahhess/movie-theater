@@ -15,6 +15,10 @@ def _seat_id_from_key(key: str) -> str:
     return key.rsplit("::", maxsplit=1)[-1]
 
 
+def seat_id_from_key(key: str) -> str:
+    return _seat_id_from_key(key)
+
+
 def _parse_seat_key(key: str) -> tuple[str, str] | None:
     prefix = "screening:"
     separator = "::"
@@ -175,6 +179,7 @@ ACQUIRE_SEATS_SCRIPT = """
 local finalized_count = 0
 local owned_count = 0
 local target_user = ARGV[1]
+local receipt_id = ARGV[2]
 
 for i, key in ipairs(KEYS) do
     local current = redis.call('GET', key)
@@ -185,10 +190,9 @@ for i, key in ipairs(KEYS) do
         if ttl > 0 then
             -- PERSIST returns 1 if timeout was removed, 0 if key has no expiry
             if redis.call('PERSIST', key) == 1 then
+                redis.call('SET', key, receipt_id)
                 finalized_count = finalized_count + 1
             end
-        elseif ttl == -1 then
-            finalized_count = finalized_count + 1
         end
     end
 end
@@ -196,7 +200,12 @@ end
 return {owned_count, finalized_count}
 """
 
-async def acquire_seats(redis: Redis, screening_id: str, user_uuid: str) -> bool:
+async def acquire_seats(
+    redis: Redis,
+    screening_id: str,
+    user_uuid: str,
+    receipt_id: str,
+) -> bool:
     """
     If payment goes through, call this function to persist ownership of all tickets 
         reserved under user_uuid which have expiration.
@@ -222,7 +231,8 @@ async def acquire_seats(redis: Redis, screening_id: str, user_uuid: str) -> bool
             ACQUIRE_SEATS_SCRIPT, 
             len(purchased_keys), 
             *purchased_keys, 
-            user_uuid
+            user_uuid,
+            receipt_id,
         )
         
         # Returns True only if owned keys were successfully finalized
@@ -311,6 +321,28 @@ async def release_all_seats(
     except RedisError as e:
         print(f"Failed to execute release_all script: {e}")
         return 0
+
+
+async def release_acquired_seats(
+    redis: Redis,
+    screening_id: str,
+    receipt_id: str,
+) -> int:
+    """Release finalized seats after a downstream checkout failure."""
+    seat_keys = await _get_user_seat_keys(redis, screening_id, receipt_id)
+    if not seat_keys:
+        return 0
+
+    deleted_count = await redis.delete(*seat_keys)
+    for key in seat_keys:
+        parsed = _parse_seat_key(key)
+        if parsed is None:
+            continue
+
+        actual_screening_id, seat_id = parsed
+        await publish_seat_update(redis, actual_screening_id, seat_id, "available")
+
+    return int(deleted_count)
 
 CHANGE_OWNER_SCRIPT = """
 local updated_count = 0
