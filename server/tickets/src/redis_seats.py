@@ -326,10 +326,10 @@ async def release_all_seats(
 async def release_acquired_seats(
     redis: Redis,
     screening_id: str,
-    receipt_id: str,
+    checkout_id: str,
 ) -> int:
     """Release finalized seats after a downstream checkout failure."""
-    seat_keys = await _get_user_seat_keys(redis, screening_id, receipt_id)
+    seat_keys = await _get_user_seat_keys(redis, screening_id, checkout_id)
     if not seat_keys:
         return 0
 
