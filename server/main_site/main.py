@@ -1,6 +1,7 @@
 from contextlib import AsyncExitStack, asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from admin.main import admin
 from main_site.src.error_handlers import register_exception_handlers
@@ -23,6 +24,14 @@ app = FastAPI(title="Main Root Application", lifespan=lifespan)
 register_exception_handlers(app)
 
 app.include_router(router)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # Adjust this to your frontend's URL in production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Mount the sub-apps (their internal routes use their own database.py files)
 app.mount("/admin", admin)
