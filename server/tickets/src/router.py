@@ -189,7 +189,7 @@ async def make_payment(
 
     if contact_info is None or not contact_info.get("email"):
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Email is required to complete checkout",
         )
 
