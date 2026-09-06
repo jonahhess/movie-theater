@@ -4,7 +4,7 @@
  */
 
 export interface paths {
-    "/": {
+    "/api/v1/admin/": {
         parameters: {
             query?: never;
             header?: never;
@@ -12,17 +12,17 @@ export interface paths {
             cookie?: never;
         };
         /** Admin Home */
-        get: operations["admin_home__get"];
+        get: operations["admin_home_api_v1_admin__get"];
         put?: never;
         /** Admin Login */
-        post: operations["admin_login__post"];
+        post: operations["admin_login_api_v1_admin__post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/users": {
+    "/api/v1/admin/users": {
         parameters: {
             query?: never;
             header?: never;
@@ -30,17 +30,17 @@ export interface paths {
             cookie?: never;
         };
         /** Get Users */
-        get: operations["get_users_users_get"];
+        get: operations["get_users_api_v1_admin_users_get"];
         put?: never;
         /** Create User */
-        post: operations["create_user_users_post"];
+        post: operations["create_user_api_v1_admin_users_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/users/{user_id}": {
+    "/api/v1/admin/users/{user_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -48,18 +48,18 @@ export interface paths {
             cookie?: never;
         };
         /** Get User */
-        get: operations["get_user_users__user_id__get"];
+        get: operations["get_user_api_v1_admin_users__user_id__get"];
         /** Update User */
-        put: operations["update_user_users__user_id__put"];
+        put: operations["update_user_api_v1_admin_users__user_id__put"];
         post?: never;
         /** Delete User */
-        delete: operations["delete_user_users__user_id__delete"];
+        delete: operations["delete_user_api_v1_admin_users__user_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/movies": {
+    "/api/v1/admin/movies": {
         parameters: {
             query?: never;
             header?: never;
@@ -67,17 +67,17 @@ export interface paths {
             cookie?: never;
         };
         /** List Movies */
-        get: operations["list_movies_movies_get"];
+        get: operations["list_movies_api_v1_admin_movies_get"];
         put?: never;
         /** Create Movie */
-        post: operations["create_movie_movies_post"];
+        post: operations["create_movie_api_v1_admin_movies_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/movies/{movie_id}": {
+    "/api/v1/admin/movies/{movie_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -85,18 +85,18 @@ export interface paths {
             cookie?: never;
         };
         /** Get Movie */
-        get: operations["get_movie_movies__movie_id__get"];
+        get: operations["get_movie_api_v1_admin_movies__movie_id__get"];
         put?: never;
         post?: never;
         /** Delete Movie */
-        delete: operations["delete_movie_movies__movie_id__delete"];
+        delete: operations["delete_movie_api_v1_admin_movies__movie_id__delete"];
         options?: never;
         head?: never;
         /** Update Movie */
-        patch: operations["update_movie_movies__movie_id__patch"];
+        patch: operations["update_movie_api_v1_admin_movies__movie_id__patch"];
         trace?: never;
     };
-    "/screenings": {
+    "/api/v1/admin/screenings": {
         parameters: {
             query?: never;
             header?: never;
@@ -104,17 +104,17 @@ export interface paths {
             cookie?: never;
         };
         /** List Screenings */
-        get: operations["list_screenings_screenings_get"];
+        get: operations["list_screenings_api_v1_admin_screenings_get"];
         put?: never;
         /** Create Screening */
-        post: operations["create_screening_screenings_post"];
+        post: operations["create_screening_api_v1_admin_screenings_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/screenings/{screening_id}": {
+    "/api/v1/admin/screenings/{screening_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -122,18 +122,18 @@ export interface paths {
             cookie?: never;
         };
         /** Get Screening */
-        get: operations["get_screening_screenings__screening_id__get"];
+        get: operations["get_screening_api_v1_admin_screenings__screening_id__get"];
         put?: never;
         post?: never;
         /** Delete Screening */
-        delete: operations["delete_screening_screenings__screening_id__delete"];
+        delete: operations["delete_screening_api_v1_admin_screenings__screening_id__delete"];
         options?: never;
         head?: never;
         /** Update Screening */
-        patch: operations["update_screening_screenings__screening_id__patch"];
+        patch: operations["update_screening_api_v1_admin_screenings__screening_id__patch"];
         trace?: never;
     };
-    "/screenings/{screening_id}/sale/open": {
+    "/api/v1/admin/screenings/{screening_id}/sale/open": {
         parameters: {
             query?: never;
             header?: never;
@@ -143,14 +143,14 @@ export interface paths {
         get?: never;
         put?: never;
         /** Open Screening Sale */
-        post: operations["open_screening_sale_screenings__screening_id__sale_open_post"];
+        post: operations["open_screening_sale_api_v1_admin_screenings__screening_id__sale_open_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/screenings/{screening_id}/sale/close": {
+    "/api/v1/admin/screenings/{screening_id}/sale/close": {
         parameters: {
             query?: never;
             header?: never;
@@ -160,14 +160,14 @@ export interface paths {
         get?: never;
         put?: never;
         /** Close Screening Sale */
-        post: operations["close_screening_sale_screenings__screening_id__sale_close_post"];
+        post: operations["close_screening_sale_api_v1_admin_screenings__screening_id__sale_close_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/auditoriums": {
+    "/api/v1/admin/auditoriums": {
         parameters: {
             query?: never;
             header?: never;
@@ -175,17 +175,17 @@ export interface paths {
             cookie?: never;
         };
         /** List Auditoriums */
-        get: operations["list_auditoriums_auditoriums_get"];
+        get: operations["list_auditoriums_api_v1_admin_auditoriums_get"];
         put?: never;
         /** Create Auditorium */
-        post: operations["create_auditorium_auditoriums_post"];
+        post: operations["create_auditorium_api_v1_admin_auditoriums_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/auditoriums/{auditorium_id}": {
+    "/api/v1/admin/auditoriums/{auditorium_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -193,18 +193,18 @@ export interface paths {
             cookie?: never;
         };
         /** Get Auditorium */
-        get: operations["get_auditorium_auditoriums__auditorium_id__get"];
+        get: operations["get_auditorium_api_v1_admin_auditoriums__auditorium_id__get"];
         put?: never;
         post?: never;
         /** Delete Auditorium */
-        delete: operations["delete_auditorium_auditoriums__auditorium_id__delete"];
+        delete: operations["delete_auditorium_api_v1_admin_auditoriums__auditorium_id__delete"];
         options?: never;
         head?: never;
         /** Update Auditorium */
-        patch: operations["update_auditorium_auditoriums__auditorium_id__patch"];
+        patch: operations["update_auditorium_api_v1_admin_auditoriums__auditorium_id__patch"];
         trace?: never;
     };
-    "/auditoriums/{auditorium_id}/seats": {
+    "/api/v1/admin/auditoriums/{auditorium_id}/seats": {
         parameters: {
             query?: never;
             header?: never;
@@ -212,18 +212,18 @@ export interface paths {
             cookie?: never;
         };
         /** Get Seats */
-        get: operations["get_seats_auditoriums__auditorium_id__seats_get"];
+        get: operations["get_seats_api_v1_admin_auditoriums__auditorium_id__seats_get"];
         /** Replace Seats */
-        put: operations["replace_seats_auditoriums__auditorium_id__seats_put"];
+        put: operations["replace_seats_api_v1_admin_auditoriums__auditorium_id__seats_put"];
         /** Create Seat */
-        post: operations["create_seat_auditoriums__auditorium_id__seats_post"];
+        post: operations["create_seat_api_v1_admin_auditoriums__auditorium_id__seats_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/auditoriums/{auditorium_id}/seats/{seat_id}": {
+    "/api/v1/admin/auditoriums/{auditorium_id}/seats/{seat_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -231,15 +231,15 @@ export interface paths {
             cookie?: never;
         };
         /** Get Seat */
-        get: operations["get_seat_auditoriums__auditorium_id__seats__seat_id__get"];
+        get: operations["get_seat_api_v1_admin_auditoriums__auditorium_id__seats__seat_id__get"];
         put?: never;
         post?: never;
         /** Delete Seat */
-        delete: operations["delete_seat_auditoriums__auditorium_id__seats__seat_id__delete"];
+        delete: operations["delete_seat_api_v1_admin_auditoriums__auditorium_id__seats__seat_id__delete"];
         options?: never;
         head?: never;
         /** Update Seat */
-        patch: operations["update_seat_auditoriums__auditorium_id__seats__seat_id__patch"];
+        patch: operations["update_seat_api_v1_admin_auditoriums__auditorium_id__seats__seat_id__patch"];
         trace?: never;
     };
 }
@@ -574,7 +574,7 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    admin_home__get: {
+    admin_home_api_v1_admin__get: {
         parameters: {
             query?: never;
             header?: never;
@@ -594,7 +594,7 @@ export interface operations {
             };
         };
     };
-    admin_login__post: {
+    admin_login_api_v1_admin__post: {
         parameters: {
             query?: never;
             header?: never;
@@ -627,7 +627,7 @@ export interface operations {
             };
         };
     };
-    get_users_users_get: {
+    get_users_api_v1_admin_users_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -647,7 +647,7 @@ export interface operations {
             };
         };
     };
-    create_user_users_post: {
+    create_user_api_v1_admin_users_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -680,7 +680,7 @@ export interface operations {
             };
         };
     };
-    get_user_users__user_id__get: {
+    get_user_api_v1_admin_users__user_id__get: {
         parameters: {
             query?: never;
             header?: never;
@@ -711,7 +711,7 @@ export interface operations {
             };
         };
     };
-    update_user_users__user_id__put: {
+    update_user_api_v1_admin_users__user_id__put: {
         parameters: {
             query?: never;
             header?: never;
@@ -746,7 +746,7 @@ export interface operations {
             };
         };
     };
-    delete_user_users__user_id__delete: {
+    delete_user_api_v1_admin_users__user_id__delete: {
         parameters: {
             query?: never;
             header?: never;
@@ -775,7 +775,7 @@ export interface operations {
             };
         };
     };
-    list_movies_movies_get: {
+    list_movies_api_v1_admin_movies_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -795,7 +795,7 @@ export interface operations {
             };
         };
     };
-    create_movie_movies_post: {
+    create_movie_api_v1_admin_movies_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -828,7 +828,7 @@ export interface operations {
             };
         };
     };
-    get_movie_movies__movie_id__get: {
+    get_movie_api_v1_admin_movies__movie_id__get: {
         parameters: {
             query?: never;
             header?: never;
@@ -859,7 +859,7 @@ export interface operations {
             };
         };
     };
-    delete_movie_movies__movie_id__delete: {
+    delete_movie_api_v1_admin_movies__movie_id__delete: {
         parameters: {
             query?: never;
             header?: never;
@@ -888,7 +888,7 @@ export interface operations {
             };
         };
     };
-    update_movie_movies__movie_id__patch: {
+    update_movie_api_v1_admin_movies__movie_id__patch: {
         parameters: {
             query?: never;
             header?: never;
@@ -923,7 +923,7 @@ export interface operations {
             };
         };
     };
-    list_screenings_screenings_get: {
+    list_screenings_api_v1_admin_screenings_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -943,7 +943,7 @@ export interface operations {
             };
         };
     };
-    create_screening_screenings_post: {
+    create_screening_api_v1_admin_screenings_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -976,7 +976,7 @@ export interface operations {
             };
         };
     };
-    get_screening_screenings__screening_id__get: {
+    get_screening_api_v1_admin_screenings__screening_id__get: {
         parameters: {
             query?: never;
             header?: never;
@@ -1007,7 +1007,7 @@ export interface operations {
             };
         };
     };
-    delete_screening_screenings__screening_id__delete: {
+    delete_screening_api_v1_admin_screenings__screening_id__delete: {
         parameters: {
             query?: never;
             header?: never;
@@ -1036,7 +1036,7 @@ export interface operations {
             };
         };
     };
-    update_screening_screenings__screening_id__patch: {
+    update_screening_api_v1_admin_screenings__screening_id__patch: {
         parameters: {
             query?: never;
             header?: never;
@@ -1071,7 +1071,7 @@ export interface operations {
             };
         };
     };
-    open_screening_sale_screenings__screening_id__sale_open_post: {
+    open_screening_sale_api_v1_admin_screenings__screening_id__sale_open_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -1102,7 +1102,7 @@ export interface operations {
             };
         };
     };
-    close_screening_sale_screenings__screening_id__sale_close_post: {
+    close_screening_sale_api_v1_admin_screenings__screening_id__sale_close_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -1133,7 +1133,7 @@ export interface operations {
             };
         };
     };
-    list_auditoriums_auditoriums_get: {
+    list_auditoriums_api_v1_admin_auditoriums_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -1153,7 +1153,7 @@ export interface operations {
             };
         };
     };
-    create_auditorium_auditoriums_post: {
+    create_auditorium_api_v1_admin_auditoriums_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -1186,7 +1186,7 @@ export interface operations {
             };
         };
     };
-    get_auditorium_auditoriums__auditorium_id__get: {
+    get_auditorium_api_v1_admin_auditoriums__auditorium_id__get: {
         parameters: {
             query?: never;
             header?: never;
@@ -1217,7 +1217,7 @@ export interface operations {
             };
         };
     };
-    delete_auditorium_auditoriums__auditorium_id__delete: {
+    delete_auditorium_api_v1_admin_auditoriums__auditorium_id__delete: {
         parameters: {
             query?: never;
             header?: never;
@@ -1246,7 +1246,7 @@ export interface operations {
             };
         };
     };
-    update_auditorium_auditoriums__auditorium_id__patch: {
+    update_auditorium_api_v1_admin_auditoriums__auditorium_id__patch: {
         parameters: {
             query?: never;
             header?: never;
@@ -1281,7 +1281,7 @@ export interface operations {
             };
         };
     };
-    get_seats_auditoriums__auditorium_id__seats_get: {
+    get_seats_api_v1_admin_auditoriums__auditorium_id__seats_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -1312,7 +1312,7 @@ export interface operations {
             };
         };
     };
-    replace_seats_auditoriums__auditorium_id__seats_put: {
+    replace_seats_api_v1_admin_auditoriums__auditorium_id__seats_put: {
         parameters: {
             query?: never;
             header?: never;
@@ -1347,7 +1347,7 @@ export interface operations {
             };
         };
     };
-    create_seat_auditoriums__auditorium_id__seats_post: {
+    create_seat_api_v1_admin_auditoriums__auditorium_id__seats_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -1382,7 +1382,7 @@ export interface operations {
             };
         };
     };
-    get_seat_auditoriums__auditorium_id__seats__seat_id__get: {
+    get_seat_api_v1_admin_auditoriums__auditorium_id__seats__seat_id__get: {
         parameters: {
             query?: never;
             header?: never;
@@ -1414,7 +1414,7 @@ export interface operations {
             };
         };
     };
-    delete_seat_auditoriums__auditorium_id__seats__seat_id__delete: {
+    delete_seat_api_v1_admin_auditoriums__auditorium_id__seats__seat_id__delete: {
         parameters: {
             query?: never;
             header?: never;
@@ -1444,7 +1444,7 @@ export interface operations {
             };
         };
     };
-    update_seat_auditoriums__auditorium_id__seats__seat_id__patch: {
+    update_seat_api_v1_admin_auditoriums__auditorium_id__seats__seat_id__patch: {
         parameters: {
             query?: never;
             header?: never;

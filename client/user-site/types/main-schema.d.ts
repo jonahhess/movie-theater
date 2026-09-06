@@ -4,7 +4,7 @@
  */
 
 export interface paths {
-    "/": {
+    "/api/v1/": {
         parameters: {
             query?: never;
             header?: never;
@@ -12,7 +12,7 @@ export interface paths {
             cookie?: never;
         };
         /** Home */
-        get: operations["home__get"];
+        get: operations["home_api_v1__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -21,7 +21,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/movies": {
+    "/api/v1/movies": {
         parameters: {
             query?: never;
             header?: never;
@@ -29,7 +29,7 @@ export interface paths {
             cookie?: never;
         };
         /** Browse Movies */
-        get: operations["browse_movies_movies_get"];
+        get: operations["browse_movies_api_v1_movies_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -38,7 +38,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/movies/{movie_id}": {
+    "/api/v1/movies/{movie_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -46,7 +46,7 @@ export interface paths {
             cookie?: never;
         };
         /** Movie Details */
-        get: operations["movie_details_movies__movie_id__get"];
+        get: operations["movie_details_api_v1_movies__movie_id__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -55,7 +55,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/screenings": {
+    "/api/v1/screenings": {
         parameters: {
             query?: never;
             header?: never;
@@ -63,7 +63,7 @@ export interface paths {
             cookie?: never;
         };
         /** Browse Screenings */
-        get: operations["browse_screenings_screenings_get"];
+        get: operations["browse_screenings_api_v1_screenings_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -72,7 +72,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/screenings/{screening_id}": {
+    "/api/v1/screenings/{screening_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -80,7 +80,7 @@ export interface paths {
             cookie?: never;
         };
         /** Screening Details */
-        get: operations["screening_details_screenings__screening_id__get"];
+        get: operations["screening_details_api_v1_screenings__screening_id__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -183,7 +183,7 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    home__get: {
+    home_api_v1__get: {
         parameters: {
             query?: never;
             header?: never;
@@ -203,7 +203,7 @@ export interface operations {
             };
         };
     };
-    browse_movies_movies_get: {
+    browse_movies_api_v1_movies_get: {
         parameters: {
             query?: {
                 rating?: ("G" | "PG" | "PG-13" | "R") | null;
@@ -237,7 +237,7 @@ export interface operations {
             };
         };
     };
-    movie_details_movies__movie_id__get: {
+    movie_details_api_v1_movies__movie_id__get: {
         parameters: {
             query?: never;
             header?: never;
@@ -275,7 +275,7 @@ export interface operations {
             };
         };
     };
-    browse_screenings_screenings_get: {
+    browse_screenings_api_v1_screenings_get: {
         parameters: {
             query?: {
                 movie_id?: number | null;
@@ -310,7 +310,7 @@ export interface operations {
             };
         };
     };
-    screening_details_screenings__screening_id__get: {
+    screening_details_api_v1_screenings__screening_id__get: {
         parameters: {
             query?: never;
             header?: never;

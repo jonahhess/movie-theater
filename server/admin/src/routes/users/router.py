@@ -9,16 +9,16 @@ from ...exceptions import NotFoundError
 from ...models import User
 from .schemas import UserCreateSchema, UserResponseSchema, UserUpdateSchema
 
-router = APIRouter()
+router = APIRouter(prefix="/users")
 db_dependency = Depends(get_admin_db)
 
 
-@router.get("/users", response_model=list[UserResponseSchema])
+@router.get("", response_model=list[UserResponseSchema])
 async def get_users(db: AsyncSession = db_dependency):
     users = (await db.scalars(select(User))).all()
     return users
 
-@router.get("/users/{user_id}", response_model=UserResponseSchema)
+@router.get("/{user_id}", response_model=UserResponseSchema)
 async def get_user(user_id: uuid.UUID, db: AsyncSession = db_dependency):
     user = await db.scalar(select(User).where(User.id == user_id))
 
@@ -27,7 +27,7 @@ async def get_user(user_id: uuid.UUID, db: AsyncSession = db_dependency):
 
     return user
 
-@router.post("/users", response_model=UserResponseSchema)
+@router.post("", response_model=UserResponseSchema)
 async def create_user(user: UserCreateSchema, db: AsyncSession = db_dependency):
     new_user = User(**user.model_dump(exclude_unset=True))
     db.add(new_user)
@@ -43,7 +43,7 @@ async def create_user(user: UserCreateSchema, db: AsyncSession = db_dependency):
 
     return new_user
 
-@router.put("/users/{user_id}", response_model=UserResponseSchema)
+@router.put("/{user_id}", response_model=UserResponseSchema)
 async def update_user(
     user_id: uuid.UUID, user: UserUpdateSchema, db: AsyncSession = db_dependency):
     existing_user = await db.scalar(select(User).where(User.id == user_id))
@@ -57,7 +57,7 @@ async def update_user(
     await db.refresh(existing_user)
     return existing_user
 
-@router.delete("/users/{user_id}", status_code=204)
+@router.delete("/{user_id}", status_code=204)
 async def delete_user(user_id: uuid.UUID, db: AsyncSession = db_dependency):
     user = await db.scalar(select(User).where(User.id == user_id))
 

@@ -1,7 +1,7 @@
 import uuid
 
 import bcrypt
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from fastapi.responses import StreamingResponse
 from redis.asyncio import Redis
 from sqlalchemy import func, select
@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from tickets.src.database import get_admin_db
+from tickets.src.helpers import get_or_create_user_uuid
 from tickets.src.models import Auditorium, Screening, ScreeningSeat, Seat, Ticket, User
 from tickets.src.receipts import get_qr_code
 from tickets.src.redis_client import get_redis
@@ -29,38 +30,9 @@ from tickets.src.redis_seats import (
 from tickets.src.schemas import LoginRequest, LoginResponse, TicketResponse
 from tickets.src.token import require_internal_service
 
-router = APIRouter()
+router = APIRouter(prefix="/api/v1/tickets")
 db_dependency = Depends(get_admin_db)
 redis_dependency = Depends(get_redis)    
-
-# assign uuid in http cookie
-async def get_or_create_user_uuid(request: Request, response: Response) -> str:
-    """
-    Dependency that retrieves an existing user_uuid from cookies,
-    or generates a new one for guests and stores it in a secure cookie.
-    """
-    # 1. Try to find an existing UUID in the incoming request cookies
-    user_uuid = request.cookies.get("user_uuid")
-    
-    if not user_uuid:
-        # 2. If it doesn't exist, they are a guest. Generate a fresh UUID.
-        user_uuid = str(uuid.uuid7())
-        
-        # 3. Set the cookie on the response so the browser remembers it
-        response.set_cookie(
-            key="user_uuid",
-            value=user_uuid,
-            max_age=3600 * 24,  # Expires in 24 hours (adjust as needed for seat holds)
-            httponly=True,      # Prevents client-side scripts from stealing the cookie
-            samesite="lax",     # Protects against CSRF attacks
-            secure=False        # Set to True in production over HTTPS
-        )
-        print(f"Generated new guest UUID: {user_uuid}")
-    else:
-        print(f"Found existing user UUID: {user_uuid}")
-        
-    return user_uuid
-
 user_uuid_dependency: str = Depends(get_or_create_user_uuid)  
 
 @router.get("/")
@@ -258,7 +230,7 @@ async def cancel_checkout(
     success = await release_all_seats(redis, str(screening_id), user_uuid)
     return success
 
-@router.get("/tickets/all", response_model=list[TicketResponse])
+@router.get("/purchases", response_model=list[TicketResponse])
 async def get_tickets(
     user_uuid: str = user_uuid_dependency,
     db: AsyncSession = db_dependency,
@@ -271,7 +243,7 @@ async def get_tickets(
     return tickets.scalars().all()
 
 
-@router.get("/tickets/{ticket_id}", response_model=TicketResponse)
+@router.get("/purchases/{ticket_id}", response_model=TicketResponse)
 async def get_ticket(
     ticket_id: int,
     user_uuid: str = user_uuid_dependency,

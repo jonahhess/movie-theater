@@ -5,10 +5,10 @@
     "version": "0.1.0"
   },
   "paths": {
-    "/": {
+    "/api/v1/tickets/": {
       "get": {
         "summary": "Tickets Welcome",
-        "operationId": "tickets_welcome__get",
+        "operationId": "tickets_welcome_api_v1_tickets__get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -21,10 +21,10 @@
         }
       }
     },
-    "/login": {
+    "/api/v1/tickets/login": {
       "post": {
         "summary": "Login",
-        "operationId": "login_login_post",
+        "operationId": "login_api_v1_tickets_login_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -59,10 +59,10 @@
         }
       }
     },
-    "/logout": {
+    "/api/v1/tickets/logout": {
       "post": {
         "summary": "Logout",
-        "operationId": "logout_logout_post",
+        "operationId": "logout_api_v1_tickets_logout_post",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -75,10 +75,10 @@
         }
       }
     },
-    "/release_seats": {
+    "/api/v1/tickets/release_seats": {
       "post": {
         "summary": "Release Seats Endpoint",
-        "operationId": "release_seats_endpoint_release_seats_post",
+        "operationId": "release_seats_endpoint_api_v1_tickets_release_seats_post",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -86,7 +86,7 @@
               "application/json": {
                 "schema": {
                   "type": "boolean",
-                  "title": "Response Release Seats Endpoint Release Seats Post"
+                  "title": "Response Release Seats Endpoint Api V1 Tickets Release Seats Post"
                 }
               }
             }
@@ -94,10 +94,10 @@
         }
       }
     },
-    "/screenings/{screening_id}/availability/stream": {
+    "/api/v1/tickets/screenings/{screening_id}/availability/stream": {
       "get": {
         "summary": "Stream Seat Availability",
-        "operationId": "stream_seat_availability_screenings__screening_id__availability_stream_get",
+        "operationId": "stream_seat_availability_api_v1_tickets_screenings__screening_id__availability_stream_get",
         "parameters": [
           {
             "name": "screening_id",
@@ -136,10 +136,10 @@
         }
       }
     },
-    "/screenings/{screening_id}/seats": {
+    "/api/v1/tickets/screenings/{screening_id}/seats": {
       "get": {
         "summary": "View Selected Seats",
-        "operationId": "view_selected_seats_screenings__screening_id__seats_get",
+        "operationId": "view_selected_seats_api_v1_tickets_screenings__screening_id__seats_get",
         "parameters": [
           {
             "name": "screening_id",
@@ -161,7 +161,7 @@
                   "items": {
                     "type": "string"
                   },
-                  "title": "Response View Selected Seats Screenings  Screening Id  Seats Get"
+                  "title": "Response View Selected Seats Api V1 Tickets Screenings  Screening Id  Seats Get"
                 }
               }
             }
@@ -179,10 +179,10 @@
         }
       }
     },
-    "/screenings/{screening_id}/seats/{seat_id}/hold": {
+    "/api/v1/tickets/screenings/{screening_id}/seats/{seat_id}/hold": {
       "post": {
         "summary": "Hold Seat",
-        "operationId": "hold_seat_screenings__screening_id__seats__seat_id__hold_post",
+        "operationId": "hold_seat_api_v1_tickets_screenings__screening_id__seats__seat_id__hold_post",
         "parameters": [
           {
             "name": "screening_id",
@@ -210,7 +210,7 @@
               "application/json": {
                 "schema": {
                   "type": "boolean",
-                  "title": "Response Hold Seat Screenings  Screening Id  Seats  Seat Id  Hold Post"
+                  "title": "Response Hold Seat Api V1 Tickets Screenings  Screening Id  Seats  Seat Id  Hold Post"
                 }
               }
             }
@@ -228,10 +228,10 @@
         }
       }
     },
-    "/screenings/{screening_id}/seats/checkout": {
+    "/api/v1/tickets/screenings/{screening_id}/seats/checkout": {
       "post": {
         "summary": "Checkout Seats",
-        "operationId": "checkout_seats_screenings__screening_id__seats_checkout_post",
+        "operationId": "checkout_seats_api_v1_tickets_screenings__screening_id__seats_checkout_post",
         "parameters": [
           {
             "name": "screening_id",
@@ -250,7 +250,7 @@
               "application/json": {
                 "schema": {
                   "type": "boolean",
-                  "title": "Response Checkout Seats Screenings  Screening Id  Seats Checkout Post"
+                  "title": "Response Checkout Seats Api V1 Tickets Screenings  Screening Id  Seats Checkout Post"
                 }
               }
             }
@@ -268,10 +268,10 @@
         }
       }
     },
-    "/screenings/{screening_id}/checkout/": {
+    "/api/v1/tickets/screenings/{screening_id}/checkout/": {
       "get": {
         "summary": "Get Checkout",
-        "operationId": "get_checkout_screenings__screening_id__checkout__get",
+        "operationId": "get_checkout_api_v1_tickets_screenings__screening_id__checkout__get",
         "parameters": [
           {
             "name": "screening_id",
@@ -293,7 +293,7 @@
                   "items": {
                     "type": "string"
                   },
-                  "title": "Response Get Checkout Screenings  Screening Id  Checkout  Get"
+                  "title": "Response Get Checkout Api V1 Tickets Screenings  Screening Id  Checkout  Get"
                 }
               }
             }
@@ -312,7 +312,7 @@
       },
       "delete": {
         "summary": "Cancel Checkout",
-        "operationId": "cancel_checkout_screenings__screening_id__checkout__delete",
+        "operationId": "cancel_checkout_api_v1_tickets_screenings__screening_id__checkout__delete",
         "parameters": [
           {
             "name": "screening_id",
@@ -331,7 +331,7 @@
               "application/json": {
                 "schema": {
                   "type": "boolean",
-                  "title": "Response Cancel Checkout Screenings  Screening Id  Checkout  Delete"
+                  "title": "Response Cancel Checkout Api V1 Tickets Screenings  Screening Id  Checkout  Delete"
                 }
               }
             }
@@ -349,10 +349,10 @@
         }
       }
     },
-    "/screenings/{screening_id}/checkout/{checkout_id}/payment": {
+    "/api/v1/tickets/screenings/{screening_id}/checkout/payment": {
       "post": {
         "summary": "Make Payment",
-        "operationId": "make_payment_screenings__screening_id__checkout__checkout_id__payment_post",
+        "operationId": "make_payment_api_v1_tickets_screenings__screening_id__checkout_payment_post",
         "parameters": [
           {
             "name": "screening_id",
@@ -361,15 +361,6 @@
             "schema": {
               "type": "integer",
               "title": "Screening Id"
-            }
-          },
-          {
-            "name": "checkout_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Checkout Id"
             }
           }
         ],
@@ -391,7 +382,7 @@
               "application/json": {
                 "schema": {
                   "type": "boolean",
-                  "title": "Response Make Payment Screenings  Screening Id  Checkout  Checkout Id  Payment Post"
+                  "title": "Response Make Payment Api V1 Tickets Screenings  Screening Id  Checkout Payment Post"
                 }
               }
             }
@@ -409,10 +400,10 @@
         }
       }
     },
-    "/tickets/all": {
+    "/api/v1/tickets/purchases": {
       "get": {
         "summary": "Get Tickets",
-        "operationId": "get_tickets_tickets_all_get",
+        "operationId": "get_tickets_api_v1_tickets_purchases_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -423,7 +414,7 @@
                     "$ref": "#/components/schemas/TicketResponse"
                   },
                   "type": "array",
-                  "title": "Response Get Tickets Tickets All Get"
+                  "title": "Response Get Tickets Api V1 Tickets Purchases Get"
                 }
               }
             }
@@ -431,10 +422,10 @@
         }
       }
     },
-    "/tickets/{ticket_id}": {
+    "/api/v1/tickets/purchases/{ticket_id}": {
       "get": {
         "summary": "Get Ticket",
-        "operationId": "get_ticket_tickets__ticket_id__get",
+        "operationId": "get_ticket_api_v1_tickets_purchases__ticket_id__get",
         "parameters": [
           {
             "name": "ticket_id",
@@ -470,10 +461,10 @@
         }
       }
     },
-    "/qrcode": {
+    "/api/v1/tickets/qrcode": {
       "get": {
         "summary": "Get Qr",
-        "operationId": "get_qr_qrcode_get",
+        "operationId": "get_qr_api_v1_tickets_qrcode_get",
         "parameters": [
           {
             "name": "token",
@@ -786,6 +777,18 @@
               }
             ],
             "title": "Checkout Id"
+          },
+          "purchaser_uuid": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purchaser Uuid"
           },
           "status": {
             "type": "string",

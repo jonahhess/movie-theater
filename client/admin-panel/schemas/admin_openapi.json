@@ -5,10 +5,10 @@
     "version": "0.1.0"
   },
   "paths": {
-    "/": {
+    "/api/v1/admin/": {
       "get": {
         "summary": "Admin Home",
-        "operationId": "admin_home__get",
+        "operationId": "admin_home_api_v1_admin__get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -22,7 +22,7 @@
       },
       "post": {
         "summary": "Admin Login",
-        "operationId": "admin_login__post",
+        "operationId": "admin_login_api_v1_admin__post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -57,10 +57,10 @@
         }
       }
     },
-    "/users": {
+    "/api/v1/admin/users": {
       "get": {
         "summary": "Get Users",
-        "operationId": "get_users_users_get",
+        "operationId": "get_users_api_v1_admin_users_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -71,7 +71,7 @@
                     "$ref": "#/components/schemas/UserResponseSchema"
                   },
                   "type": "array",
-                  "title": "Response Get Users Users Get"
+                  "title": "Response Get Users Api V1 Admin Users Get"
                 }
               }
             }
@@ -85,7 +85,7 @@
       },
       "post": {
         "summary": "Create User",
-        "operationId": "create_user_users_post",
+        "operationId": "create_user_api_v1_admin_users_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -125,10 +125,10 @@
         ]
       }
     },
-    "/users/{user_id}": {
+    "/api/v1/admin/users/{user_id}": {
       "get": {
         "summary": "Get User",
-        "operationId": "get_user_users__user_id__get",
+        "operationId": "get_user_api_v1_admin_users__user_id__get",
         "security": [
           {
             "HTTPBearer": []
@@ -171,7 +171,7 @@
       },
       "put": {
         "summary": "Update User",
-        "operationId": "update_user_users__user_id__put",
+        "operationId": "update_user_api_v1_admin_users__user_id__put",
         "security": [
           {
             "HTTPBearer": []
@@ -224,7 +224,7 @@
       },
       "delete": {
         "summary": "Delete User",
-        "operationId": "delete_user_users__user_id__delete",
+        "operationId": "delete_user_api_v1_admin_users__user_id__delete",
         "security": [
           {
             "HTTPBearer": []
@@ -259,10 +259,10 @@
         }
       }
     },
-    "/movies": {
+    "/api/v1/admin/movies": {
       "get": {
         "summary": "List Movies",
-        "operationId": "list_movies_movies_get",
+        "operationId": "list_movies_api_v1_admin_movies_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -273,7 +273,7 @@
                     "$ref": "#/components/schemas/MovieResponseSchema"
                   },
                   "type": "array",
-                  "title": "Response List Movies Movies Get"
+                  "title": "Response List Movies Api V1 Admin Movies Get"
                 }
               }
             }
@@ -287,7 +287,7 @@
       },
       "post": {
         "summary": "Create Movie",
-        "operationId": "create_movie_movies_post",
+        "operationId": "create_movie_api_v1_admin_movies_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -327,10 +327,10 @@
         ]
       }
     },
-    "/movies/{movie_id}": {
+    "/api/v1/admin/movies/{movie_id}": {
       "get": {
         "summary": "Get Movie",
-        "operationId": "get_movie_movies__movie_id__get",
+        "operationId": "get_movie_api_v1_admin_movies__movie_id__get",
         "security": [
           {
             "HTTPBearer": []
@@ -372,7 +372,7 @@
       },
       "patch": {
         "summary": "Update Movie",
-        "operationId": "update_movie_movies__movie_id__patch",
+        "operationId": "update_movie_api_v1_admin_movies__movie_id__patch",
         "security": [
           {
             "HTTPBearer": []
@@ -424,7 +424,7 @@
       },
       "delete": {
         "summary": "Delete Movie",
-        "operationId": "delete_movie_movies__movie_id__delete",
+        "operationId": "delete_movie_api_v1_admin_movies__movie_id__delete",
         "security": [
           {
             "HTTPBearer": []
@@ -458,10 +458,10 @@
         }
       }
     },
-    "/screenings": {
+    "/api/v1/admin/screenings": {
       "get": {
         "summary": "List Screenings",
-        "operationId": "list_screenings_screenings_get",
+        "operationId": "list_screenings_api_v1_admin_screenings_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -472,7 +472,7 @@
                     "$ref": "#/components/schemas/ScreeningResponse"
                   },
                   "type": "array",
-                  "title": "Response List Screenings Screenings Get"
+                  "title": "Response List Screenings Api V1 Admin Screenings Get"
                 }
               }
             }
@@ -486,7 +486,7 @@
       },
       "post": {
         "summary": "Create Screening",
-        "operationId": "create_screening_screenings_post",
+        "operationId": "create_screening_api_v1_admin_screenings_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -526,10 +526,10 @@
         ]
       }
     },
-    "/screenings/{screening_id}": {
+    "/api/v1/admin/screenings/{screening_id}": {
       "get": {
         "summary": "Get Screening",
-        "operationId": "get_screening_screenings__screening_id__get",
+        "operationId": "get_screening_api_v1_admin_screenings__screening_id__get",
         "security": [
           {
             "HTTPBearer": []
@@ -571,7 +571,7 @@
       },
       "patch": {
         "summary": "Update Screening",
-        "operationId": "update_screening_screenings__screening_id__patch",
+        "operationId": "update_screening_api_v1_admin_screenings__screening_id__patch",
         "security": [
           {
             "HTTPBearer": []
@@ -623,7 +623,7 @@
       },
       "delete": {
         "summary": "Delete Screening",
-        "operationId": "delete_screening_screenings__screening_id__delete",
+        "operationId": "delete_screening_api_v1_admin_screenings__screening_id__delete",
         "security": [
           {
             "HTTPBearer": []
@@ -657,10 +657,10 @@
         }
       }
     },
-    "/screenings/{screening_id}/sale/open": {
+    "/api/v1/admin/screenings/{screening_id}/sale/open": {
       "post": {
         "summary": "Open Screening Sale",
-        "operationId": "open_screening_sale_screenings__screening_id__sale_open_post",
+        "operationId": "open_screening_sale_api_v1_admin_screenings__screening_id__sale_open_post",
         "security": [
           {
             "HTTPBearer": []
@@ -701,10 +701,10 @@
         }
       }
     },
-    "/screenings/{screening_id}/sale/close": {
+    "/api/v1/admin/screenings/{screening_id}/sale/close": {
       "post": {
         "summary": "Close Screening Sale",
-        "operationId": "close_screening_sale_screenings__screening_id__sale_close_post",
+        "operationId": "close_screening_sale_api_v1_admin_screenings__screening_id__sale_close_post",
         "security": [
           {
             "HTTPBearer": []
@@ -745,10 +745,10 @@
         }
       }
     },
-    "/auditoriums": {
+    "/api/v1/admin/auditoriums": {
       "get": {
         "summary": "List Auditoriums",
-        "operationId": "list_auditoriums_auditoriums_get",
+        "operationId": "list_auditoriums_api_v1_admin_auditoriums_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -759,7 +759,7 @@
                     "$ref": "#/components/schemas/AuditoriumResponse"
                   },
                   "type": "array",
-                  "title": "Response List Auditoriums Auditoriums Get"
+                  "title": "Response List Auditoriums Api V1 Admin Auditoriums Get"
                 }
               }
             }
@@ -773,7 +773,7 @@
       },
       "post": {
         "summary": "Create Auditorium",
-        "operationId": "create_auditorium_auditoriums_post",
+        "operationId": "create_auditorium_api_v1_admin_auditoriums_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -813,10 +813,10 @@
         ]
       }
     },
-    "/auditoriums/{auditorium_id}": {
+    "/api/v1/admin/auditoriums/{auditorium_id}": {
       "get": {
         "summary": "Get Auditorium",
-        "operationId": "get_auditorium_auditoriums__auditorium_id__get",
+        "operationId": "get_auditorium_api_v1_admin_auditoriums__auditorium_id__get",
         "security": [
           {
             "HTTPBearer": []
@@ -858,7 +858,7 @@
       },
       "patch": {
         "summary": "Update Auditorium",
-        "operationId": "update_auditorium_auditoriums__auditorium_id__patch",
+        "operationId": "update_auditorium_api_v1_admin_auditoriums__auditorium_id__patch",
         "security": [
           {
             "HTTPBearer": []
@@ -910,7 +910,7 @@
       },
       "delete": {
         "summary": "Delete Auditorium",
-        "operationId": "delete_auditorium_auditoriums__auditorium_id__delete",
+        "operationId": "delete_auditorium_api_v1_admin_auditoriums__auditorium_id__delete",
         "security": [
           {
             "HTTPBearer": []
@@ -944,10 +944,10 @@
         }
       }
     },
-    "/auditoriums/{auditorium_id}/seats": {
+    "/api/v1/admin/auditoriums/{auditorium_id}/seats": {
       "get": {
         "summary": "Get Seats",
-        "operationId": "get_seats_auditoriums__auditorium_id__seats_get",
+        "operationId": "get_seats_api_v1_admin_auditoriums__auditorium_id__seats_get",
         "security": [
           {
             "HTTPBearer": []
@@ -989,7 +989,7 @@
       },
       "post": {
         "summary": "Create Seat",
-        "operationId": "create_seat_auditoriums__auditorium_id__seats_post",
+        "operationId": "create_seat_api_v1_admin_auditoriums__auditorium_id__seats_post",
         "security": [
           {
             "HTTPBearer": []
@@ -1041,7 +1041,7 @@
       },
       "put": {
         "summary": "Replace Seats",
-        "operationId": "replace_seats_auditoriums__auditorium_id__seats_put",
+        "operationId": "replace_seats_api_v1_admin_auditoriums__auditorium_id__seats_put",
         "security": [
           {
             "HTTPBearer": []
@@ -1096,10 +1096,10 @@
         }
       }
     },
-    "/auditoriums/{auditorium_id}/seats/{seat_id}": {
+    "/api/v1/admin/auditoriums/{auditorium_id}/seats/{seat_id}": {
       "get": {
         "summary": "Get Seat",
-        "operationId": "get_seat_auditoriums__auditorium_id__seats__seat_id__get",
+        "operationId": "get_seat_api_v1_admin_auditoriums__auditorium_id__seats__seat_id__get",
         "security": [
           {
             "HTTPBearer": []
@@ -1150,7 +1150,7 @@
       },
       "patch": {
         "summary": "Update Seat",
-        "operationId": "update_seat_auditoriums__auditorium_id__seats__seat_id__patch",
+        "operationId": "update_seat_api_v1_admin_auditoriums__auditorium_id__seats__seat_id__patch",
         "security": [
           {
             "HTTPBearer": []
@@ -1211,7 +1211,7 @@
       },
       "delete": {
         "summary": "Delete Seat",
-        "operationId": "delete_seat_auditoriums__auditorium_id__seats__seat_id__delete",
+        "operationId": "delete_seat_api_v1_admin_auditoriums__auditorium_id__seats__seat_id__delete",
         "security": [
           {
             "HTTPBearer": []

@@ -5,10 +5,10 @@
     "version": "0.1.0"
   },
   "paths": {
-    "/": {
+    "/api/v1/": {
       "get": {
         "summary": "Home",
-        "operationId": "home__get",
+        "operationId": "home_api_v1__get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -21,10 +21,10 @@
         }
       }
     },
-    "/movies": {
+    "/api/v1/movies": {
       "get": {
         "summary": "Browse Movies",
-        "operationId": "browse_movies_movies_get",
+        "operationId": "browse_movies_api_v1_movies_get",
         "parameters": [
           {
             "name": "rating",
@@ -117,10 +117,10 @@
         }
       }
     },
-    "/movies/{movie_id}": {
+    "/api/v1/movies/{movie_id}": {
       "get": {
         "summary": "Movie Details",
-        "operationId": "movie_details_movies__movie_id__get",
+        "operationId": "movie_details_api_v1_movies__movie_id__get",
         "parameters": [
           {
             "name": "movie_id",
@@ -159,10 +159,10 @@
         }
       }
     },
-    "/screenings": {
+    "/api/v1/screenings": {
       "get": {
         "summary": "Browse Screenings",
-        "operationId": "browse_screenings_screenings_get",
+        "operationId": "browse_screenings_api_v1_screenings_get",
         "parameters": [
           {
             "name": "movie_id",
@@ -263,10 +263,10 @@
         }
       }
     },
-    "/screenings/{screening_id}": {
+    "/api/v1/screenings/{screening_id}": {
       "get": {
         "summary": "Screening Details",
-        "operationId": "screening_details_screenings__screening_id__get",
+        "operationId": "screening_details_api_v1_screenings__screening_id__get",
         "parameters": [
           {
             "name": "screening_id",

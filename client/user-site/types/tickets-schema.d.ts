@@ -4,7 +4,7 @@
  */
 
 export interface paths {
-    "/": {
+    "/api/v1/tickets/": {
         parameters: {
             query?: never;
             header?: never;
@@ -12,7 +12,7 @@ export interface paths {
             cookie?: never;
         };
         /** Tickets Welcome */
-        get: operations["tickets_welcome__get"];
+        get: operations["tickets_welcome_api_v1_tickets__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -21,7 +21,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/login": {
+    "/api/v1/tickets/login": {
         parameters: {
             query?: never;
             header?: never;
@@ -31,14 +31,14 @@ export interface paths {
         get?: never;
         put?: never;
         /** Login */
-        post: operations["login_login_post"];
+        post: operations["login_api_v1_tickets_login_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/logout": {
+    "/api/v1/tickets/logout": {
         parameters: {
             query?: never;
             header?: never;
@@ -48,14 +48,14 @@ export interface paths {
         get?: never;
         put?: never;
         /** Logout */
-        post: operations["logout_logout_post"];
+        post: operations["logout_api_v1_tickets_logout_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/release_seats": {
+    "/api/v1/tickets/release_seats": {
         parameters: {
             query?: never;
             header?: never;
@@ -65,14 +65,14 @@ export interface paths {
         get?: never;
         put?: never;
         /** Release Seats Endpoint */
-        post: operations["release_seats_endpoint_release_seats_post"];
+        post: operations["release_seats_endpoint_api_v1_tickets_release_seats_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/screenings/{screening_id}/availability/stream": {
+    "/api/v1/tickets/screenings/{screening_id}/availability/stream": {
         parameters: {
             query?: never;
             header?: never;
@@ -80,7 +80,7 @@ export interface paths {
             cookie?: never;
         };
         /** Stream Seat Availability */
-        get: operations["stream_seat_availability_screenings__screening_id__availability_stream_get"];
+        get: operations["stream_seat_availability_api_v1_tickets_screenings__screening_id__availability_stream_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -89,7 +89,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/screenings/{screening_id}/seats": {
+    "/api/v1/tickets/screenings/{screening_id}/seats": {
         parameters: {
             query?: never;
             header?: never;
@@ -97,7 +97,7 @@ export interface paths {
             cookie?: never;
         };
         /** View Selected Seats */
-        get: operations["view_selected_seats_screenings__screening_id__seats_get"];
+        get: operations["view_selected_seats_api_v1_tickets_screenings__screening_id__seats_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -106,7 +106,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/screenings/{screening_id}/seats/{seat_id}/hold": {
+    "/api/v1/tickets/screenings/{screening_id}/seats/{seat_id}/hold": {
         parameters: {
             query?: never;
             header?: never;
@@ -116,14 +116,14 @@ export interface paths {
         get?: never;
         put?: never;
         /** Hold Seat */
-        post: operations["hold_seat_screenings__screening_id__seats__seat_id__hold_post"];
+        post: operations["hold_seat_api_v1_tickets_screenings__screening_id__seats__seat_id__hold_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/screenings/{screening_id}/seats/checkout": {
+    "/api/v1/tickets/screenings/{screening_id}/seats/checkout": {
         parameters: {
             query?: never;
             header?: never;
@@ -133,14 +133,14 @@ export interface paths {
         get?: never;
         put?: never;
         /** Checkout Seats */
-        post: operations["checkout_seats_screenings__screening_id__seats_checkout_post"];
+        post: operations["checkout_seats_api_v1_tickets_screenings__screening_id__seats_checkout_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/screenings/{screening_id}/checkout/": {
+    "/api/v1/tickets/screenings/{screening_id}/checkout/": {
         parameters: {
             query?: never;
             header?: never;
@@ -148,17 +148,17 @@ export interface paths {
             cookie?: never;
         };
         /** Get Checkout */
-        get: operations["get_checkout_screenings__screening_id__checkout__get"];
+        get: operations["get_checkout_api_v1_tickets_screenings__screening_id__checkout__get"];
         put?: never;
         post?: never;
         /** Cancel Checkout */
-        delete: operations["cancel_checkout_screenings__screening_id__checkout__delete"];
+        delete: operations["cancel_checkout_api_v1_tickets_screenings__screening_id__checkout__delete"];
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/screenings/{screening_id}/checkout/{checkout_id}/payment": {
+    "/api/v1/tickets/screenings/{screening_id}/checkout/payment": {
         parameters: {
             query?: never;
             header?: never;
@@ -168,14 +168,14 @@ export interface paths {
         get?: never;
         put?: never;
         /** Make Payment */
-        post: operations["make_payment_screenings__screening_id__checkout__checkout_id__payment_post"];
+        post: operations["make_payment_api_v1_tickets_screenings__screening_id__checkout_payment_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/tickets/all": {
+    "/api/v1/tickets/purchases": {
         parameters: {
             query?: never;
             header?: never;
@@ -183,7 +183,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Tickets */
-        get: operations["get_tickets_tickets_all_get"];
+        get: operations["get_tickets_api_v1_tickets_purchases_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -192,7 +192,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/tickets/{ticket_id}": {
+    "/api/v1/tickets/purchases/{ticket_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -200,7 +200,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Ticket */
-        get: operations["get_ticket_tickets__ticket_id__get"];
+        get: operations["get_ticket_api_v1_tickets_purchases__ticket_id__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -209,7 +209,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/qrcode": {
+    "/api/v1/tickets/qrcode": {
         parameters: {
             query?: never;
             header?: never;
@@ -217,7 +217,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Qr */
-        get: operations["get_qr_qrcode_get"];
+        get: operations["get_qr_api_v1_tickets_qrcode_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -355,6 +355,8 @@ export interface components {
             receipt_number: string;
             /** Checkout Id */
             checkout_id?: string | null;
+            /** Purchaser Uuid */
+            purchaser_uuid?: string | null;
             /** Status */
             status: string;
             /**
@@ -385,7 +387,7 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    tickets_welcome__get: {
+    tickets_welcome_api_v1_tickets__get: {
         parameters: {
             query?: never;
             header?: never;
@@ -405,7 +407,7 @@ export interface operations {
             };
         };
     };
-    login_login_post: {
+    login_api_v1_tickets_login_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -438,7 +440,7 @@ export interface operations {
             };
         };
     };
-    logout_logout_post: {
+    logout_api_v1_tickets_logout_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -458,7 +460,7 @@ export interface operations {
             };
         };
     };
-    release_seats_endpoint_release_seats_post: {
+    release_seats_endpoint_api_v1_tickets_release_seats_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -478,7 +480,7 @@ export interface operations {
             };
         };
     };
-    stream_seat_availability_screenings__screening_id__availability_stream_get: {
+    stream_seat_availability_api_v1_tickets_screenings__screening_id__availability_stream_get: {
         parameters: {
             query?: {
                 last_event_id?: string;
@@ -509,7 +511,7 @@ export interface operations {
             };
         };
     };
-    view_selected_seats_screenings__screening_id__seats_get: {
+    view_selected_seats_api_v1_tickets_screenings__screening_id__seats_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -540,7 +542,7 @@ export interface operations {
             };
         };
     };
-    hold_seat_screenings__screening_id__seats__seat_id__hold_post: {
+    hold_seat_api_v1_tickets_screenings__screening_id__seats__seat_id__hold_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -572,7 +574,7 @@ export interface operations {
             };
         };
     };
-    checkout_seats_screenings__screening_id__seats_checkout_post: {
+    checkout_seats_api_v1_tickets_screenings__screening_id__seats_checkout_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -603,7 +605,7 @@ export interface operations {
             };
         };
     };
-    get_checkout_screenings__screening_id__checkout__get: {
+    get_checkout_api_v1_tickets_screenings__screening_id__checkout__get: {
         parameters: {
             query?: never;
             header?: never;
@@ -634,7 +636,7 @@ export interface operations {
             };
         };
     };
-    cancel_checkout_screenings__screening_id__checkout__delete: {
+    cancel_checkout_api_v1_tickets_screenings__screening_id__checkout__delete: {
         parameters: {
             query?: never;
             header?: never;
@@ -665,13 +667,12 @@ export interface operations {
             };
         };
     };
-    make_payment_screenings__screening_id__checkout__checkout_id__payment_post: {
+    make_payment_api_v1_tickets_screenings__screening_id__checkout_payment_post: {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 screening_id: number;
-                checkout_id: string;
             };
             cookie?: never;
         };
@@ -703,7 +704,7 @@ export interface operations {
             };
         };
     };
-    get_tickets_tickets_all_get: {
+    get_tickets_api_v1_tickets_purchases_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -723,7 +724,7 @@ export interface operations {
             };
         };
     };
-    get_ticket_tickets__ticket_id__get: {
+    get_ticket_api_v1_tickets_purchases__ticket_id__get: {
         parameters: {
             query?: never;
             header?: never;
@@ -754,7 +755,7 @@ export interface operations {
             };
         };
     };
-    get_qr_qrcode_get: {
+    get_qr_api_v1_tickets_qrcode_get: {
         parameters: {
             query: {
                 token: string;

@@ -16,8 +16,9 @@ from .routes.screenings.router import router as screenings_router
 from .routes.users.router import router as users_router
 from .schemas import AdminLoginRequest, AdminLoginResponse
 
-public_router = APIRouter()
-protected_router = APIRouter(dependencies=[Depends(require_admin)])
+public_router = APIRouter(prefix="/api/v1/admin")
+protected_router = APIRouter(prefix="/api/v1/admin", 
+                             dependencies=[Depends(require_admin)])
 db_dependency = Depends(get_admin_db)
 
 # Public home page prompts for login.
@@ -30,7 +31,7 @@ def admin_home():
         ),
         "login": {
             "method": "POST",
-            "path": "/admin/",
+            "path": "/api/v1/admin/",
             "body": {"email": "admin@test.com", "password": "Admin123!"},
         },
         "next": "Use returned token in Authorization: Bearer <token>",
