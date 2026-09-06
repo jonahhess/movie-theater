@@ -6,6 +6,7 @@ export default function Home() {
         <p>Check out the latest movies and book your tickets now!</p>
         <nav>
           <a href="/movies">Browse Movies</a>
+          <a href="/screenings">Browse Screenings</a>
           <a href="/tickets">View My Tickets</a>
         </nav>
       </main>
