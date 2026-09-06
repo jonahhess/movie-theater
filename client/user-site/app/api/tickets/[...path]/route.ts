@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 
 const ticketsApiUrl =
-  process.env.TICKETS_API_URL ?? "http://localhost:8000/tickets";
+  process.env.NEXT_PUBLIC_TICKETS_API_URL ?? "http://localhost:8000/";
 
 async function proxy(request: NextRequest, context: RouteContext<"/api/tickets/[...path]">) {
   const { path } = await context.params;
