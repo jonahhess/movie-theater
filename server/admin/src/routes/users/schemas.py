@@ -18,7 +18,7 @@ class UserUpdateSchema(BaseModel):
     phone: str | None = None
     password: str | None = None
 
-class UserResponseSchema(UserCreateSchema):
+class UserResponseSchema(UserBaseSchema):
     model_config = ConfigDict(from_attributes=True)
     
     id: uuid.UUID

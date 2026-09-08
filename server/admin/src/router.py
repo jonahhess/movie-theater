@@ -12,9 +12,11 @@ from .database import get_admin_db
 from .models import Admin
 from .routes.auditoriums.router import router as auditoriums_router
 from .routes.movies.router import router as movies_router
+from .routes.screening_seats.router import router as screening_seats_router
 from .routes.screenings.router import router as screenings_router
+from .routes.tickets.router import router as tickets_router
 from .routes.users.router import router as users_router
-from .schemas import AdminLoginRequest, AdminLoginResponse
+from .schemas import AdminLoginRequest, AdminLoginResponse, AdminMeResponse
 
 public_router = APIRouter(prefix="/api/v1/admin")
 protected_router = APIRouter(prefix="/api/v1/admin", 
@@ -59,7 +61,28 @@ async def admin_login(payload: AdminLoginRequest, db: AsyncSession = db_dependen
     )
 
 
+@protected_router.post("/refresh", response_model=AdminLoginResponse)
+async def refresh_admin_token(admin_user: Admin = Depends(require_admin)):
+    token = create_admin_access_token(admin_user)
+    return AdminLoginResponse(
+        access_token=token,
+        expires_in_seconds=JWT_EXP_MINUTES * 60,
+    )
+
+
+@protected_router.get("/me", response_model=AdminMeResponse)
+async def get_current_admin(admin_user: Admin = Depends(require_admin)):
+    return AdminMeResponse(
+        id=str(admin_user.id),
+        email=admin_user.email,
+        is_active=admin_user.is_active,
+        created_at=admin_user.created_at,
+    )
+
+
 protected_router.include_router(users_router)
 protected_router.include_router(movies_router)
 protected_router.include_router(screenings_router)
 protected_router.include_router(auditoriums_router)
+protected_router.include_router(tickets_router)
+protected_router.include_router(screening_seats_router)
