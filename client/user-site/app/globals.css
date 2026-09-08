@@ -1,26 +1,63 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+  /* light (default) */
+  --color-bg: #ffffff;
+  --color-bg-raised: rgba(13, 17, 23, 0.04);
+  --color-ink: #ffffff;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-foreground: #0d1117;
+  --color-foreground-muted: rgba(13, 17, 23, 0.75);
+  --color-foreground-subtle: rgba(13, 17, 23, 0.6);
+
+  --color-accent: #d97706;
+  --color-accent-hover: #b45309;
+
+  --color-border: rgba(13, 17, 23, 0.12);
+  --color-border-strong: rgba(13, 17, 23, 0.35);
+
+  --tracking-wide: 0.24em;
+  --tracking-wider: 0.32em;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --color-bg: #0d1117;
+    --color-bg-raised: rgba(255, 255, 255, 0.06);
+    --color-ink: #0d1117;
+
+    --color-foreground: #ffffff;
+    --color-foreground-muted: rgba(255, 255, 255, 0.75);
+    --color-foreground-subtle: rgba(255, 255, 255, 0.6);
+
+    --color-accent: #fcd34d;
+    --color-accent-hover: #fde68a;
+
+    --color-border: rgba(255, 255, 255, 0.1);
+    --color-border-strong: rgba(255, 255, 255, 0.35);
   }
 }
 
+@theme inline {
+  --color-bg: var(--color-bg);
+  --color-bg-raised: var(--color-bg-raised);
+  --color-ink: var(--color-ink);
+  --color-foreground: var(--color-foreground);
+  --color-foreground-muted: var(--color-foreground-muted);
+  --color-foreground-subtle: var(--color-foreground-subtle);
+  --color-accent: var(--color-accent);
+  --color-accent-hover: var(--color-accent-hover);
+  --color-border: var(--color-border);
+  --color-border-strong: var(--color-border-strong);
+  --tracking-wide: var(--tracking-wide);
+  --tracking-wider: var(--tracking-wider);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-geist-sans), sans-serif;
+  background: var(--color-bg);
+  color: var(--color-foreground);
+  font-family: var(--font-sans), sans-serif;
 }

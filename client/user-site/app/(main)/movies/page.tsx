@@ -35,7 +35,13 @@ export default async function MoviesPage({ searchParams }: MoviesPageProps) {
     });
 
   if (movieError) {
-    return <div>No movies found.</div>;
+    return (
+      <main className="mx-auto max-w-5xl bg-bg px-6 py-12 text-foreground sm:px-10">
+        <p className="rounded-2xl border border-border bg-bg-raised p-6 leading-7 text-foreground-muted">
+          No movies found.
+        </p>
+      </main>
+    );
   }
 
   return (
@@ -47,12 +53,15 @@ export default async function MoviesPage({ searchParams }: MoviesPageProps) {
         listId="movies-list"
         getPageHref={(nextOffset) => `/movies?limit=${limit}&offset=${nextOffset}`}
         renderItem={(movie) => (
-          <div key={movie.id} className="mb-4">
-            <Link href={`/movies/${movie.id}`}>
-              <h2 className="text-2xl font-bold">{movie.title}</h2>
-              <p className="text-gray-600">{movie.description}</p>
-            </Link>
-          </div>
+          <Link
+            key={movie.id}
+            href={`/movies/${movie.id}`}
+            className="group rounded-2xl border border-border bg-bg-raised p-6 transition hover:-translate-y-1 hover:border-accent/60"
+          >
+            <p className="text-sm font-semibold uppercase tracking-wide text-accent">Film</p>
+            <h2 className="mt-3 text-xl font-semibold tracking-tight">{movie.title}</h2>
+            <p className="mt-2 leading-7 text-foreground-subtle">{movie.description}</p>
+          </Link>
         )}
       />
   );

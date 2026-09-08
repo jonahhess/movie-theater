@@ -22,9 +22,9 @@ const { data: screening, error: screeningError } = await mainApi.GET(
 
 if (screeningError || !screening) {
   return (
-    <main className="p-8 max-w-xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Screening Details</h1>
-      <p className="bg-red-100 p-4 rounded border text-red-600">
+    <main className="mx-auto max-w-xl bg-bg px-6 py-12 text-foreground sm:px-10">
+      <h1 className="text-3xl font-semibold tracking-tight">Screening Details</h1>
+      <p className="mt-6 rounded-2xl border border-border bg-bg-raised p-6 leading-7 text-foreground-muted">
         Error loading screening details.
       </p>
     </main>
@@ -32,24 +32,23 @@ if (screeningError || !screening) {
 }
 
   return (
-    <main className="min-h-screen bg-slate-50 p-6 md:p-10">
-      <div className="mx-auto max-w-6xl">
+    <main className="mx-auto max-w-6xl bg-bg px-6 py-12 text-foreground sm:px-10">
       <TicketAccountBar />
-      <h1 className="text-3xl font-bold text-slate-900">Choose your seats</h1>
-      <p className="mt-2 text-slate-600">Screening #{screeningId}</p>
-      <div className="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-      <p>
-        Price: <span className="font-semibold">{screening.price}</span>
+      <p className="text-sm font-semibold uppercase tracking-wide text-accent">Auditorium</p>
+      <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">Choose your seats</h1>
+      <p className="mt-2 leading-7 text-foreground-muted">Screening #{screeningId}</p>
+      <div className="mt-6 rounded-2xl border border-border bg-bg-raised p-6">
+      <p className="leading-7 text-foreground-muted">
+        Price: <span className="font-semibold text-foreground">{screening.price}</span>
       </p>
-      <p className="mt-1">
-        Screening time: <span className="font-semibold">{screening.start_time}</span>
+      <p className="mt-1 leading-7 text-foreground-muted">
+        Screening time: <span className="font-semibold text-foreground">{screening.start_time}</span>
       </p>
       </div>
       <p className="sr-only">
-        Viewing ID: <span className="font-mono text-blue-600">{screeningId}</span>
+        Viewing ID: <span className="font-mono text-accent-hover">{screeningId}</span>
       </p>
       <BookingExperience screeningId={screeningId} />
-      </div>
     </main>
   );
 }

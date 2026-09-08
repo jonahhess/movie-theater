@@ -107,46 +107,46 @@ export default function BookingCheckout({
   }
 
   return (
-    <div className="max-w-lg rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-      <div className="flex items-center justify-between border-b pb-4">
+    <div className="max-w-lg rounded-2xl border border-border bg-bg-raised p-6">
+      <div className="flex items-center justify-between border-b border-border pb-4">
         <div>
-          <h2 className="text-lg font-bold text-slate-900">Checkout</h2>
-          <p className="text-xs text-slate-500">
+          <h2 className="text-lg font-semibold tracking-tight text-foreground">Checkout</h2>
+          <p className="text-xs text-foreground-subtle">
             {selectedCount} seat{selectedCount === 1 ? "" : "s"} held
           </p>
         </div>
         <button
           type="button"
           onClick={onBackToSeats}
-          className="text-xs text-blue-600 hover:underline"
+          className="text-xs font-semibold text-accent-hover hover:text-accent"
         >
           Back to seats
         </button>
       </div>
 
       {/* Session Banner / Auth Switcher */}
-      <div className="mt-4 rounded-lg bg-slate-50 p-3 text-xs text-slate-700">
+      <div className="mt-4 rounded-xl bg-bg p-3 text-xs text-foreground-muted">
         {session?.authenticated ? (
           <div className="flex items-center justify-between">
             <div>
-              <span className="font-semibold text-emerald-700">Signed in</span> as{" "}
-              <span className="font-semibold">{session.username}</span> ({session.email})
+              <span className="font-semibold text-accent">Signed in</span> as{" "}
+              <span className="font-semibold text-foreground">{session.username}</span> ({session.email})
             </div>
           </div>
         ) : (
           <div>
-            <p className="font-medium text-slate-800">Booking as Guest</p>
-            <div className="mt-2 flex gap-2">
+            <p className="font-medium text-foreground">Booking as Guest</p>
+            <div className="mt-2 flex flex-wrap gap-2">
               <button
                 type="button"
                 onClick={() => {
                   setAuthTab("guest");
                   setAuthError(null);
                 }}
-                className={`rounded px-2.5 py-1 text-xs font-medium transition ${
+                className={`rounded-full px-2.5 py-1 text-xs font-semibold transition ${
                   authTab === "guest"
-                    ? "bg-slate-800 text-white"
-                    : "border border-slate-300 bg-white text-slate-700 hover:bg-slate-100"
+                    ? "bg-accent text-ink"
+                    : "border border-border-strong text-foreground hover:border-foreground hover:bg-white/10"
                 }`}
               >
                 Guest checkout
@@ -157,10 +157,10 @@ export default function BookingCheckout({
                   setAuthTab("login");
                   setAuthError(null);
                 }}
-                className={`rounded px-2.5 py-1 text-xs font-medium transition ${
+                className={`rounded-full px-2.5 py-1 text-xs font-semibold transition ${
                   authTab === "login"
-                    ? "bg-slate-800 text-white"
-                    : "border border-slate-300 bg-white text-slate-700 hover:bg-slate-100"
+                    ? "bg-accent text-ink"
+                    : "border border-border-strong text-foreground hover:border-foreground hover:bg-white/10"
                 }`}
               >
                 Sign in & keep seats
@@ -171,10 +171,10 @@ export default function BookingCheckout({
                   setAuthTab("register");
                   setAuthError(null);
                 }}
-                className={`rounded px-2.5 py-1 text-xs font-medium transition ${
+                className={`rounded-full px-2.5 py-1 text-xs font-semibold transition ${
                   authTab === "register"
-                    ? "bg-slate-800 text-white"
-                    : "border border-slate-300 bg-white text-slate-700 hover:bg-slate-100"
+                    ? "bg-accent text-ink"
+                    : "border border-border-strong text-foreground hover:border-foreground hover:bg-white/10"
                 }`}
               >
                 Create account
@@ -187,10 +187,10 @@ export default function BookingCheckout({
       {/* Inline Sign In Form */}
       {!session?.authenticated && authTab === "login" && (
         <form action={handleInlineLogin} className="mt-4 space-y-4">
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-foreground-subtle">
             Sign in to migrate and link your held seats to your account.
           </p>
-          <label className="block text-sm font-medium text-slate-700">
+          <label className="block text-sm font-medium text-foreground-muted">
             Email address
             <input
               required
@@ -199,10 +199,10 @@ export default function BookingCheckout({
               value={loginEmail}
               onChange={(e) => setLoginEmail(e.target.value)}
               placeholder="you@example.com"
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+              className="mt-1 w-full rounded-xl border border-border bg-bg px-3 py-2 text-sm text-foreground outline-none transition focus:border-accent"
             />
           </label>
-          <label className="block text-sm font-medium text-slate-700">
+          <label className="block text-sm font-medium text-foreground-muted">
             Password
             <input
               required
@@ -210,11 +210,11 @@ export default function BookingCheckout({
               type="password"
               value={loginPassword}
               onChange={(e) => setLoginPassword(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+              className="mt-1 w-full rounded-xl border border-border bg-bg px-3 py-2 text-sm text-foreground outline-none transition focus:border-accent"
             />
           </label>
           {authError && (
-            <p className="text-xs text-red-600" role="alert">
+            <p className="text-xs text-accent" role="alert">
               {authError}
             </p>
           )}
@@ -222,14 +222,14 @@ export default function BookingCheckout({
             <button
               type="submit"
               disabled={authBusy}
-              className="flex-1 rounded-lg bg-blue-600 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:bg-slate-300"
+              className="flex-1 rounded-full bg-accent py-2 text-sm font-bold text-ink transition hover:bg-accent-hover disabled:text-foreground-subtle disabled:hover:bg-accent"
             >
               {authBusy ? "Signing in..." : "Sign in & keep seats"}
             </button>
             <button
               type="button"
               onClick={() => setAuthTab("guest")}
-              className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              className="rounded-full border border-border-strong px-3 py-2 text-sm font-semibold text-foreground transition hover:border-foreground hover:bg-white/10"
             >
               Cancel
             </button>
@@ -240,10 +240,10 @@ export default function BookingCheckout({
       {/* Inline Register Form */}
       {!session?.authenticated && authTab === "register" && (
         <form action={handleInlineRegister} className="mt-4 space-y-4">
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-foreground-subtle">
             Create an account and keep your currently held seats.
           </p>
-          <label className="block text-sm font-medium text-slate-700">
+          <label className="block text-sm font-medium text-foreground-muted">
             Username
             <input
               required
@@ -252,10 +252,10 @@ export default function BookingCheckout({
               value={registerUsername}
               onChange={(e) => setRegisterUsername(e.target.value)}
               placeholder="username"
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+              className="mt-1 w-full rounded-xl border border-border bg-bg px-3 py-2 text-sm text-foreground outline-none transition focus:border-accent"
             />
           </label>
-          <label className="block text-sm font-medium text-slate-700">
+          <label className="block text-sm font-medium text-foreground-muted">
             Email address
             <input
               required
@@ -264,10 +264,10 @@ export default function BookingCheckout({
               value={registerEmail}
               onChange={(e) => setRegisterEmail(e.target.value)}
               placeholder="you@example.com"
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+              className="mt-1 w-full rounded-xl border border-border bg-bg px-3 py-2 text-sm text-foreground outline-none transition focus:border-accent"
             />
           </label>
-          <label className="block text-sm font-medium text-slate-700">
+          <label className="block text-sm font-medium text-foreground-muted">
             Password
             <input
               required
@@ -276,10 +276,10 @@ export default function BookingCheckout({
               type="password"
               value={registerPassword}
               onChange={(e) => setRegisterPassword(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+              className="mt-1 w-full rounded-xl border border-border bg-bg px-3 py-2 text-sm text-foreground outline-none transition focus:border-accent"
             />
           </label>
-          <label className="block text-sm font-medium text-slate-700">
+          <label className="block text-sm font-medium text-foreground-muted">
             Phone (optional)
             <input
               name="phone"
@@ -287,11 +287,11 @@ export default function BookingCheckout({
               value={registerPhone}
               onChange={(e) => setRegisterPhone(e.target.value)}
               placeholder="555-0199"
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+              className="mt-1 w-full rounded-xl border border-border bg-bg px-3 py-2 text-sm text-foreground outline-none transition focus:border-accent"
             />
           </label>
           {authError && (
-            <p className="text-xs text-red-600" role="alert">
+            <p className="text-xs text-accent" role="alert">
               {authError}
             </p>
           )}
@@ -299,14 +299,14 @@ export default function BookingCheckout({
             <button
               type="submit"
               disabled={authBusy}
-              className="flex-1 rounded-lg bg-blue-600 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:bg-slate-300"
+              className="flex-1 rounded-full bg-accent py-2 text-sm font-bold text-ink transition hover:bg-accent-hover disabled:text-foreground-subtle disabled:hover:bg-accent"
             >
               {authBusy ? "Creating..." : "Create account & keep seats"}
             </button>
             <button
               type="button"
               onClick={() => setAuthTab("guest")}
-              className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              className="rounded-full border border-border-strong px-3 py-2 text-sm font-semibold text-foreground transition hover:border-foreground hover:bg-white/10"
             >
               Cancel
             </button>
@@ -317,7 +317,7 @@ export default function BookingCheckout({
       {/* Main Payment Form */}
       {(session?.authenticated || authTab === "guest") && (
         <form action={handlePaymentSubmit} className="mt-4 space-y-4">
-          <label className="block text-sm font-medium text-slate-700">
+          <label className="block text-sm font-medium text-foreground-muted">
             Email address
             <input
               required
@@ -326,11 +326,11 @@ export default function BookingCheckout({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+              className="mt-1 w-full rounded-xl border border-border bg-bg px-3 py-2 text-sm text-foreground outline-none transition focus:border-accent"
             />
           </label>
 
-          <label className="block text-sm font-medium text-slate-700">
+          <label className="block text-sm font-medium text-foreground-muted">
             Phone number (optional)
             <input
               name="phone"
@@ -338,7 +338,7 @@ export default function BookingCheckout({
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="555-0199"
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+              className="mt-1 w-full rounded-xl border border-border bg-bg px-3 py-2 text-sm text-foreground outline-none transition focus:border-accent"
             />
           </label>
 
@@ -346,14 +346,14 @@ export default function BookingCheckout({
             <button
               type="submit"
               disabled={busy}
-              className="flex-1 rounded-lg bg-emerald-600 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:bg-slate-300"
+              className="flex-1 rounded-full bg-accent py-3 text-sm font-bold text-ink transition hover:bg-accent-hover disabled:text-foreground-subtle disabled:hover:bg-accent"
             >
               {busy ? "Confirming..." : "Confirm Booking & Pay"}
             </button>
             <button
               type="button"
               onClick={onBackToSeats}
-              className="rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              className="rounded-full border border-border-strong px-4 py-3 text-sm font-semibold text-foreground transition hover:border-foreground hover:bg-white/10"
             >
               Cancel
             </button>
