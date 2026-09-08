@@ -94,7 +94,7 @@ export default function SeatMap({ seats, selectedSeatIds, onSelect }: SeatMapPro
         aria-label="Seat map legend"
       >
         <span className="flex items-center gap-1.5">
-          <i className="h-3 w-3 rounded bg-accent" />
+          <i className="h-3 w-3 rounded bg-[#fcd34d]" />
           Selected
         </span>
         <span className="flex items-center gap-1.5">
