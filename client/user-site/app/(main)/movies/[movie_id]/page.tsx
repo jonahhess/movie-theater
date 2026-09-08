@@ -1,5 +1,6 @@
 // app/movies/[movie_id]/page.tsx
 
+import Link from "next/link";
 import { mainApi } from "@/lib/api";
 
 interface PageProps {
@@ -39,9 +40,6 @@ if (movieError || !movie) {
   <main className="mx-auto max-w-xl bg-bg px-6 py-12 text-foreground sm:px-10">
     <p className="text-sm font-semibold uppercase tracking-wide text-accent">Now playing</p>
     <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">{movie?.title}</h1>
-    <p className="mt-4 rounded-2xl border border-border bg-bg-raised p-4 text-sm text-foreground-muted">
-      Viewing ID: <span className="font-mono text-accent-hover">{movieId}</span>
-    </p>
 
     <div className="mt-8 rounded-2xl border border-border bg-bg-raised p-6">
       <p className="text-sm font-semibold uppercase tracking-wide text-accent">Details</p>
@@ -52,6 +50,13 @@ if (movieError || !movie) {
         <div>Release Date: {movie?.release_date}</div>
       </dl>
     </div>
+
+    <Link
+      href={`/screenings?movie_id=${movieId}`}
+      className="mt-8 inline-block rounded-full bg-accent px-6 py-3 text-sm font-bold text-ink transition hover:bg-accent-hover"
+    >
+      View Screenings
+    </Link>
   </main>
 );
 }
