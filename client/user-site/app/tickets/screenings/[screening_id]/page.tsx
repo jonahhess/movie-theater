@@ -1,6 +1,5 @@
 import { mainApi } from "@/lib/api";
 import BookingExperience from "../../components/BookingExperience";
-import { TicketAccountBar } from "../../components/TicketAccount";
 
 interface PageProps {
   params: Promise<{
@@ -33,7 +32,6 @@ if (screeningError || !screening) {
 
   return (
     <main className="mx-auto max-w-6xl bg-bg px-6 py-12 text-foreground sm:px-10">
-      <TicketAccountBar />
       <p className="text-sm font-semibold uppercase tracking-wide text-accent">Auditorium</p>
       <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">Choose your seats</h1>
       <p className="mt-2 leading-7 text-foreground-muted">Screening #{screeningId}</p>
