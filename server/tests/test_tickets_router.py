@@ -223,7 +223,7 @@ async def make_client(monkeypatch):
 
     transport = ASGITransport(app=tickets)
     try:
-        async with AsyncClient(transport=transport, base_url="http://test") as client:
+        async with AsyncClient(transport=transport, base_url="http://test/api/v1/tickets") as client:
             yield client, session_factory, fake_redis
     finally:
         tickets.dependency_overrides.clear()
