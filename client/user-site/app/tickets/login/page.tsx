@@ -1,10 +1,18 @@
 import Link from "next/link";
-import { LoginForm, TicketAccountBar } from "../components/TicketAccount";
+import LoginForm from "../components/LoginForm";
 
-export default function TicketLoginPage() {
+interface PageProps {
+  searchParams: Promise<{
+    redirect?: string;
+  }>;
+}
+
+export default async function TicketLoginPage({ searchParams }: PageProps) {
+  const { redirect } = await searchParams;
+  const registerHref = redirect ? `/tickets/register?redirect=${encodeURIComponent(redirect)}` : "/tickets/register";
+
   return (
     <main className="mx-auto max-w-xl bg-bg px-6 py-12 text-foreground sm:px-10">
-      <TicketAccountBar />
       <Link href="/tickets/my-tickets" className="text-sm font-semibold text-foreground-muted underline decoration-accent underline-offset-4 hover:text-foreground">
         &larr; Back to my tickets
       </Link>
@@ -13,10 +21,10 @@ export default function TicketLoginPage() {
       <p className="mt-2 mb-8 max-w-md leading-7 text-foreground-muted">
         Sign in to view your tickets and save holds to your account.
       </p>
-      <LoginForm />
+      <LoginForm redirectTo={redirect} />
       <p className="mt-6 text-sm leading-7 text-foreground-muted">
         Don&apos;t have an account?{" "}
-        <Link href="/tickets/register" className="font-semibold text-accent-hover hover:text-accent">
+        <Link href={registerHref} className="font-semibold text-accent-hover hover:text-accent">
           Create an account
         </Link>
       </p>

@@ -1,10 +1,9 @@
 import Link from "next/link";
-import { MyTickets, TicketAccountBar } from "../components/TicketAccount";
+import MyTickets from "../components/MyTickets";
 
 export default function MyTicketsPage() {
   return (
     <main className="mx-auto max-w-3xl bg-bg px-6 py-12 text-foreground sm:px-10">
-      <TicketAccountBar />
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-accent">Your night out</p>

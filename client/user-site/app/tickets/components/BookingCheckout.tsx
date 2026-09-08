@@ -62,6 +62,7 @@ export default function BookingCheckout({
     onSessionChange(updatedSession);
     setEmail(data.email || "");
     setAuthTab("guest");
+    window.dispatchEvent(new CustomEvent("ticket-session-changed"));
   }
 
   async function handleInlineRegister(formData: FormData) {
@@ -98,6 +99,7 @@ export default function BookingCheckout({
     setEmail(data.email || "");
     setPhone(phoneInput || "");
     setAuthTab("guest");
+    window.dispatchEvent(new CustomEvent("ticket-session-changed"));
   }
 
   async function handlePaymentSubmit(formData: FormData) {
