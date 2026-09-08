@@ -18,7 +18,7 @@ load_dotenv(dotenv_path=ENV_PATH)
 
 JWT_SECRET = os.getenv("JWT_SECRET")
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
-JWT_EXP_MINUTES = int(os.getenv("JWT_EXP_MINUTES", "60"))
+JWT_EXP_MINUTES = int(os.getenv("JWT_EXP_MINUTES", "15"))
 
 bearer_scheme = HTTPBearer(auto_error=False)
 security_credentials = Security(bearer_scheme)
