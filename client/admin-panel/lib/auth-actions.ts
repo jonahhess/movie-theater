@@ -9,7 +9,7 @@ export async function loginAction(prevState: any, formData: FormData) {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
 
-  const { data, error } = await apiClient.POST("/", {
+  const { data, error } = await apiClient.POST("/api/v1/admin/", {
     body: { email, password },
   });
 
@@ -24,7 +24,7 @@ export async function loginAction(prevState: any, formData: FormData) {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
-    maxAge: 60 * 60 * 24 * 7,
+    maxAge: data.expires_in_seconds,
     path: "/",
   });
 
