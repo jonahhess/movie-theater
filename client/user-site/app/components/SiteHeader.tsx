@@ -78,6 +78,8 @@ export function SiteHeader() {
                 Sign out
               </button>
             </div>
+          ) : session === null ? (
+            <div className="h-9 w-20 animate-pulse rounded-full bg-bg-raised" aria-hidden="true" />
           ) : (
             <Link
               href={loginHref}
