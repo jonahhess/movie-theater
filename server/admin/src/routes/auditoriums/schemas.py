@@ -49,6 +49,17 @@ class AuditoriumResponse(AuditoriumBaseSchema):
     total_capacity: int
     is_accessible: bool
 
+
+class GenerateSeatsSchema(BaseModel):
+    row_count: int = 6
+    seats_per_row: int = 8
+    row_spacing: int = 50
+    seat_spacing: int = 45
+    x_offset: int = 60
+    y_offset: int = 70
+    accessible_rows: list[str] = ["A"]
+
+
 # TODO: Consider adding a schema for updating the seat map all at once. 
 
 # class SeatMapItem(BaseModel):
