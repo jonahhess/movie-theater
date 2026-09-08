@@ -28,7 +28,13 @@ export function PaginatedList<TItem>({
   renderItem,
 }: PaginatedListProps<TItem>) {
   if (!data || data.total === 0) {
-    return <div>{emptyMessage}</div>;
+    return (
+      <main className="mx-auto max-w-5xl bg-bg px-6 py-12 text-foreground sm:px-10">
+        <p className="rounded-2xl border border-border bg-bg-raised p-6 leading-7 text-foreground-muted">
+          {emptyMessage}
+        </p>
+      </main>
+    );
   }
 
   const limit = data.limit > 0 ? data.limit : data.items.length || 1;
@@ -40,30 +46,54 @@ export function PaginatedList<TItem>({
   const hasNextPage = nextOffset < data.total;
 
   return (
-    <main>
-      <h1>{title}</h1>
-      <p>{description}</p>
-      <div className="my-4 flex items-center gap-3">
-        <span>
+    <main className="mx-auto max-w-5xl bg-bg px-6 py-12 text-foreground sm:px-10">
+      <p className="text-sm font-semibold uppercase tracking-wide text-accent">Now showing</p>
+      <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">{title}</h1>
+      <p className="mt-2 max-w-2xl leading-7 text-foreground-muted">{description}</p>
+
+      <div className="my-8 flex flex-wrap items-center gap-4 border-y border-border py-4 text-sm">
+        <span className="text-foreground-muted">
           Page {currentPage} of {totalPages}
         </span>
-        <span>Total: {data.total}</span>
-        {hasPreviousPage ? (
-          <Link href={getPageHref(previousOffset)}>Back</Link>
-        ) : (
-          <span aria-disabled="true" className="text-gray-400">
-            Back
-          </span>
-        )}
-        {hasNextPage ? (
-          <Link href={getPageHref(nextOffset)}>Forward</Link>
-        ) : (
-          <span aria-disabled="true" className="text-gray-400">
-            Forward
-          </span>
-        )}
+        <span className="text-foreground-muted">Total: {data.total}</span>
+
+        <div className="ml-auto flex gap-2">
+          {hasPreviousPage ? (
+            <Link
+              href={getPageHref(previousOffset)}
+              className="rounded-full border border-border-strong px-4 py-1.5 font-semibold text-foreground transition hover:border-foreground hover:bg-white/10"
+            >
+              Back
+            </Link>
+          ) : (
+            <span
+              aria-disabled="true"
+              className="rounded-full border border-border-strong px-4 py-1.5 font-semibold text-foreground-subtle"
+            >
+              Back
+            </span>
+          )}
+          {hasNextPage ? (
+            <Link
+              href={getPageHref(nextOffset)}
+              className="rounded-full border border-border-strong px-4 py-1.5 font-semibold text-foreground transition hover:border-foreground hover:bg-white/10"
+            >
+              Forward
+            </Link>
+          ) : (
+            <span
+              aria-disabled="true"
+              className="rounded-full border border-border-strong px-4 py-1.5 font-semibold text-foreground-subtle"
+            >
+              Forward
+            </span>
+          )}
+        </div>
       </div>
-      <div id={listId}>{data.items.map(renderItem)}</div>
+
+      <div id={listId} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {data.items.map(renderItem)}
+      </div>
     </main>
   );
 }

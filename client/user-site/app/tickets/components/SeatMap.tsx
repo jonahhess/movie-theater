@@ -22,19 +22,19 @@ export default function SeatMap({ seats, selectedSeatIds, onSelect }: SeatMapPro
 
   return (
     <div className="space-y-4">
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-slate-950 p-4 shadow-inner">
+      <div className="overflow-hidden rounded-2xl border border-border bg-[#070a0f] p-4">
         <svg
           aria-label="Interactive auditorium seat map"
           className="h-[min(65vh,580px)] w-full"
           role="img"
           viewBox={viewBox}
         >
-          <rect x={minX} y={minY} width={maxX - minX} height={maxY - minY} fill="#0f172a" />
+          <rect x={minX} y={minY} width={maxX - minX} height={maxY - minY} fill="#070a0f" />
           <text
             x={(minX + maxX) / 2}
             y={minY + 24}
             textAnchor="middle"
-            fill="#94a3b8"
+            fill="#fcd34d"
             fontSize="12"
             fontWeight="600"
           >
@@ -44,9 +44,9 @@ export default function SeatMap({ seats, selectedSeatIds, onSelect }: SeatMapPro
             const isSelected = selectedSeatIds.has(seat.id);
             const fill = seat.is_available
               ? seat.is_accessible
-                ? "#34d399"
-                : "#38bdf8"
-              : "#64748b";
+                ? "#d97706"
+                : "#e7e5e4"
+              : "#3f3f46";
 
             return (
               <g
@@ -70,14 +70,14 @@ export default function SeatMap({ seats, selectedSeatIds, onSelect }: SeatMapPro
                   width="32"
                   height="24"
                   rx="4"
-                  fill={isSelected ? "#fbbf24" : fill}
-                  stroke={isSelected ? "#ffffff" : "#1e293b"}
+                  fill={isSelected ? "#fcd34d" : fill}
+                  stroke={isSelected ? "#ffffff" : "#1c1917"}
                   strokeWidth={isSelected ? 2.5 : 1}
                 />
                 <text
                   textAnchor="middle"
                   dominantBaseline="central"
-                  fill={isSelected ? "#451a03" : "#082f49"}
+                  fill={isSelected ? "#0d1117" : seat.is_available ? "#0d1117" : "#a1a1aa"}
                   fontSize="10"
                   fontWeight="700"
                 >
@@ -90,23 +90,23 @@ export default function SeatMap({ seats, selectedSeatIds, onSelect }: SeatMapPro
         </svg>
       </div>
       <div
-        className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-medium text-slate-600"
+        className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-medium text-foreground-muted"
         aria-label="Seat map legend"
       >
         <span className="flex items-center gap-1.5">
-          <i className="h-3 w-3 rounded bg-amber-400" />
+          <i className="h-3 w-3 rounded bg-accent" />
           Selected
         </span>
         <span className="flex items-center gap-1.5">
-          <i className="h-3 w-3 rounded bg-sky-400" />
+          <i className="h-3 w-3 rounded bg-[#e7e5e4]" />
           Available
         </span>
         <span className="flex items-center gap-1.5">
-          <i className="h-3 w-3 rounded bg-emerald-400" />
+          <i className="h-3 w-3 rounded bg-[#d97706]" />
           Accessible
         </span>
         <span className="flex items-center gap-1.5">
-          <i className="h-3 w-3 rounded bg-slate-500" />
+          <i className="h-3 w-3 rounded bg-[#3f3f46]" />
           Unavailable
         </span>
       </div>

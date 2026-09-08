@@ -3,24 +3,23 @@ import { RegisterForm, TicketAccountBar } from "../components/TicketAccount";
 
 export default function TicketRegisterPage() {
   return (
-    <main className="min-h-screen bg-slate-50 p-6 md:p-10">
-      <div className="mx-auto max-w-xl">
-        <TicketAccountBar />
-        <Link href="/tickets/login" className="text-sm text-blue-700 underline">
-          &larr; Back to sign in
+    <main className="mx-auto max-w-xl bg-bg px-6 py-12 text-foreground sm:px-10">
+      <TicketAccountBar />
+      <Link href="/tickets/login" className="text-sm font-semibold text-foreground-muted underline decoration-accent underline-offset-4 hover:text-foreground">
+        &larr; Back to sign in
+      </Link>
+      <p className="mt-8 text-sm font-semibold uppercase tracking-wide text-accent">Account</p>
+      <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">Create ticket account</h1>
+      <p className="mt-2 mb-8 max-w-md leading-7 text-foreground-muted">
+        Create an account to keep your bookings and receipts saved.
+      </p>
+      <RegisterForm />
+      <p className="mt-6 text-sm leading-7 text-foreground-muted">
+        Already have an account?{" "}
+        <Link href="/tickets/login" className="font-semibold text-accent-hover hover:text-accent">
+          Sign in
         </Link>
-        <h1 className="mt-4 text-2xl font-bold text-slate-900">Create ticket account</h1>
-        <p className="mt-1 mb-6 text-sm text-slate-600">
-          Create an account to keep your bookings and receipts saved.
-        </p>
-        <RegisterForm />
-        <p className="mt-4 text-sm text-slate-600">
-          Already have an account?{" "}
-          <Link href="/tickets/login" className="text-blue-700 underline">
-            Sign in
-          </Link>
-        </p>
-      </div>
+      </p>
     </main>
   );
 }

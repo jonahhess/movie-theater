@@ -42,27 +42,27 @@ export function TicketAccountBar({
   const isLoading = session === null;
 
   return (
-    <div className="mb-8 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+    <div className="mb-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-bg-raised px-4 py-3">
       <div className="flex items-center gap-3">
         <span
           className={`h-2.5 w-2.5 rounded-full ${
             isLoading
-              ? "bg-slate-300"
+              ? "bg-foreground-subtle"
               : session.authenticated
-              ? "bg-emerald-500"
-              : "bg-amber-400"
+              ? "bg-accent"
+              : "bg-accent-hover"
           }`}
           aria-hidden="true"
         />
         <div>
-          <p className="text-sm font-semibold text-slate-900">
+          <p className="text-sm font-semibold text-foreground">
             {isLoading
               ? "Checking account..."
               : session.authenticated
               ? `Signed in as ${session.username}`
               : "Guest booking"}
           </p>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-foreground-subtle">
             {isLoading
               ? ""
               : session.authenticated
@@ -72,7 +72,7 @@ export function TicketAccountBar({
         </div>
       </div>
       <nav className="flex flex-wrap items-center gap-3 text-sm" aria-label="Ticket account">
-        <Link href="/tickets/my-tickets" className="font-medium text-blue-700 hover:underline">
+        <Link href="/tickets/my-tickets" className="font-semibold text-accent-hover hover:text-accent">
           My tickets
         </Link>
         {!isLoading &&
@@ -80,7 +80,7 @@ export function TicketAccountBar({
             <button
               type="button"
               onClick={handleSignOut}
-              className="rounded border border-slate-300 px-3 py-1.5 font-medium text-slate-700 hover:bg-slate-50"
+              className="rounded-full border border-border-strong px-3 py-1.5 font-semibold text-foreground transition hover:border-foreground hover:bg-white/10"
             >
               Sign out
             </button>
@@ -88,13 +88,13 @@ export function TicketAccountBar({
             <>
               <Link
                 href="/tickets/login"
-                className="rounded border border-slate-300 px-3 py-1.5 font-medium text-slate-700 hover:bg-slate-50"
+                className="rounded-full border border-border-strong px-3 py-1.5 font-semibold text-foreground transition hover:border-foreground hover:bg-white/10"
               >
                 Sign in
               </Link>
               <Link
                 href="/tickets/register"
-                className="rounded bg-slate-900 px-3 py-1.5 font-medium text-white hover:bg-slate-700"
+                className="rounded-full bg-accent px-3 py-1.5 font-bold text-ink transition hover:bg-accent-hover"
               >
                 Create account
               </Link>
@@ -131,7 +131,7 @@ export function MyTickets() {
     router.refresh();
   }
 
-  if (loading) return <p className="text-slate-600">Loading tickets...</p>;
+  if (loading) return <p className="leading-7 text-foreground-muted">Loading tickets...</p>;
 
   const redeemed = tickets.filter(ticket => ticket.status === "redeemed");
   const unredeemed = tickets.filter(ticket => ticket.status !== "redeemed");
@@ -140,46 +140,46 @@ export function MyTickets() {
     <div className="space-y-6">
       {redeemed.length > 0 && (
         <div className="space-y-4">
-          <h3 className="text-lg font-bold text-slate-800">Redeemed Tickets</h3>
+          <h3 className="text-sm font-semibold uppercase tracking-wide text-accent">Redeemed Tickets</h3>
           {redeemed.map((ticket) => (
-            <article key={ticket.id} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <article key={ticket.id} className="rounded-2xl border border-border bg-bg-raised p-6">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="font-mono text-sm font-semibold text-slate-800">
+                <p className="font-mono text-sm font-semibold text-accent-hover">
                   Receipt #{ticket.receipt_number}
                 </p>
-                <span className="inline-flex rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-800 capitalize">
+                <span className="inline-flex rounded-full bg-bg px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-foreground-subtle capitalize">
                   {ticket.status}
                 </span>
               </div>
-              {ticket.email && <p className="mt-2 text-xs text-slate-500">Email: {ticket.email}</p>}
+              {ticket.email && <p className="mt-2 text-xs text-foreground-subtle">Email: {ticket.email}</p>}
             </article>
           ))}
         </div>
       )}
       {unredeemed.length > 0 && (
         <div className="space-y-4">
-          <h3 className="text-lg font-bold text-slate-800">Unredeemed Tickets</h3>
+          <h3 className="text-sm font-semibold uppercase tracking-wide text-accent">Unredeemed Tickets</h3>
           {unredeemed.map((ticket) => (
-            <article key={ticket.id} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <article key={ticket.id} className="rounded-2xl border border-border bg-bg-raised p-6">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="font-mono text-sm font-semibold text-slate-800">
+                <p className="font-mono text-sm font-semibold text-accent-hover">
                   Receipt #{ticket.receipt_number}
                 </p>
-                <span className="inline-flex rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-800 capitalize">
+                <span className="inline-flex rounded-full bg-accent px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-ink capitalize">
                   {ticket.status}
                 </span>
               </div>
-              {ticket.email && <p className="mt-2 text-xs text-slate-500">Email: {ticket.email}</p>}
+              {ticket.email && <p className="mt-2 text-xs text-foreground-subtle">Email: {ticket.email}</p>}
             </article>
           ))}
         </div>
       )}
       {!redeemed.length && !unredeemed.length && (
-        <div className="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center">
-          <p className="text-slate-600">No tickets found for this session.</p>
+        <div className="rounded-2xl border border-dashed border-border bg-bg-raised p-8 text-center">
+          <p className="leading-7 text-foreground-muted">No tickets found for this session.</p>
           {!session?.authenticated && (
-            <p className="mt-1 text-xs text-slate-500">
-              Already have an account? <Link href="/tickets/login" className="text-blue-600 underline">Sign in</Link> to view previous bookings.
+            <p className="mt-1 text-xs text-foreground-subtle">
+              Already have an account? <Link href="/tickets/login" className="font-semibold text-accent-hover hover:text-accent">Sign in</Link> to view previous bookings.
             </p>
           )}
         </div>
@@ -190,12 +190,12 @@ export function MyTickets() {
           <button
             type="button"
             onClick={handleSignOut}
-            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            className="rounded-full border border-border-strong px-6 py-3 text-sm font-semibold text-foreground transition hover:border-foreground hover:bg-white/10"
           >
             Sign out
           </button>
         )}
-        <Link href="/screenings" className="text-sm font-medium text-blue-700 underline">
+        <Link href="/screenings" className="text-sm font-semibold text-foreground-muted underline decoration-accent underline-offset-4 hover:text-foreground">
           Browse screenings
         </Link>
       </div>
@@ -231,8 +231,8 @@ export function LoginForm() {
   }
 
   return (
-    <form action={submit} className="max-w-md space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-      <label className="block text-sm font-medium text-slate-700">
+    <form action={submit} className="max-w-md space-y-4 rounded-2xl border border-border bg-bg-raised p-6">
+      <label className="block text-sm font-medium text-foreground-muted">
         Email
         <input
           required
@@ -241,10 +241,10 @@ export function LoginForm() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="you@example.com"
-          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+          className="mt-1 w-full rounded-xl border border-border bg-bg px-3 py-2 text-sm text-foreground outline-none transition focus:border-accent"
         />
       </label>
-      <label className="block text-sm font-medium text-slate-700">
+      <label className="block text-sm font-medium text-foreground-muted">
         Password
         <input
           required
@@ -252,18 +252,18 @@ export function LoginForm() {
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+          className="mt-1 w-full rounded-xl border border-border bg-bg px-3 py-2 text-sm text-foreground outline-none transition focus:border-accent"
         />
       </label>
       {error && (
-        <p className="text-sm text-red-600" role="alert">
+        <p className="text-sm text-accent" role="alert">
           {error}
         </p>
       )}
       <button
         type="submit"
         disabled={busy}
-        className="w-full rounded-lg bg-blue-600 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:bg-slate-300"
+        className="w-full rounded-full bg-accent py-3 text-sm font-bold text-ink transition hover:bg-accent-hover disabled:text-foreground-subtle disabled:hover:bg-accent"
       >
         {busy ? "Signing in..." : "Sign in"}
       </button>
@@ -308,8 +308,8 @@ export function RegisterForm() {
   }
 
   return (
-    <form action={submit} className="max-w-md space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-      <label className="block text-sm font-medium text-slate-700">
+    <form action={submit} className="max-w-md space-y-4 rounded-2xl border border-border bg-bg-raised p-6">
+      <label className="block text-sm font-medium text-foreground-muted">
         Username
         <input
           required
@@ -318,10 +318,10 @@ export function RegisterForm() {
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           placeholder="username"
-          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+          className="mt-1 w-full rounded-xl border border-border bg-bg px-3 py-2 text-sm text-foreground outline-none transition focus:border-accent"
         />
       </label>
-      <label className="block text-sm font-medium text-slate-700">
+      <label className="block text-sm font-medium text-foreground-muted">
         Email
         <input
           required
@@ -330,10 +330,10 @@ export function RegisterForm() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="you@example.com"
-          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+          className="mt-1 w-full rounded-xl border border-border bg-bg px-3 py-2 text-sm text-foreground outline-none transition focus:border-accent"
         />
       </label>
-      <label className="block text-sm font-medium text-slate-700">
+      <label className="block text-sm font-medium text-foreground-muted">
         Password (8+ characters)
         <input
           required
@@ -342,10 +342,10 @@ export function RegisterForm() {
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+          className="mt-1 w-full rounded-xl border border-border bg-bg px-3 py-2 text-sm text-foreground outline-none transition focus:border-accent"
         />
       </label>
-      <label className="block text-sm font-medium text-slate-700">
+      <label className="block text-sm font-medium text-foreground-muted">
         Phone (optional)
         <input
           name="phone"
@@ -353,18 +353,18 @@ export function RegisterForm() {
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
           placeholder="555-0199"
-          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+          className="mt-1 w-full rounded-xl border border-border bg-bg px-3 py-2 text-sm text-foreground outline-none transition focus:border-accent"
         />
       </label>
       {error && (
-        <p className="text-sm text-red-600" role="alert">
+        <p className="text-sm text-accent" role="alert">
           {error}
         </p>
       )}
       <button
         type="submit"
         disabled={busy}
-        className="w-full rounded-lg bg-blue-600 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:bg-slate-300"
+        className="w-full rounded-full bg-accent py-3 text-sm font-bold text-ink transition hover:bg-accent-hover disabled:text-foreground-subtle disabled:hover:bg-accent"
       >
         {busy ? "Creating account..." : "Create account"}
       </button>

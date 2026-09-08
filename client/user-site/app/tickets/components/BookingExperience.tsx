@@ -284,23 +284,23 @@ export default function BookingExperience({ screeningId }: { screeningId: number
     setStage("confirmed");
   }
 
-  if (loading) return <p className="mt-8 text-slate-600">Loading seat map...</p>;
+  if (loading) return <p className="mt-8 leading-7 text-foreground-muted">Loading seat map...</p>;
 
   if (stage === "confirmed") {
     return (
-      <div className="mt-8 rounded-xl border border-emerald-200 bg-emerald-50 p-6 text-emerald-900">
-        <h2 className="text-xl font-bold">Booking Confirmed!</h2>
-        <p className="mt-2 text-sm">Your tickets have been reserved and receipt generated.</p>
-        <div className="mt-4 flex gap-4">
+      <div className="mt-8 rounded-2xl border border-border bg-accent p-6 text-ink">
+        <h2 className="text-xl font-semibold tracking-tight">Booking Confirmed!</h2>
+        <p className="mt-2 text-sm leading-7 text-ink/70">Your tickets have been reserved and receipt generated.</p>
+        <div className="mt-4 flex flex-wrap gap-3">
           <Link
             href="/tickets/my-tickets"
-            className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800"
+            className="rounded-full bg-ink px-6 py-3 text-sm font-bold text-accent transition hover:opacity-90"
           >
             View My Tickets
           </Link>
           <Link
             href="/screenings"
-            className="rounded-lg border border-emerald-300 bg-white px-4 py-2 text-sm font-semibold text-emerald-800 hover:bg-emerald-100"
+            className="rounded-full border border-ink/35 px-6 py-3 text-sm font-semibold text-ink transition hover:bg-ink/10"
           >
             Browse More Screenings
           </Link>
@@ -312,7 +312,7 @@ export default function BookingExperience({ screeningId }: { screeningId: number
   return (
     <section className="mt-6 space-y-6">
       {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700" role="alert">
+        <div className="rounded-2xl border border-border bg-bg-raised p-4 text-sm text-accent" role="alert">
           {error}
         </div>
       )}
@@ -320,18 +320,18 @@ export default function BookingExperience({ screeningId }: { screeningId: number
       {stage === "seats" ? (
         <>
           <SeatMap seats={mapSeats} selectedSeatIds={selected} onSelect={selectSeat} />
-          <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-bg-raised p-6">
             <div>
-              <p className="text-sm font-semibold text-slate-800">
+              <p className="text-sm font-semibold text-foreground">
                 {selected.size} seat{selected.size === 1 ? "" : "s"} selected
               </p>
-              <p className="text-xs text-slate-500">Click available seats to reserve them.</p>
+              <p className="text-xs text-foreground-subtle">Click available seats to reserve them.</p>
             </div>
             <button
               type="button"
               disabled={busy || selected.size === 0}
               onClick={continueToCheckout}
-              className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+              className="rounded-full bg-accent px-6 py-3 text-sm font-bold text-ink transition hover:bg-accent-hover disabled:text-foreground-subtle disabled:hover:bg-accent"
             >
               Continue to Checkout
             </button>

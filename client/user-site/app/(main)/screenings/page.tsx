@@ -45,11 +45,23 @@ export default async function ScreeningsPage({ searchParams }: ScreeningsPagePro
     ]);
 
   if (screeningsError) {
-    return <div>No screenings found.</div>;
+    return (
+      <main className="mx-auto max-w-5xl bg-bg px-6 py-12 text-foreground sm:px-10">
+        <p className="rounded-2xl border border-border bg-bg-raised p-6 leading-7 text-foreground-muted">
+          No screenings found.
+        </p>
+      </main>
+    );
   }
 
   if (moviesError) {
-    return <div>No movies found.</div>;
+    return (
+      <main className="mx-auto max-w-5xl bg-bg px-6 py-12 text-foreground sm:px-10">
+        <p className="rounded-2xl border border-border bg-bg-raised p-6 leading-7 text-foreground-muted">
+          No movies found.
+        </p>
+      </main>
+    );
   }
 
   const screeningsWithMovies = screenings.items.map(screening => {
@@ -68,19 +80,28 @@ export default async function ScreeningsPage({ searchParams }: ScreeningsPagePro
         listId="screenings-list"
         getPageHref={(nextOffset) => `/screenings?limit=${limit}&offset=${nextOffset}`}
         renderItem={(screening) => (
-          <div key={screening.id} className="mb-4">
-            <Link href={`/tickets/screenings/${screening.id}`}>
-              <h2 className="text-2xl font-bold">Title: {screening.title}</h2>
-              <p className="text-gray-600">Price: ${screening.price}</p>
-              <p className="text-gray-600">Description: {screening.description}</p>
-              <p className="text-gray-600">Start Time: {screening.start_time}</p>
-              <p className="text-gray-600">End Time: {screening.start_time + screening.duration_minutes}</p>
-              <p className="text-gray-600">Duration: {screening.duration_minutes} minutes</p>
-              <p className="text-gray-600">Rating: {screening.rating}</p>
-              <p className="text-gray-600">Release Date: {screening.release_date}</p>
-              <p className="text-gray-600">Auditorium: {screening.auditorium?.name}</p>
-            </Link>
-          </div>
+          <Link
+            key={screening.id}
+            href={`/tickets/screenings/${screening.id}`}
+            className="group rounded-2xl border border-border bg-bg-raised p-6 transition hover:-translate-y-1 hover:border-accent/60"
+          >
+            <p className="text-sm font-semibold uppercase tracking-wide text-accent">
+              {screening.auditorium?.name}
+            </p>
+            <h2 className="mt-3 text-xl font-semibold tracking-tight">{screening.title}</h2>
+            <p className="mt-2 leading-7 text-foreground-subtle">{screening.description}</p>
+            <dl className="mt-5 space-y-1 text-sm leading-7 text-foreground-muted">
+              <div>Price: ${screening.price}</div>
+              <div>Start Time: {screening.start_time}</div>
+              <div>End Time: {screening.start_time + screening.duration_minutes}</div>
+              <div>Duration: {screening.duration_minutes} minutes</div>
+              <div>Rating: {screening.rating}</div>
+              <div>Release Date: {screening.release_date}</div>
+            </dl>
+            <span className="mt-5 inline-block text-sm font-semibold text-accent-hover">
+              Choose seats
+            </span>
+          </Link>
         )}
       />
   );

@@ -26,9 +26,9 @@ const { data: movie, error: movieError } = await mainApi.GET(
 
 if (movieError || !movie) {
   return (
-    <main className="p-8 max-w-xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Movie Details</h1>
-      <p className="bg-red-100 p-4 rounded border text-red-600">
+    <main className="mx-auto max-w-xl bg-bg px-6 py-12 text-foreground sm:px-10">
+      <h1 className="text-3xl font-semibold tracking-tight">Movie Details</h1>
+      <p className="mt-6 rounded-2xl border border-border bg-bg-raised p-6 leading-7 text-foreground-muted">
         Error loading movie details.
       </p>
     </main>
@@ -36,17 +36,22 @@ if (movieError || !movie) {
 }
 
   return (
-    <main className="p-8 max-w-xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Movie Details</h1>
-      <p className="bg-gray-100 p-4 rounded border">
-        Viewing ID: <span className="font-mono text-blue-600">{movieId}</span>
-      </p>
-      <div>Details</div>
-         <p>Title: {movie?.title}</p>
-         <p>Description: {movie?.description}</p>
-         <p>Duration: {movie?.duration_minutes} minutes</p>
-         <p>Rating: {movie?.rating}</p>
-         <p>Release Date: {movie?.release_date}</p>
-    </main>
-  );
+  <main className="mx-auto max-w-xl bg-bg px-6 py-12 text-foreground sm:px-10">
+    <p className="text-sm font-semibold uppercase tracking-wide text-accent">Now playing</p>
+    <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">{movie?.title}</h1>
+    <p className="mt-4 rounded-2xl border border-border bg-bg-raised p-4 text-sm text-foreground-muted">
+      Viewing ID: <span className="font-mono text-accent-hover">{movieId}</span>
+    </p>
+
+    <div className="mt-8 rounded-2xl border border-border bg-bg-raised p-6">
+      <p className="text-sm font-semibold uppercase tracking-wide text-accent">Details</p>
+      <p className="mt-4 leading-7 text-foreground-muted">{movie?.description}</p>
+      <dl className="mt-6 space-y-2 leading-7 text-foreground-muted">
+        <div>Duration: {movie?.duration_minutes} minutes</div>
+        <div>Rating: {movie?.rating}</div>
+        <div>Release Date: {movie?.release_date}</div>
+      </dl>
+    </div>
+  </main>
+);
 }
