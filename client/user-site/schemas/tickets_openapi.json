@@ -21,6 +21,24 @@
         }
       }
     },
+    "/api/v1/tickets/session": {
+      "get": {
+        "summary": "Establish Ticket Session",
+        "operationId": "establish_ticket_session_api_v1_tickets_session_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/tickets/login": {
       "post": {
         "summary": "Login",
@@ -37,6 +55,44 @@
         },
         "responses": {
           "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/tickets/register": {
+      "post": {
+        "summary": "Register",
+        "operationId": "register_api_v1_tickets_register_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
             "description": "Successful Response",
             "content": {
               "application/json": {
@@ -179,6 +235,49 @@
         }
       }
     },
+    "/api/v1/tickets/screenings/{screening_id}/seat-map": {
+      "get": {
+        "summary": "View Screening Seat Map",
+        "operationId": "view_screening_seat_map_api_v1_tickets_screenings__screening_id__seat_map_get",
+        "parameters": [
+          {
+            "name": "screening_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Screening Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ScreeningSeatResponse"
+                  },
+                  "title": "Response View Screening Seat Map Api V1 Tickets Screenings  Screening Id  Seat Map Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/tickets/screenings/{screening_id}/seats/{seat_id}/hold": {
       "post": {
         "summary": "Hold Seat",
@@ -211,6 +310,53 @@
                 "schema": {
                   "type": "boolean",
                   "title": "Response Hold Seat Api V1 Tickets Screenings  Screening Id  Seats  Seat Id  Hold Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Release Held Seat",
+        "operationId": "release_held_seat_api_v1_tickets_screenings__screening_id__seats__seat_id__hold_delete",
+        "parameters": [
+          {
+            "name": "screening_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Screening Id"
+            }
+          },
+          {
+            "name": "seat_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Seat Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean",
+                  "title": "Response Release Held Seat Api V1 Tickets Screenings  Screening Id  Seats  Seat Id  Hold Delete"
                 }
               }
             }
@@ -737,6 +883,157 @@
           "migrated_seat_count"
         ],
         "title": "LoginResponse"
+      },
+      "RegisterRequest": {
+        "properties": {
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "password": {
+            "type": "string",
+            "title": "Password"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          }
+        },
+        "type": "object",
+        "required": [
+          "username",
+          "email",
+          "password"
+        ],
+        "title": "RegisterRequest"
+      },
+      "ScreeningSeatResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "seat_id": {
+            "type": "integer",
+            "title": "Seat Id"
+          },
+          "row": {
+            "type": "string",
+            "title": "Row"
+          },
+          "number": {
+            "type": "integer",
+            "title": "Number"
+          },
+          "is_available": {
+            "type": "boolean",
+            "title": "Is Available"
+          },
+          "is_accessible": {
+            "type": "boolean",
+            "title": "Is Accessible"
+          },
+          "x_pos": {
+            "type": "integer",
+            "title": "X Pos"
+          },
+          "y_pos": {
+            "type": "integer",
+            "title": "Y Pos"
+          },
+          "angle": {
+            "type": "integer",
+            "title": "Angle"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "seat_id",
+          "row",
+          "number",
+          "is_available",
+          "is_accessible",
+          "x_pos",
+          "y_pos",
+          "angle",
+          "status"
+        ],
+        "title": "ScreeningSeatResponse"
+      },
+      "SessionResponse": {
+        "properties": {
+          "authenticated": {
+            "type": "boolean",
+            "title": "Authenticated"
+          },
+          "user_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Id"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "email"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "username": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Username"
+          },
+          "owner_tag": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner Tag"
+          }
+        },
+        "type": "object",
+        "required": [
+          "authenticated"
+        ],
+        "title": "SessionResponse"
       },
       "TicketResponse": {
         "properties": {
