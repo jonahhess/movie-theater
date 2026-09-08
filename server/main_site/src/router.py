@@ -27,6 +27,7 @@ async def home():
         "routes": {
             "movies": "/movies",
             "movie_details": "/movies/{movie_id}",
+            "movie_screenings": "/movies/{movie_id}/screenings",
             "screenings": "/screenings",
             "screening_details": "/screenings/{screening_id}",
         },
@@ -89,6 +90,46 @@ async def movie_details(movie_id: int, db: AsyncSession = db_dependency):
             detail=f"Movie {movie_id} was not found",
         )
     return movie
+
+
+@router.get("/movies/{movie_id}/screenings", response_model=ScreeningsListResponse,
+            responses={404: {"description": "Movie not found"}})
+async def movie_screenings(
+    movie_id: int,
+    limit: Annotated[int, Query(ge=1, le=100)] = 20,
+    offset: Annotated[int, Query(ge=0, le=100)] = 0,
+    db: AsyncSession = db_dependency,
+):
+    movie_exists = await db.scalar(select(MovieView.id).where(MovieView.id == movie_id))
+    if movie_exists is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Movie {movie_id} was not found",
+        )
+
+    count_stmt = (
+        select(func.count())
+        .select_from(ScreeningView)
+        .where(ScreeningView.movie_id == movie_id)
+    )
+    list_stmt = (
+        select(ScreeningView)
+        .options(selectinload(ScreeningView.auditorium))
+        .where(ScreeningView.movie_id == movie_id)
+        .order_by(ScreeningView.start_time.asc(), ScreeningView.id.asc())
+        .offset(offset)
+        .limit(limit)
+    )
+
+    total = await db.scalar(count_stmt) or 0
+    items = (await db.scalars(list_stmt)).all()
+
+    return ScreeningsListResponse(
+        total=total,
+        limit=limit,
+        offset=offset,
+        items=items,
+    )
 
 
 @router.get("/screenings", response_model=ScreeningsListResponse)
