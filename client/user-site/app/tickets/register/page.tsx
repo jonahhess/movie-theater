@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { RegisterForm } from "../components/TicketAccount";
+import RegisterForm from "../components/RegisterForm";
 
 interface PageProps {
   searchParams: Promise<{

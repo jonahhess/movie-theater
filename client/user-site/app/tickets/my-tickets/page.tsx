@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { MyTickets } from "../components/TicketAccount";
+import MyTickets from "../components/MyTickets";
 
 export default function MyTicketsPage() {
   return (

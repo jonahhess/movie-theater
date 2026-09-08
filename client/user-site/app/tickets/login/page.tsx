@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LoginForm } from "../components/TicketAccount";
+import LoginForm from "../components/LoginForm";
 
 interface PageProps {
   searchParams: Promise<{
