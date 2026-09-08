@@ -1,9 +1,20 @@
+import hashlib
+import hmac
 import json
+import os
 from asyncio import CancelledError, sleep
 from typing import Any
 
 from redis.asyncio import Redis
 from redis.exceptions import RedisError
+
+HMAC_SECRET = os.getenv("TICKETS_HMAC_SECRET", "movie-theater-seat-owner-secret-key").encode()
+
+def generate_owner_tag(user_uuid: str) -> str:
+    """Generate a non-reversible opaque tag identifying the owner without leaking user UUID."""
+    if not user_uuid:
+        return ""
+    return hmac.new(HMAC_SECRET, user_uuid.encode(), hashlib.sha256).hexdigest()[:16]
 
 # --- PURPOSE 1: HIGH CONTENTION SEAT RESERVATION (SET NX EX) ---
 
@@ -100,7 +111,16 @@ async def reserve_seat(
 
     success = await redis.set(key, user_uuid, nx=True, ex=lock_ttl_seconds)
     if success:
-        await publish_seat_update(redis, screening_id, seat_id, "locked")
+        try:
+            owner_tag = generate_owner_tag(user_uuid)
+            await publish_seat_update(redis, screening_id, seat_id, "locked", owner_tag=owner_tag)
+        except RedisError:
+            # The hold is already authoritative in Redis; live notifications
+            # should not turn a successful hold into a failed booking request.
+            print(
+                "Failed to publish seat hold update: "
+                f"screening_id={screening_id} seat_id={seat_id}"
+            )
 
     return bool(success)
 
@@ -115,7 +135,13 @@ async def release_seat(
     # It safely deletes a seat reservation only if it belongs to the specified user.
     deleted = await redis.delex(f"screening:{screening_id}::{seat_id}", ifeq=user_uuid)
     if deleted:
-        await publish_seat_update(redis, screening_id, seat_id, "available")
+        try:
+            await publish_seat_update(redis, screening_id, seat_id, "available")
+        except RedisError:
+            print(
+                "Failed to publish seat release update: "
+                f"screening_id={screening_id} seat_id={seat_id}"
+            )
 
     return bool(deleted)
 
@@ -483,12 +509,14 @@ async def publish_seat_update(
     screening_id: str,
     seat_id: str,
     status: str,
+    owner_tag: str = "",
 ) -> None:
     """Pushes a seat status change into the Redis Stream."""
     stream_key = f"stream:screening:{screening_id}"
     screening_data = {
         "seat_id": seat_id,
-        "status": status  # "locked", "available", or "purchased"
+        "status": status,  # "locked", "available", or "purchased"
+        "owner_tag": owner_tag,
     }
     # Keep the stream bounded to avoid unbounded growth over time.
     await redis.xadd(
@@ -502,12 +530,12 @@ async def publish_seat_update(
 
 async def listen_for_expired_seat_holds(redis: Redis) -> None:
     pubsub = redis.pubsub()
-    channel = "__keyevent@0__:expired"
-    await pubsub.subscribe(channel)
+    pattern = "__keyevent@*__:expired"
+    await pubsub.psubscribe(pattern)
 
     try:
         async for message in pubsub.listen():
-            if message.get("type") != "message":
+            if message.get("type") not in ("message", "pmessage"):
                 continue
 
             expired_key = message.get("data")
@@ -521,7 +549,7 @@ async def listen_for_expired_seat_holds(redis: Redis) -> None:
             screening_id, seat_id = parsed
             await publish_seat_update(redis, screening_id, seat_id, "available")
     finally:
-        await pubsub.unsubscribe(channel)
+        await pubsub.punsubscribe(pattern)
         await pubsub.aclose()
 
 # 3. READ NEW MESSAGES FROM THE STREAM (The Listening Layer)
@@ -539,7 +567,7 @@ async def listen_to_stream(
         try:
             response = await redis.xread(
                 {stream_key: last_id},
-                count=1,
+                count=100,
                 block=block_ms,
             )
         except CancelledError:

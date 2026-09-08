@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...database import get_admin_db
 from ...exceptions import NotFoundError
-from ...models import Screening, ScreeningSeat, Seat
+from ...models import Auditorium, Movie, Screening, ScreeningSeat, Seat, Ticket
 from .schemas import ScreeningCreate, ScreeningResponse, ScreeningUpdate
 
 router = APIRouter(prefix="/screenings")
@@ -15,6 +15,60 @@ db_dependency = Depends(get_admin_db)
 TICKETS_BASE_URL = os.getenv("TICKETS_BASE_URL", "http://127.0.0.1:8000/tickets")
 INTERNAL_SERVICE_TOKEN = os.getenv("INTERNAL_SERVICE_TOKEN")
 
+
+async def ensure_screening_editable(
+    screening: Screening,
+    db: AsyncSession,
+) -> None:
+    if screening.status == "on_sale":
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                "This screening cannot be changed while ticket sales are open. "
+                "Close the sale before editing it."
+            ),
+        )
+
+    has_paid_tickets = await db.scalar(
+        select(ScreeningSeat.id)
+        .join(Ticket, Ticket.screening_seat_id == ScreeningSeat.id)
+        .where(
+            ScreeningSeat.screening_id == screening.id,
+            Ticket.status.in_(["confirmed", "redeemed"]),
+        )
+        .limit(1)
+    )
+    if has_paid_tickets is not None:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                "This screening cannot be changed because paid tickets exist. "
+                "Cancel or refund affected tickets before making this change."
+            ),
+        )
+
+
+async def ensure_screening_references_active(
+    screening: Screening,
+    db: AsyncSession,
+) -> None:
+    movie_status = await db.scalar(
+        select(Movie.status).where(Movie.id == screening.movie_id)
+    )
+    if movie_status != "now_showing":
+        raise HTTPException(
+            status_code=409,
+            detail="The screening movie must be now showing before sales can open.",
+        )
+
+    auditorium_active = await db.scalar(
+        select(Auditorium.is_active).where(Auditorium.id == screening.auditorium_id)
+    )
+    if auditorium_active is not True:
+        raise HTTPException(
+            status_code=409,
+            detail="The screening auditorium must be active before sales can open.",
+        )
 
 @router.get("", response_model=list[ScreeningResponse])
 async def list_screenings(db: AsyncSession = db_dependency):
@@ -24,6 +78,11 @@ async def list_screenings(db: AsyncSession = db_dependency):
 @router.post("", response_model=ScreeningResponse)
 async def create_screening(
     screening: ScreeningCreate, db: AsyncSession = db_dependency):
+    if screening.status == "on_sale":
+        raise HTTPException(
+            status_code=409,
+            detail="Create the screening as draft, then open sales explicitly.",
+        )
     screening = Screening(**screening.model_dump(exclude_unset=True))
     db.add(screening)
     try:
@@ -56,6 +115,7 @@ async def update_screening(
     if existing_screening is None:
         raise NotFoundError("Screening", screening_id)
 
+    await ensure_screening_editable(existing_screening, db)
     for key, value in screening.model_dump(exclude_unset=True).items():
         setattr(existing_screening, key, value)
     await db.commit()
@@ -77,53 +137,20 @@ async def open_screening_sale(screening_id: int, db: AsyncSession = db_dependenc
     if screening is None:
         raise NotFoundError("Screening", screening_id)
 
-    if screening.status == "on_sale":
+    if screening.status != "draft":
         raise HTTPException(
             status_code=409,
-            detail="Screening sale is already open",
+            detail="Only draft screenings can be opened for sale.",
         )
 
-    screening_seats = (
-        await db.scalars(
-            select(ScreeningSeat).where(ScreeningSeat.screening_id == screening_id)
-        )
-    ).all()
-
-    if not screening_seats:
-        auditorium_seats = (
-            await db.scalars(
-                select(Seat).where(
-                    Seat.auditorium_id == screening.auditorium_id,
-                    Seat.is_available.is_(True),
-                )
-            )
-        ).all()
-
-        if not auditorium_seats:
-            raise HTTPException(
-                status_code=409,
-                detail="Auditorium has no available seats to put on sale",
-            )
-
-        screening_seats = [
-            ScreeningSeat(
-                screening_id=screening_id,
-                seat_id=seat.id,
-                is_taken=False,
-            )
-            for seat in auditorium_seats
-        ]
-        db.add_all(screening_seats)
-        await db.flush()
-
-    seat_ids = [str(screening_seat.id) for screening_seat in screening_seats]
+    await ensure_screening_references_active(screening, db)
 
     try:
         async with httpx.AsyncClient(base_url=TICKETS_BASE_URL) as client:
             response = await client.post(
                 f"/internal/screenings/{screening_id}/sale/open",
-                json={"seat_ids": seat_ids},
-                headers={"X-Internal-Service-Token": INTERNAL_SERVICE_TOKEN},
+                json={},
+                headers={"x_internal_service_token": INTERNAL_SERVICE_TOKEN},
                 timeout=5.0,
             )
             response.raise_for_status()
@@ -164,7 +191,7 @@ async def close_screening_sale(screening_id: int, db: AsyncSession = db_dependen
         async with httpx.AsyncClient(base_url=TICKETS_BASE_URL) as client:
             response = await client.post(
                 f"/internal/screenings/{screening_id}/sale/close",
-                headers={"X-Internal-Service-Token": INTERNAL_SERVICE_TOKEN},
+                headers={"x_internal_service_token": INTERNAL_SERVICE_TOKEN},
                 timeout=5.0,
             )
             response.raise_for_status()
@@ -189,6 +216,7 @@ async def delete_screening(screening_id: int, db: AsyncSession = db_dependency):
     if existing_screening is None:
         raise NotFoundError("Screening", screening_id)
 
+    await ensure_screening_editable(existing_screening, db)
     await db.delete(existing_screening)
     await db.commit()
     return None
