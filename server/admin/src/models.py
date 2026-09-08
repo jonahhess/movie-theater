@@ -108,21 +108,21 @@ class Auditorium(Base):
     # Dynamic properties
     @hybrid_property
     def total_capacity(self):
-        return sum(1 for seat in self.seats if seat.is_available)
+        return len(self.seats)
 
     @total_capacity.inplace.expression
     @classmethod
     def _total_capacity_expression(cls):
         return (
             select(func.count(Seat.id))
-            .where(Seat.auditorium_id == cls.id, Seat.is_available)
+            .where(Seat.auditorium_id == cls.id)
             .label("total_capacity")
         )
 
     # 3. Dynamic property for accessibility (True if >= 1 seat is accessible)
     @hybrid_property
     def is_accessible(self):
-        return any(seat.is_accessible for seat in self.seats)
+        return any(seat.is_accessible and seat.is_available for seat in self.seats)
 
     @is_accessible.inplace.expression
     @classmethod
@@ -130,6 +130,7 @@ class Auditorium(Base):
         return select(func.count(Seat.id) > 0).where(
             Seat.auditorium_id == cls.id,
             Seat.is_accessible,
+            Seat.is_available,
         ).scalar_subquery()
     
     created_at: Mapped[datetime] = mapped_column(

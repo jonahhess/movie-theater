@@ -22,6 +22,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Refresh Admin Token */
+        post: operations["refresh_admin_token_api_v1_admin_refresh_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Current Admin */
+        get: operations["get_current_admin_api_v1_admin_me_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/users": {
         parameters: {
             query?: never;
@@ -242,6 +276,95 @@ export interface paths {
         patch: operations["update_seat_api_v1_admin_auditoriums__auditorium_id__seats__seat_id__patch"];
         trace?: never;
     };
+    "/api/v1/admin/auditoriums/{auditorium_id}/seats/generate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Generate Seat Layout */
+        post: operations["generate_seat_layout_api_v1_admin_auditoriums__auditorium_id__seats_generate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/tickets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Tickets */
+        get: operations["list_tickets_api_v1_admin_tickets_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/tickets/{ticket_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Ticket */
+        get: operations["get_ticket_api_v1_admin_tickets__ticket_id__get"];
+        put?: never;
+        post?: never;
+        /** Delete Ticket */
+        delete: operations["delete_ticket_api_v1_admin_tickets__ticket_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Ticket */
+        patch: operations["update_ticket_api_v1_admin_tickets__ticket_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/admin/screening-seats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Screening Seats */
+        get: operations["list_screening_seats_api_v1_admin_screening_seats_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/screening-seats/{screening_seat_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Screening Seat */
+        get: operations["get_screening_seat_api_v1_admin_screening_seats__screening_seat_id__get"];
+        put?: never;
+        post?: never;
+        /** Delete Screening Seat */
+        delete: operations["delete_screening_seat_api_v1_admin_screening_seats__screening_seat_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Screening Seat */
+        patch: operations["update_screening_seat_api_v1_admin_screening_seats__screening_seat_id__patch"];
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -267,6 +390,23 @@ export interface components {
             token_type: string;
             /** Expires In Seconds */
             expires_in_seconds: number;
+        };
+        /** AdminMeResponse */
+        AdminMeResponse: {
+            /** Id */
+            id: string;
+            /**
+             * Email
+             * Format: email
+             */
+            email: string;
+            /** Is Active */
+            is_active: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
         };
         /** AuditoriumCreateSchema */
         AuditoriumCreateSchema: {
@@ -319,6 +459,46 @@ export interface components {
             is_accessible: boolean;
             /** Seats */
             seats: components["schemas"]["SeatResponse"][];
+        };
+        /** GenerateSeatsSchema */
+        GenerateSeatsSchema: {
+            /**
+             * Row Count
+             * @default 6
+             */
+            row_count: number;
+            /**
+             * Seats Per Row
+             * @default 8
+             */
+            seats_per_row: number;
+            /**
+             * Row Spacing
+             * @default 50
+             */
+            row_spacing: number;
+            /**
+             * Seat Spacing
+             * @default 45
+             */
+            seat_spacing: number;
+            /**
+             * X Offset
+             * @default 60
+             */
+            x_offset: number;
+            /**
+             * Y Offset
+             * @default 70
+             */
+            y_offset: number;
+            /**
+             * Accessible Rows
+             * @default [
+             *       "A"
+             *     ]
+             */
+            accessible_rows: string[];
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -413,6 +593,27 @@ export interface components {
             price: string;
             status: components["schemas"]["ScreeningStatus"];
         };
+        /** ScreeningSeatResponse */
+        ScreeningSeatResponse: {
+            /** Id */
+            id: number;
+            /** Screening Id */
+            screening_id: number;
+            /** Seat Id */
+            seat_id: number;
+            /** Is Taken */
+            is_taken: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** ScreeningSeatUpdate */
+        ScreeningSeatUpdate: {
+            /** Is Taken */
+            is_taken?: boolean | null;
+        };
         /**
          * ScreeningStatus
          * @enum {string}
@@ -503,6 +704,42 @@ export interface components {
             /** Angle */
             angle?: number | null;
         };
+        /** TicketResponse */
+        TicketResponse: {
+            /** Id */
+            id: number;
+            /** Screening Seat Id */
+            screening_seat_id: number;
+            /** Email */
+            email: string;
+            /** Phone */
+            phone?: string | null;
+            /** Receipt Number */
+            receipt_number: string;
+            /** Checkout Id */
+            checkout_id?: string | null;
+            /** Purchaser Uuid */
+            purchaser_uuid?: string | null;
+            status: components["schemas"]["TicketStatus"];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /**
+         * TicketStatus
+         * @enum {string}
+         */
+        TicketStatus: "confirmed" | "cancelled" | "redeemed";
+        /** TicketUpdate */
+        TicketUpdate: {
+            /** Email */
+            email?: string | null;
+            /** Phone */
+            phone?: string | null;
+            status?: components["schemas"]["TicketStatus"] | null;
+        };
         /** UserCreateSchema */
         UserCreateSchema: {
             /** Username */
@@ -528,8 +765,6 @@ export interface components {
             email: string;
             /** Phone */
             phone: string | null;
-            /** Password */
-            password: string;
             /**
              * Id
              * Format: uuid
@@ -623,6 +858,46 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    refresh_admin_token_api_v1_admin_refresh_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminLoginResponse"];
+                };
+            };
+        };
+    };
+    get_current_admin_api_v1_admin_me_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminMeResponse"];
                 };
             };
         };
@@ -1467,6 +1742,283 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SeatResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    generate_seat_layout_api_v1_admin_auditoriums__auditorium_id__seats_generate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                auditorium_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GenerateSeatsSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditoriumWithSeats"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_tickets_api_v1_admin_tickets_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TicketResponse"][];
+                };
+            };
+        };
+    };
+    get_ticket_api_v1_admin_tickets__ticket_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ticket_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TicketResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_ticket_api_v1_admin_tickets__ticket_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ticket_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_ticket_api_v1_admin_tickets__ticket_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ticket_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TicketUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TicketResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_screening_seats_api_v1_admin_screening_seats_get: {
+        parameters: {
+            query?: {
+                /** @description Filter by screening ID */
+                screening_id?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScreeningSeatResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_screening_seat_api_v1_admin_screening_seats__screening_seat_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                screening_seat_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScreeningSeatResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_screening_seat_api_v1_admin_screening_seats__screening_seat_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                screening_seat_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_screening_seat_api_v1_admin_screening_seats__screening_seat_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                screening_seat_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScreeningSeatUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScreeningSeatResponse"];
                 };
             };
             /** @description Validation Error */

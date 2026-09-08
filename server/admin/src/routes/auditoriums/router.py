@@ -1,17 +1,18 @@
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from ...database import get_admin_db
 from ...exceptions import NotFoundError
-from ...models import Auditorium, Seat
+from ...models import Auditorium, Screening, ScreeningSeat, Seat, Ticket
 from .schemas import (
     AuditoriumCreateSchema,
     AuditoriumResponse,
     AuditoriumUpdateSchema,
     AuditoriumWithSeats,
+    GenerateSeatsSchema,
     SeatBase,
     SeatResponse,
     SeatUpdate,
@@ -21,9 +22,54 @@ router = APIRouter(prefix="/auditoriums")
 
 db_dependency = Depends(get_admin_db)
 
+
+async def ensure_seat_map_editable(
+    auditorium_id: int,
+    db: AsyncSession,
+) -> None:
+    sale_is_open = await db.scalar(
+        select(Screening.id)
+        .where(
+            Screening.auditorium_id == auditorium_id,
+            Screening.status == "on_sale",
+        )
+        .limit(1)
+    )
+    if sale_is_open is not None:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                "This seat map cannot be changed while ticket sales are open. "
+                "Close the affected sale before editing seats."
+            ),
+        )
+
+    has_paid_tickets = await db.scalar(
+        select(Ticket.id)
+        .join(ScreeningSeat, Ticket.screening_seat_id == ScreeningSeat.id)
+        .join(Seat, ScreeningSeat.seat_id == Seat.id)
+        .where(
+            Seat.auditorium_id == auditorium_id,
+            Ticket.status.in_(["confirmed", "redeemed"]),
+        )
+        .limit(1)
+    )
+    if has_paid_tickets is not None:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                "This seat map cannot be changed because paid tickets exist. "
+                "Cancel or refund affected tickets before changing seats."
+            ),
+        )
+
 @router.get("", response_model=list[AuditoriumResponse])
 async def list_auditoriums(db: AsyncSession = db_dependency):
-    auditoriums = (await db.scalars(select(Auditorium))).all()
+    auditoriums = (
+        await db.scalars(
+            select(Auditorium).options(selectinload(Auditorium.seats))
+        )
+    ).all()
     return auditoriums
 
 
@@ -32,16 +78,23 @@ async def create_auditorium(
     auditorium: AuditoriumCreateSchema, db: AsyncSession = db_dependency):
     auditorium = Auditorium(**auditorium.model_dump(exclude_unset=True))
     db.add(auditorium)
+    await db.flush()
+    created_auditorium_id = auditorium.id
     await db.commit()
-    await db.refresh(auditorium)
-    return auditorium
+    return await db.scalar(
+        select(Auditorium)
+        .options(selectinload(Auditorium.seats))
+        .where(Auditorium.id == created_auditorium_id)
+    )
 
 
 @router.get("/{auditorium_id}", response_model=AuditoriumResponse)
 async def get_auditorium(
     auditorium_id: int, db: AsyncSession = db_dependency):
     auditorium = await db.scalar(
-        select(Auditorium).where(Auditorium.id == auditorium_id))
+        select(Auditorium)
+        .options(selectinload(Auditorium.seats))
+        .where(Auditorium.id == auditorium_id))
 
     if auditorium is None:
         raise NotFoundError("Auditorium", auditorium_id)
@@ -55,7 +108,9 @@ async def update_auditorium(
     auditorium: AuditoriumUpdateSchema, 
     db: AsyncSession = db_dependency):
     existing_auditorium = await db.scalar(
-        select(Auditorium).where(Auditorium.id == auditorium_id))
+        select(Auditorium)
+        .options(selectinload(Auditorium.seats))
+        .where(Auditorium.id == auditorium_id))
 
     if existing_auditorium is None:
         raise NotFoundError("Auditorium", auditorium_id)
@@ -63,8 +118,11 @@ async def update_auditorium(
     for key, value in auditorium.model_dump(exclude_unset=True).items():
         setattr(existing_auditorium, key, value)
     await db.commit()
-    await db.refresh(existing_auditorium)
-    return existing_auditorium
+    return await db.scalar(
+        select(Auditorium)
+        .options(selectinload(Auditorium.seats))
+        .where(Auditorium.id == auditorium_id)
+    )
 
 
 @router.delete("/{auditorium_id}", status_code=204)
@@ -99,6 +157,7 @@ async def create_seat(
     seat_data: SeatBase,
     db: AsyncSession = db_dependency,
 ):
+    await ensure_seat_map_editable(auditorium_id, db)
     auditorium = await db.scalar(
         select(Auditorium).where(Auditorium.id == auditorium_id))
 
@@ -114,6 +173,7 @@ async def create_seat(
 @router.put("/{auditorium_id}/seats", response_model=AuditoriumWithSeats)
 async def replace_seats(
     auditorium_id: int, seats: list[SeatBase], db: AsyncSession = db_dependency):
+    await ensure_seat_map_editable(auditorium_id, db)
     auditorium = await db.scalar(
         select(Auditorium).where(Auditorium.id == auditorium_id))
 
@@ -123,8 +183,11 @@ async def replace_seats(
     auditorium.seats = [Seat(auditorium_id=auditorium_id, 
                              **seat.model_dump()) for seat in seats]
     await db.commit()
-    await db.refresh(auditorium)
-    return auditorium
+    return await db.scalar(
+        select(Auditorium)
+        .options(selectinload(Auditorium.seats))
+        .where(Auditorium.id == auditorium_id)
+    )
 
 @router.get("/{auditorium_id}/seats/{seat_id}", response_model=SeatResponse)
 async def get_seat(
@@ -143,6 +206,7 @@ async def update_seat(
     auditorium_id: int, 
     seat_id: int, seat_data: SeatUpdate, 
     db: AsyncSession = db_dependency):
+    await ensure_seat_map_editable(auditorium_id, db)
     seat = await db.scalar(
         select(Seat)
         .where(Seat.id == seat_id, Seat.auditorium_id == auditorium_id))
@@ -159,6 +223,7 @@ async def update_seat(
 @router.delete("/{auditorium_id}/seats/{seat_id}", status_code=204)
 async def delete_seat(
     auditorium_id: int, seat_id: int, db: AsyncSession = db_dependency):
+    await ensure_seat_map_editable(auditorium_id, db)
     seat = await db.scalar(
         select(Seat)
         .where(Seat.id == seat_id, Seat.auditorium_id == auditorium_id))
@@ -170,51 +235,47 @@ async def delete_seat(
     await db.commit()
     return None
 
-# TODO: Add bulk seat-map synchronization endpoint.
-# The endpoint should atomically synchronize the complete seat layout.
-# @router.patch("/{auditorium_id}/seats", response_model=AuditoriumWithSeats)
-# async def update_seat_map(
-#     auditorium_id: int, seats: SeatMapUpdateSchema, db: AsyncSession = db_dependency):
 
-    # result = await db.execute(
-    # select(Auditorium)
-    # .options(selectinload(Auditorium.seats))
-    # .where(Auditorium.id == auditorium_id)
-    # )
+@router.post("/{auditorium_id}/seats/generate", response_model=AuditoriumWithSeats)
+async def generate_seat_layout(
+    auditorium_id: int,
+    config: GenerateSeatsSchema,
+    db: AsyncSession = db_dependency,
+):
+    await ensure_seat_map_editable(auditorium_id, db)
+    auditorium = await db.scalar(
+        select(Auditorium)
+        .options(selectinload(Auditorium.seats))
+        .where(Auditorium.id == auditorium_id)
+    )
 
-    # auditorium = result.scalar_one_or_none()
+    if auditorium is None:
+        raise NotFoundError("Auditorium", auditorium_id)
 
-    # if auditorium is None:
-    #     raise NotFoundError("Auditorium", auditorium_id)
+    generated_seats: list[Seat] = []
+    for r_idx in range(config.row_count):
+        row_letter = chr(65 + r_idx) if r_idx < 26 else f"R{r_idx + 1}"
+        y = config.y_offset + r_idx * config.row_spacing
+        for s_idx in range(1, config.seats_per_row + 1):
+            x = config.x_offset + (s_idx - 1) * config.seat_spacing
+            generated_seats.append(
+                Seat(
+                    auditorium_id=auditorium_id,
+                    row=row_letter,
+                    number=s_idx,
+                    x_pos=x,
+                    y_pos=y,
+                    angle=0,
+                    is_available=True,
+                    is_accessible=row_letter in config.accessible_rows,
+                )
+            )
 
-    # Create a mapping of seat IDs to their corresponding Seat objects
-    # seat_map = {seat.id: seat for seat in auditorium.seats}
+    auditorium.seats = generated_seats
+    await db.commit()
+    return await db.scalar(
+        select(Auditorium)
+        .options(selectinload(Auditorium.seats))
+        .where(Auditorium.id == auditorium_id)
+    )
 
-    # confirm that all seats with id are actually in the auditorium, return error if not
-    # for seat in seats.seats:
-    #     if seat.id is not None and seat.id not in seat_map:
-    #         raise NotFoundError("Seat", seat.id)
-
-    # for seat in seats.seats:
-    #     existing = seat_map.get(seat.id)
-    #     if existing is not None:
-    #         for key, value in seat.model_dump(exclude_unset=True).items():
-    #             setattr(existing, key, value)
-    #     else:
-    #         new_seat = Seat(auditorium_id=auditorium_id, **seat.model_dump(
-    #                                                           exclude={"id"}))
-    #         db.add(new_seat)
-
-
-    # existing_seat_ids = {seat.id for seat in auditorium.seats if seat.id is not None}
-    # incoming_seat_ids = {seat.id for seat in seats.seats if seat.id is not None}
-    # missing_seat_ids = existing_seat_ids - incoming_seat_ids
-
-    # for seat_id in missing_seat_ids:
-    #         seat_to_deactivate = seat_map[seat_id]
-    #         seat_to_deactivate.is_active = False
-
-
-    # await db.commit()
-    # await db.refresh(auditorium)
-    # return auditorium

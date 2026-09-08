@@ -70,6 +70,12 @@ class FakePubSub:
     async def unsubscribe(self, channel):
         self.unsubscribed_channels.append(channel)
 
+    async def psubscribe(self, pattern):
+        self.subscribed_channels.append(pattern)
+
+    async def punsubscribe(self, pattern):
+        self.unsubscribed_channels.append(pattern)
+
     async def aclose(self):
         self.closed = True
 
@@ -212,9 +218,11 @@ def test_reserve_seat_sets_temporary_lock_and_rejects_duplicate_holder():
         assert second_attempt is False
         assert await redis.get("screening:10::A1") == "user-1"
         assert await redis.ttl("screening:10::A1") == 60
-        assert redis.streams == {
-            "stream:screening:10": [("1-0", {"seat_id": "A1", "status": "locked"})]
-        }
+        assert len(redis.streams["stream:screening:10"]) == 1
+        msg_id, payload = redis.streams["stream:screening:10"][0]
+        assert payload["seat_id"] == "A1"
+        assert payload["status"] == "locked"
+        assert "owner_tag" in payload
 
     run(scenario())
 
@@ -236,7 +244,7 @@ def test_release_seat_only_deletes_matching_user_lock():
         assert await redis.get("screening:10::A1") is None
         assert redis.streams == {
             "stream:screening:10": [
-                ("1-0", {"seat_id": "A1", "status": "available"})
+                ("1-0", {"seat_id": "A1", "status": "available", "owner_tag": ""})
             ]
         }
 
@@ -297,8 +305,8 @@ def test_acquire_seats_persists_owned_locks():
         assert await redis.get("screening:10::A3") == "user-2"
         assert redis.streams == {
             "stream:screening:10": [
-                ("1-0", {"seat_id": "A1", "status": "purchased"}),
-                ("1-0", {"seat_id": "A2", "status": "purchased"}),
+                ("1-0", {"seat_id": "A1", "status": "purchased", "owner_tag": ""}),
+                ("1-0", {"seat_id": "A2", "status": "purchased", "owner_tag": ""}),
             ]
         }
 
@@ -320,8 +328,8 @@ def test_release_all_seats_deletes_only_matching_user_locks():
         assert await redis.get("screening:10::A3") == "user-2"
         assert redis.streams == {
             "stream:screening:10": [
-                ("1-0", {"seat_id": "A1", "status": "available"}),
-                ("1-0", {"seat_id": "A2", "status": "available"}),
+                ("1-0", {"seat_id": "A1", "status": "available", "owner_tag": ""}),
+                ("1-0", {"seat_id": "A2", "status": "available", "owner_tag": ""}),
             ]
         }
 
@@ -435,7 +443,7 @@ def test_publish_seat_update_adds_stream_message():
         await redis_seats.publish_seat_update(redis, "10", "A1", "locked")
 
         assert redis.streams == {
-            "stream:screening:10": [("1-0", {"seat_id": "A1", "status": "locked"})]
+            "stream:screening:10": [("1-0", {"seat_id": "A1", "status": "locked", "owner_tag": ""})]
         }
 
     run(scenario())
@@ -455,14 +463,14 @@ def test_expired_seat_listener_publishes_available_update_for_seat_keys():
 
         assert redis.streams == {
             "stream:screening:10": [
-                ("1-0", {"seat_id": "A1", "status": "available"})
+                ("1-0", {"seat_id": "A1", "status": "available", "owner_tag": ""})
             ]
         }
         assert redis.pubsub_instance.subscribed_channels == [
-            "__keyevent@0__:expired"
+            "__keyevent@*__:expired"
         ]
         assert redis.pubsub_instance.unsubscribed_channels == [
-            "__keyevent@0__:expired"
+            "__keyevent@*__:expired"
         ]
         assert redis.pubsub_instance.closed is True
 

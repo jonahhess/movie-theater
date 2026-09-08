@@ -57,6 +57,52 @@
         }
       }
     },
+    "/api/v1/admin/refresh": {
+      "post": {
+        "summary": "Refresh Admin Token",
+        "operationId": "refresh_admin_token_api_v1_admin_refresh_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminLoginResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/me": {
+      "get": {
+        "summary": "Get Current Admin",
+        "operationId": "get_current_admin_api_v1_admin_me_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminMeResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/admin/users": {
       "get": {
         "summary": "Get Users",
@@ -1253,6 +1299,406 @@
           }
         }
       }
+    },
+    "/api/v1/admin/auditoriums/{auditorium_id}/seats/generate": {
+      "post": {
+        "summary": "Generate Seat Layout",
+        "operationId": "generate_seat_layout_api_v1_admin_auditoriums__auditorium_id__seats_generate_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "auditorium_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Auditorium Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateSeatsSchema"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditoriumWithSeats"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/tickets": {
+      "get": {
+        "summary": "List Tickets",
+        "operationId": "list_tickets_api_v1_admin_tickets_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/TicketResponse"
+                  },
+                  "type": "array",
+                  "title": "Response List Tickets Api V1 Admin Tickets Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/tickets/{ticket_id}": {
+      "get": {
+        "summary": "Get Ticket",
+        "operationId": "get_ticket_api_v1_admin_tickets__ticket_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "ticket_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Ticket Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update Ticket",
+        "operationId": "update_ticket_api_v1_admin_tickets__ticket_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "ticket_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Ticket Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TicketUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete Ticket",
+        "operationId": "delete_ticket_api_v1_admin_tickets__ticket_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "ticket_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Ticket Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/screening-seats": {
+      "get": {
+        "summary": "List Screening Seats",
+        "operationId": "list_screening_seats_api_v1_admin_screening_seats_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "screening_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by screening ID",
+              "title": "Screening Id"
+            },
+            "description": "Filter by screening ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ScreeningSeatResponse"
+                  },
+                  "title": "Response List Screening Seats Api V1 Admin Screening Seats Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/screening-seats/{screening_seat_id}": {
+      "get": {
+        "summary": "Get Screening Seat",
+        "operationId": "get_screening_seat_api_v1_admin_screening_seats__screening_seat_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "screening_seat_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Screening Seat Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreeningSeatResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update Screening Seat",
+        "operationId": "update_screening_seat_api_v1_admin_screening_seats__screening_seat_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "screening_seat_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Screening Seat Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScreeningSeatUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreeningSeatResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete Screening Seat",
+        "operationId": "delete_screening_seat_api_v1_admin_screening_seats__screening_seat_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "screening_seat_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Screening Seat Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1298,6 +1744,36 @@
           "expires_in_seconds"
         ],
         "title": "AdminLoginResponse"
+      },
+      "AdminMeResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "email",
+          "is_active",
+          "created_at"
+        ],
+        "title": "AdminMeResponse"
       },
       "AuditoriumCreateSchema": {
         "properties": {
@@ -1430,6 +1906,52 @@
           "seats"
         ],
         "title": "AuditoriumWithSeats"
+      },
+      "GenerateSeatsSchema": {
+        "properties": {
+          "row_count": {
+            "type": "integer",
+            "title": "Row Count",
+            "default": 6
+          },
+          "seats_per_row": {
+            "type": "integer",
+            "title": "Seats Per Row",
+            "default": 8
+          },
+          "row_spacing": {
+            "type": "integer",
+            "title": "Row Spacing",
+            "default": 50
+          },
+          "seat_spacing": {
+            "type": "integer",
+            "title": "Seat Spacing",
+            "default": 45
+          },
+          "x_offset": {
+            "type": "integer",
+            "title": "X Offset",
+            "default": 60
+          },
+          "y_offset": {
+            "type": "integer",
+            "title": "Y Offset",
+            "default": 70
+          },
+          "accessible_rows": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Accessible Rows",
+            "default": [
+              "A"
+            ]
+          }
+        },
+        "type": "object",
+        "title": "GenerateSeatsSchema"
       },
       "HTTPValidationError": {
         "properties": {
@@ -1723,6 +2245,57 @@
         ],
         "title": "ScreeningResponse"
       },
+      "ScreeningSeatResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "screening_id": {
+            "type": "integer",
+            "title": "Screening Id"
+          },
+          "seat_id": {
+            "type": "integer",
+            "title": "Seat Id"
+          },
+          "is_taken": {
+            "type": "boolean",
+            "title": "Is Taken"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "screening_id",
+          "seat_id",
+          "is_taken",
+          "created_at"
+        ],
+        "title": "ScreeningSeatResponse"
+      },
+      "ScreeningSeatUpdate": {
+        "properties": {
+          "is_taken": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Taken"
+          }
+        },
+        "type": "object",
+        "title": "ScreeningSeatUpdate"
+      },
       "ScreeningStatus": {
         "type": "string",
         "enum": [
@@ -1977,6 +2550,125 @@
         "type": "object",
         "title": "SeatUpdate"
       },
+      "TicketResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "screening_seat_id": {
+            "type": "integer",
+            "title": "Screening Seat Id"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "receipt_number": {
+            "type": "string",
+            "title": "Receipt Number"
+          },
+          "checkout_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checkout Id"
+          },
+          "purchaser_uuid": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purchaser Uuid"
+          },
+          "status": {
+            "$ref": "#/components/schemas/TicketStatus"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "screening_seat_id",
+          "email",
+          "receipt_number",
+          "status",
+          "created_at"
+        ],
+        "title": "TicketResponse"
+      },
+      "TicketStatus": {
+        "type": "string",
+        "enum": [
+          "confirmed",
+          "cancelled",
+          "redeemed"
+        ],
+        "title": "TicketStatus"
+      },
+      "TicketUpdate": {
+        "properties": {
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TicketStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "TicketUpdate"
+      },
       "UserCreateSchema": {
         "properties": {
           "username": {
@@ -2035,10 +2727,6 @@
             ],
             "title": "Phone"
           },
-          "password": {
-            "type": "string",
-            "title": "Password"
-          },
           "id": {
             "type": "string",
             "format": "uuid",
@@ -2055,7 +2743,6 @@
           "username",
           "email",
           "phone",
-          "password",
           "id",
           "created_at"
         ],

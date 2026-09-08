@@ -117,6 +117,10 @@ class Seat(Base):
         server_default=text("FALSE"),
     )
 
+    x_pos: Mapped[int] = mapped_column(Integer, nullable=False)
+    y_pos: Mapped[int] = mapped_column(Integer, nullable=False)
+    angle: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+
     # Relationships
     auditorium: Mapped[Auditorium] = relationship(
         "Auditorium", back_populates="seats")

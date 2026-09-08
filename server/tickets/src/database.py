@@ -17,20 +17,18 @@ def _required_env(name: str) -> str:
     return value
 
 
-def _build_read_url() -> URL:
+def _build_write_url() -> URL:
     return URL.create(
         "mysql+aiomysql",
-        username=_required_env("MYSQL_VIEWER_USER"),
-        password=_required_env("MYSQL_VIEWER_PASSWORD"),
+        username=_required_env("MYSQL_ADMIN_USER"),
+        password=_required_env("MYSQL_ADMIN_PASSWORD"),
         host=_required_env("MYSQL_HOST"),
         port=int(_required_env("MYSQL_PORT")),
         database=_required_env("MYSQL_DATABASE"),
     )
 
 
-DATABASE_URL = os.getenv("DATABASE_URL") \
-            or os.getenv("DATABASE_READ_URL") \
-            or _build_read_url()
+DATABASE_URL = os.getenv("DATABASE_WRITE_URL") or _build_write_url()
 
 engine = create_async_engine(DATABASE_URL)
 SessionLocal = async_sessionmaker(autocommit=False, autoflush=False, bind=engine)

@@ -2,7 +2,7 @@ import { apiClient } from "../lib/api";
 
 export default async function HomePage() {
   // Replace "/endpoint" with your actual path string from openapi.json
-  const { data, error, response } = await apiClient.GET("/");
+  const { data, error, response } = await apiClient.GET("/api/v1/admin/");
 
   if (error || !data) {
     // Safely grab the status code by treating response as any temporarily
@@ -36,9 +36,7 @@ export default async function HomePage() {
   return (
     <main className="p-8">
       <h1 className="text-2xl font-bold mb-4">Data Loaded Successfully!</h1>
-      <pre className="bg-gray-100 p-4 rounded text-black">
-        {JSON.stringify(data, null, 2)}
-      </pre>
+      <p> Go to login page <a href="/login" className="text-blue-600 underline">here</a>.</p>
     </main>
   );
 }
