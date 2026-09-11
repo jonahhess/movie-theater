@@ -1,6 +1,7 @@
 import { mainApi } from "@/lib/api";
 import Link from "next/link";
 import { PaginatedList } from "../components/PaginatedList";
+import Accordion from "../components/Accordian";
   
 interface MoviesPageProps {
   searchParams: Promise<{
@@ -52,16 +53,22 @@ export default async function MoviesPage({ searchParams }: MoviesPageProps) {
         emptyMessage="No movies found."
         listId="movies-list"
         getPageHref={(nextOffset) => `/movies?limit=${limit}&offset=${nextOffset}`}
-        renderItem={(movie) => (
-          <Link
+        renderItem={(movie) => (      
+            <Accordion key={movie.id} 
+            summary={<>
+              <h2 className="mt-3 text-xl font-semibold tracking-tight">{movie.title}</h2>
+
+            </>} details={<>
+              <p className="mt-2 leading-7 text-foreground-subtle">{movie.description}</p>
+              <br />
+            <Link
             key={movie.id}
-            href={`/movies/${movie.id}`}
-            className="group rounded-2xl border border-border bg-bg-raised p-6 transition hover:-translate-y-1 hover:border-accent/60"
-          >
-            <p className="text-sm font-semibold uppercase tracking-wide text-accent">Film</p>
-            <h2 className="mt-3 text-xl font-semibold tracking-tight">{movie.title}</h2>
-            <p className="mt-2 leading-7 text-foreground-subtle">{movie.description}</p>
-          </Link>
+            href={`/screenings?movie_id=${movie.id}`}
+            className="rounded-full bg-accent px-6 py-3 text-sm font-bold text-ink transition hover:bg-accent-hover"
+            > Find Screenings
+            </Link>
+            </>}> 
+            </Accordion>
         )}
       />
   );
