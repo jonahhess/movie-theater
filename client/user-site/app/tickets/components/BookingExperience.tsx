@@ -348,6 +348,7 @@ export default function BookingExperience({ screeningId }: { screeningId: number
           onConfirmPayment={confirmPayment}
           onBackToSeats={() => setStage("seats")}
           busy={busy}
+          timeLeft={600000}
         />
       )}
     </section>

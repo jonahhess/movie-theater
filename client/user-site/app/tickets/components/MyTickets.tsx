@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ticketsApiClient } from "@/lib/tickets-api-client";
 import type { components } from "@/types/tickets-schema";
+import QRCodeGenerator from "./QRCodeGenerator";
 
 export type TicketSession = components["schemas"]["SessionResponse"];
 export type Ticket = components["schemas"]["TicketResponse"];
@@ -14,6 +15,7 @@ export default function MyTickets() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [session, setSession] = useState<TicketSession | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showTicket, setShowTicket] = useState(0);
 
   const loadAccountData = useCallback(async () => {
     const [ticketsResult, sessionResult] = await Promise.all([
@@ -89,6 +91,9 @@ export default function MyTickets() {
                 </span>
               </div>
               {ticket.email && <p className="mt-2 text-xs text-foreground-subtle">Email: {ticket.email}</p>}
+              <br />
+              {showTicket === ticket.id && <QRCodeGenerator text={ticket.id} />}
+              <button onClick={() => setShowTicket(ticket.id === showTicket ? 0 : ticket.id)} className="rounded-full bg-accent px-6 py-3 text-sm font-bold text-ink transition hover:bg-accent-hover">{showTicket === ticket.id ? "Hide QR Code" : "Show QR Code"}</button>
             </article>
           ))}
         </div>
