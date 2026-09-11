@@ -51,6 +51,10 @@ export function PaginatedList<TItem>({
       <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">{title}</h1>
       <p className="mt-2 max-w-2xl leading-7 text-foreground-muted">{description}</p>
 
+       <div id={listId} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {data.items.map(renderItem)}
+      </div>
+
       <div className="my-8 flex flex-wrap items-center gap-4 border-y border-border py-4 text-sm">
         <span className="text-foreground-muted">
           Page {currentPage} of {totalPages}
@@ -89,10 +93,6 @@ export function PaginatedList<TItem>({
             </span>
           )}
         </div>
-      </div>
-
-      <div id={listId} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {data.items.map(renderItem)}
       </div>
     </main>
   );
