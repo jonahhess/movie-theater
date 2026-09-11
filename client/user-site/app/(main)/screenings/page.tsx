@@ -2,6 +2,8 @@ import { mainApi } from "@/lib/api";
 import Link from "next/link";
 import { PaginatedList } from "../components/PaginatedList";
 import type { components } from "@/types/main-schema";
+import formatDateTime from "@/helpers/formatDateTime";
+import Accordion from "../components/Accordian";
 
 type MovieResponse = components["schemas"]["MovieResponse"];
   
@@ -102,6 +104,8 @@ export default async function ScreeningsPage({ searchParams }: ScreeningsPagePro
 
   const filteredMovieTitle = movieId !== undefined ? movies[0]?.title : undefined;
   const filterQuery = movieId !== undefined ? `&movie_id=${movieId}` : "";
+  const calculateEndTime = (startTime: string, durationMinutes?: number) =>
+    new Date(new Date(startTime).getTime() + (durationMinutes ?? 0) * 60000);
 
   return (
       <PaginatedList
@@ -112,29 +116,34 @@ export default async function ScreeningsPage({ searchParams }: ScreeningsPagePro
         listId="screenings-list"
         getPageHref={(nextOffset) => `/screenings?limit=${limit}&offset=${nextOffset}${filterQuery}`}
         renderItem={(screening) => (
-          <Link
-            key={screening.id}
-            href={`/tickets/screenings/${screening.id}`}
-            className="group rounded-2xl border border-border bg-bg-raised p-6 transition hover:-translate-y-1 hover:border-accent/60"
-          >
+          <Accordion key={screening.id} 
+          summary={
+            <>
             <p className="text-sm font-semibold uppercase tracking-wide text-accent">
               {screening.auditorium?.name}
             </p>
             <h2 className="mt-3 text-xl font-semibold tracking-tight">{screening.title}</h2>
+            <div>{formatDateTime(screening.start_time)}</div>
+            </>} details={<>
             <p className="mt-2 leading-7 text-foreground-subtle">{screening.description}</p>
             <dl className="mt-5 space-y-1 text-sm leading-7 text-foreground-muted">
               <div>Price: ${screening.price}</div>
-              <div>Start Time: {screening.start_time}</div>
-              <div>End Time: {screening.start_time + screening.duration_minutes}</div>
+              <div>Start Time:  {formatDateTime(screening.start_time)}</div>
+              <div>End Time: {formatDateTime(calculateEndTime(screening.start_time, screening.duration_minutes))}</div>
               <div>Duration: {screening.duration_minutes} minutes</div>
               <div>Rating: {screening.rating}</div>
               <div>Release Date: {screening.release_date}</div>
             </dl>
-            <span className="mt-5 inline-block text-sm font-semibold text-accent-hover">
-              Choose seats
-            </span>
-          </Link>
-        )}
+            <br />
+            <Link
+            key={screening.id}
+            href={`/tickets/screenings/${screening.id}`}
+            className="rounded-full bg-accent px-6 py-3 text-sm font-bold text-ink transition hover:bg-accent-hover"
+            > Choose Seats
+            </Link>
+            </>}>
+          </Accordion>
+            )}
       />
   );
 }
