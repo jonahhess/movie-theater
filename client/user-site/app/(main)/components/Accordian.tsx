@@ -15,7 +15,8 @@ export default function Accordion({ summary, details, defaultOpen = false }: Acc
     <div className="border border-gray-200 rounded-lg overflow-hidden max-w-xl mx-auto">
       {/* Clickable Header Button */}
       <button
-        onMouseEnter={() => setIsOpen(!isOpen)}
+        onPointerEnter={() => setIsOpen(!isOpen)}
+        onPointerLeave={() => setIsOpen(!isOpen)}
         className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 font-semibold text-left select-none transition-colors duration-200"
         aria-expanded={isOpen}
       >
