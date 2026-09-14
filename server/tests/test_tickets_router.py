@@ -22,19 +22,9 @@ os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
 from tickets.main import tickets
 from tickets.src import token as token_module
 from tickets.src.database import Base, get_admin_db
-from tickets.src.models import Auditorium, Screening, ScreeningSeat, Seat, Ticket, User
+from tickets.src.models import Auditorium, Screening, Seat, Ticket, User
 from tickets.src.redis_client import get_redis
 from tickets.src.router import get_or_create_user_uuid
-
-# Ticket.screening_seat_id references a "screening_seats" table owned by
-# another service's migrations; it isn't modeled here, so register a bare
-# stand-in table for the test metadata's create_all() to resolve the FK.
-if "screening_seats" not in Base.metadata.tables:
-    Table(
-        "screening_seats",
-        Base.metadata,
-        Column("id", Integer, primary_key=True),
-    )
 
 TEST_USER_UUID = "0198f8db-cb17-75e8-9f80-0e18e015d741"
 
@@ -371,11 +361,8 @@ def test_make_payment_creates_tickets_for_held_seats(monkeypatch):
 
             async with session_factory() as session:
                 tickets = (await session.execute(select(Ticket))).scalars().all()
-                screening_seats = (
-                    await session.execute(select(ScreeningSeat))
-                ).scalars().all()
 
-            assert len(screening_seats) == 2
+            assert len(seat_ids) == 2
             assert len(tickets) == 2
             assert {ticket.email for ticket in tickets} == {"fan@example.com"}
             checkout_ids = {ticket.checkout_id for ticket in tickets}
@@ -385,9 +372,7 @@ def test_make_payment_creates_tickets_for_held_seats(monkeypatch):
             assert {str(ticket.purchaser_uuid) for ticket in tickets} == {
                 TEST_USER_UUID
             }
-            assert {ticket.screening_seat_id for ticket in tickets} == {
-                screening_seat.id for screening_seat in screening_seats
-            }
+            assert {ticket.seat_id for ticket in tickets} == set(seat_ids)
             finalized_ttls = [
                 await redis.ttl(f"screening:{screening_id}::{seat_id}")
                 for seat_id in seat_ids

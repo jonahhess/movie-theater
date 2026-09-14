@@ -6,7 +6,7 @@ from sqlalchemy.orm import selectinload
 
 from ...database import get_admin_db
 from ...exceptions import NotFoundError
-from ...models import Auditorium, Screening, ScreeningSeat, Seat, Ticket
+from ...models import Auditorium, Screening, Seat, Ticket
 from .schemas import (
     AuditoriumCreateSchema,
     AuditoriumResponse,
@@ -46,8 +46,7 @@ async def ensure_seat_map_editable(
 
     has_paid_tickets = await db.scalar(
         select(Ticket.id)
-        .join(ScreeningSeat, Ticket.screening_seat_id == ScreeningSeat.id)
-        .join(Seat, ScreeningSeat.seat_id == Seat.id)
+        .join(Seat, Ticket.seat_id == Seat.id)
         .where(
             Seat.auditorium_id == auditorium_id,
             Ticket.status.in_(["confirmed", "redeemed"]),
