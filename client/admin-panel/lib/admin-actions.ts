@@ -60,6 +60,15 @@ export async function updateAdminRecord(
         ...(hasValue(values, "status")
           ? { status: values.status as "draft" | "now_showing" | "archived" }
           : {}),
+        ...(hasValue(values, "director") ? { director: values.director || null } : {}),
+        ...(hasValue(values, "cast") ? { cast: values.cast || null } : {}),
+        ...(hasValue(values, "tagline") ? { tagline: values.tagline || null } : {}),
+        ...(hasValue(values, "genre") ? { genre: values.genre || null } : {}),
+        ...(hasValue(values, "poster_url") ? { poster_url: values.poster_url || null } : {}),
+        ...(hasValue(values, "trailer_url") ? { trailer_url: values.trailer_url || null } : {}),
+        ...(hasValue(values, "backdrop_url") ? { backdrop_url: values.backdrop_url || null } : {}),
+        ...(hasValue(values, "language") ? { language: values.language || null } : {}),
+        ...(hasValue(values, "country") ? { country: values.country || null } : {}),
       },
     });
   } else if (resource === "auditoriums") {
@@ -67,8 +76,8 @@ export async function updateAdminRecord(
       params: { path: { auditorium_id: Number(id) } },
       body: {
         ...(hasValue(values, "name") ? { name: values.name } : {}),
-        ...(hasValue(values, "is_active")
-          ? { is_active: booleanValue(values, "is_active") }
+        ...(hasValue(values, "status")
+          ? { status: values.status as "active" | "frozen" | "inactive" }
           : {}),
       },
     });
@@ -83,15 +92,6 @@ export async function updateAdminRecord(
           : {}),
       },
     });
-  } else if (resource === "screening-seats") {
-    result = await apiClient.PATCH("/api/v1/admin/screening-seats/{screening_seat_id}", {
-      params: { path: { screening_seat_id: Number(id) } },
-      body: {
-        ...(hasValue(values, "is_taken")
-          ? { is_taken: booleanValue(values, "is_taken") }
-          : {}),
-      },
-    });
   } else {
     result = await apiClient.PATCH("/api/v1/admin/screenings/{screening_id}", {
       params: { path: { screening_id: Number(id) } },
@@ -103,6 +103,7 @@ export async function updateAdminRecord(
           ? { auditorium_id: numberValue(values, "auditorium_id") }
           : {}),
         ...(hasValue(values, "start_time") ? { start_time: values.start_time } : {}),
+        ...(hasValue(values, "end_time") ? { end_time: values.end_time } : {}),
         ...(hasValue(values, "price") ? { price: values.price } : {}),
         ...(hasValue(values, "status")
           ? { status: values.status as "draft" | "on_sale" | "past" | "cancelled" }
@@ -140,6 +141,55 @@ export async function createAdminRecord(resource: Resource, values: EditableValu
         rating: values.rating as "G" | "PG" | "PG-13" | "R",
         release_date: values.release_date || null,
         status: values.status as "draft" | "now_showing" | "archived",
+        genre: values.genre as
+          | "Action"
+          | "Adventure"
+          | "Animation"
+          | "Comedy"
+          | "Drama"
+          | "Fantasy"
+          | "Horror"
+          | "Mystery"
+          | "Romance"
+          | "Sci-Fi"
+          | "Thriller"
+          | "War"
+          | "Western"
+          | "Other",
+        country: values.country as
+          | "USA"
+          | "UK"
+          | "Canada"
+          | "Australia"
+          | "France"
+          | "Germany"
+          | "Italy"
+          | "Spain"
+          | "Japan"
+          | "South Korea"
+          | "India"
+          | "China"
+          | "Israel"
+          | "Other",
+        language: values.language as
+          | "English"
+          | "Hebrew"
+          | "Arabic"
+          | "French"
+          | "Spanish"
+          | "German"
+          | "Italian"
+          | "Portuguese"
+          | "Russian"
+          | "Japanese"
+          | "Korean"
+          | "Chinese"
+          | "Hindi"
+          | "Other",
+        trailer_url: values.trailer_url || null,
+        backdrop_url: values.backdrop_url || null,
+        director: values.director || null,
+        cast: values.cast || null,
       },
     });
   } else if (resource === "auditoriums") {
@@ -155,6 +205,7 @@ export async function createAdminRecord(resource: Resource, values: EditableValu
         movie_id: numberValue(values, "movie_id") ?? 0,
         auditorium_id: numberValue(values, "auditorium_id") ?? 0,
         start_time: values.start_time,
+        end_time: values.end_time,
         price: values.price,
         status: values.status as "draft" | "on_sale" | "past" | "cancelled",
       },
@@ -187,10 +238,6 @@ export async function deleteAdminRecord(resource: Resource, id: number | string)
   } else if (resource === "tickets") {
     result = await apiClient.DELETE("/api/v1/admin/tickets/{ticket_id}", {
       params: { path: { ticket_id: Number(id) } },
-    });
-  } else if (resource === "screening-seats") {
-    result = await apiClient.DELETE("/api/v1/admin/screening-seats/{screening_seat_id}", {
-      params: { path: { screening_seat_id: Number(id) } },
     });
   } else {
     result = await apiClient.DELETE("/api/v1/admin/screenings/{screening_id}", {
