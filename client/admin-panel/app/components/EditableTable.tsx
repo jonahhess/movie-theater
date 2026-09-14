@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -80,6 +80,12 @@ export default function EditableTable({
   const [savingId, setSavingId] = useState<number | string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (error) {
+      setTimeout(() => setError(null), 5000);
+    }
+  }, [error]);
+
   function draftFor(row: EditableRow) {
     return drafts[String(row.id)] ?? {};
   }
@@ -120,7 +126,7 @@ export default function EditableTable({
   const tableRows = hasNewRow ? [{ id: "__new__" }, ...rows] : rows;
 
   return (
-    <div className="overflow-x-auto">
+    <>
       {warning && (
         <div className="mb-4 flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 p-3.5 text-sm text-amber-900 shadow-sm" role="alert">
           <span className="text-base font-bold">⚠️</span>
@@ -131,20 +137,21 @@ export default function EditableTable({
         </div>
       )}
       {error && (
-        <p className="mb-4 rounded border border-red-200 bg-red-50 p-3 text-red-700" role="alert">
+        <p className="mb-4 rounded border border-red-200 bg-red-50 p-3 text-red-700" role="alert" >
           {error}
         </p>
       )}
       {canAdd && onCreate && (
         <button
-          type="button"
-          onClick={() => setHasNewRow(true)}
-          disabled={hasNewRow}
-          className="mb-4 rounded bg-green-600 px-3 py-1.5 font-medium text-white enabled:hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+        type="button"
+        onClick={() => setHasNewRow(true)}
+        disabled={hasNewRow}
+        className="mb-4 rounded bg-green-600 px-3 py-1.5 font-medium text-white enabled:hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-gray-300"
         >
           Add row
         </button>
       )}
+    <div className="overflow-x-auto">
       <table className="min-w-full border-collapse border border-gray-200 text-left text-sm">
         <thead className="bg-gray-100">
           <tr>
@@ -246,7 +253,7 @@ export default function EditableTable({
                         </div>
                       ) : (
                         <input
-                          aria-label={`${column.label} for row ${row.id}`}
+                        aria-label={`${column.label} for row ${row.id}`}
                           type={column.type ?? "text"}
                           value={inputValue(value, column.type)}
                           onChange={(event) => setDraftValue(row, column.key, event.target.value)}
@@ -290,7 +297,7 @@ export default function EditableTable({
                   <td className="p-2 align-top">
                     {isSaleOpen && onCloseSale ? (
                       <button
-                        type="button"
+                      type="button"
                         disabled={isSaving}
                         onClick={async () => {
                           setSavingId(row.id);
@@ -333,5 +340,6 @@ export default function EditableTable({
         </tbody>
       </table>
     </div>
+  </>
   );
 }
