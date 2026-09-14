@@ -13,6 +13,12 @@ const columns = [
   { key: "is_active", label: "Active", type: "boolean" as const },
   { key: "total_capacity", label: "Capacity", editable: false },
   { key: "is_accessible", label: "Accessible", editable: false },
+  { key: "status", label: "Status", type: "select" as const, 
+    options: [
+      { label: "Active", value: "active" },
+      { label: "Frozen", value: "frozen" },
+      { label: "Inactive", value: "inactive" },
+    ] }
 ];
 
 export default async function AuditoriumsPage() {
