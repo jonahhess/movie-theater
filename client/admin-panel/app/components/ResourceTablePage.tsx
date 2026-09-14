@@ -31,8 +31,6 @@ export default function ResourceTablePage({
   onSave,
   onCreate,
   onDelete,
-  onOpenSale,
-  onCloseSale,
   canAdd = true,
   canDelete = true,
 }: ResourceTablePageProps) {
@@ -47,8 +45,6 @@ export default function ResourceTablePage({
         onSave={onSave}
         onCreate={onCreate}
         onDelete={onDelete}
-        onOpenSale={onOpenSale}
-        onCloseSale={onCloseSale}
         canAdd={canAdd}
         canDelete={canDelete}
         warning={warning}
