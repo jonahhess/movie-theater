@@ -1,11 +1,8 @@
 import { mainApi } from "@/lib/api";
 import Link from "next/link";
 import { PaginatedList } from "../components/PaginatedList";
-import type { components } from "@/types/main-schema";
 import formatDateTime from "@/helpers/formatDateTime";
 import Accordion from "../components/Accordian";
-
-type MovieResponse = components["schemas"]["MovieResponse"];
   
 interface ScreeningsPageProps {
   searchParams: Promise<{
@@ -52,6 +49,12 @@ export default async function ScreeningsPage({ searchParams }: ScreeningsPagePro
         <p className="rounded-2xl border border-border bg-bg-raised p-6 leading-7 text-foreground-muted">
           No screenings found.
         </p>
+        <Link
+          href="/movies"
+          className="mt-4 inline-block text-blue-700 underline"
+        >
+          Back to Movies
+        </Link>
       </main>
     );
   }
@@ -61,7 +64,13 @@ export default async function ScreeningsPage({ searchParams }: ScreeningsPagePro
   const calculateEndTime = (startTime: string, durationMinutes?: number) =>
     new Date(new Date(startTime).getTime() + (durationMinutes ?? 0) * 60000);
 
-  return (
+  return (<main className="p-8">
+      <Link
+          href="/movies"
+          className="mt-4 inline-block text-blue-700 underline"
+        >
+          Back to Movies
+        </Link>
       <PaginatedList
         data={screenings}
         title={filteredMovieTitle ? `Screenings for ${filteredMovieTitle}` : "Screenings"}
@@ -72,13 +81,14 @@ export default async function ScreeningsPage({ searchParams }: ScreeningsPagePro
         renderItem={(screening) => (
           <Accordion key={screening.id} 
           summary={
-            <>
+            <Link href={`/tickets/screenings/${screening.id}`}>
+              <img src={screening.movie?.poster_url ?? ""} alt={screening.movie?.title ?? ""} />
             <p className="text-sm font-semibold uppercase tracking-wide text-accent">
               {screening.auditorium?.name}
             </p>
             <h2 className="mt-3 text-xl font-semibold tracking-tight">{screening.movie?.title}</h2>
             <div>{formatDateTime(screening.start_time)}</div>
-            </>} details={<>
+            </Link>} details={<>
             <p className="mt-2 leading-7 text-foreground-subtle">{screening.movie?.description}</p>
             <dl className="mt-5 space-y-1 text-sm leading-7 text-foreground-muted">
               <div>Price: ${screening.price}</div>
@@ -89,15 +99,10 @@ export default async function ScreeningsPage({ searchParams }: ScreeningsPagePro
               <div>Release Date: {screening.movie?.release_date}</div>
             </dl>
             <br />
-            <Link
-            key={screening.id}
-            href={`/tickets/screenings/${screening.id}`}
-            className="rounded-full bg-accent px-6 py-3 text-sm font-bold text-ink transition hover:bg-accent-hover"
-            > Choose Seats
-            </Link>
             </>}>
           </Accordion>
             )}
-      />
+            />
+    </main>
   );
 }

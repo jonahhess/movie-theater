@@ -67,9 +67,7 @@ export default function EditableTable({
   rows,
   onSave,
   onCreate,
-  onDelete,
-  onOpenSale,
-  onCloseSale,
+  onDelete, 
   canAdd = true,
   canDelete = true,
   warning,
@@ -162,9 +160,6 @@ export default function EditableTable({
             ))}
             <th scope="col" className="border-b border-gray-200 p-3 whitespace-nowrap">Save</th>
             {canDelete && <th scope="col" className="border-b border-gray-200 p-3 whitespace-nowrap">Delete</th>}
-            {(onOpenSale || onCloseSale) && (
-              <th scope="col" className="border-b border-gray-200 p-3 whitespace-nowrap">Sale</th>
-            )}
           </tr>
         </thead>
         <tbody>
@@ -291,47 +286,6 @@ export default function EditableTable({
                     >
                       Delete
                     </button>
-                  </td>
-                )}
-                {(onOpenSale || onCloseSale) && (
-                  <td className="p-2 align-top">
-                    {isSaleOpen && onCloseSale ? (
-                      <button
-                      type="button"
-                        disabled={isSaving}
-                        onClick={async () => {
-                          setSavingId(row.id);
-                          const result = await onCloseSale(row.id);
-                          setSavingId(null);
-                          if (result?.error) {
-                            setError(result.error);
-                            return;
-                          }
-                          router.refresh();
-                        }}
-                        className="whitespace-nowrap rounded bg-amber-600 px-3 py-1.5 font-medium text-white disabled:bg-gray-300"
-                      >
-                        Close sale
-                      </button>
-                    ) : onOpenSale && row.status === "draft" && row.id !== "__new__" ? (
-                      <button
-                        type="button"
-                        disabled={isSaving}
-                        onClick={async () => {
-                          setSavingId(row.id);
-                          const result = await onOpenSale(row.id);
-                          setSavingId(null);
-                          if (result?.error) {
-                            setError(result.error);
-                            return;
-                          }
-                          router.refresh();
-                        }}
-                        className="whitespace-nowrap rounded bg-emerald-600 px-3 py-1.5 font-medium text-white disabled:bg-gray-300"
-                      >
-                        Open sale
-                      </button>
-                    ) : null}
                   </td>
                 )}
               </tr>

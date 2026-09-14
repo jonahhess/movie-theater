@@ -1,3 +1,4 @@
+import datetime
 import logging
 import uuid
 
@@ -7,7 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.responses import StreamingResponse
 from redis.asyncio import Redis
 from redis.exceptions import RedisError
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -18,6 +19,7 @@ from tickets.src.models import Auditorium, Screening, Seat, Ticket, User, Movie
 from tickets.src.redis_client import get_redis
 from tickets.src.redis_seats import (
     acquire_seats,
+    are_screening_seats_warmed,
     change_seat_owner,
     close_screening_sale,
     extend_seat_hold,
@@ -30,6 +32,7 @@ from tickets.src.redis_seats import (
     seat_exists,
     seat_id_from_key,
     stream_sse_events,
+    are_screening_seats_warmed,
     warm_screening_seats,
 )
 from tickets.src.schemas import (
@@ -224,21 +227,22 @@ async def view_screening_seat_map(
     screening = await db.get(Screening, screening_id)
     if screening is None:
         raise HTTPException(status_code=404, detail="Screening not found")
-
-    purchased_seat_ids = set(
-        await db.scalars(
-            select(Ticket.seat_id).where(
-                Ticket.screening_id == screening_id
-            )
+    
+    if await are_screening_seats_warmed(redis, str(screening_id)) == False:
+        db_seating = await db.execute(
+            select(Seat.id)
+            .where(Seat.auditorium_id == screening.auditorium_id)
         )
-    )
+        seat_ids = [row.id for row in db_seating]
+        await warm_screening_seats(redis, str(screening_id), seat_ids)
+        
     locked_seat_ids = {
         seat_id
         async for key in redis.scan_iter(match=f"screening:{screening_id}::*")
         if await redis.ttl(key) > 0
         for seat_id in [seat_id_from_key(key)]
     }
-    purchased_seat_id_strings = {str(value) for value in purchased_seat_ids}
+
     locked_seat_id_strings = set(locked_seat_ids)
 
     seat_rows = (
@@ -262,8 +266,7 @@ async def view_screening_seat_map(
         ScreeningSeatResponse(
             **row._mapping,
             status=(
-                "purchased" if str(row.seat_id) in purchased_seat_id_strings
-                else "locked" if str(row.seat_id) in locked_seat_id_strings
+                "locked" if str(row.seat_id) in locked_seat_id_strings
                 else "available"
             ),
         )
@@ -551,7 +554,10 @@ async def open_screening_sale(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Screening not found",
         )
-    if screening.status == "on_sale":
+    if (
+        screening.sale_start_time is not None and 
+        screening.sale_start_time <= datetime.utcnow()
+    ):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Screening is already on sale",
@@ -623,7 +629,8 @@ async def close_screening_sale_endpoint(
             detail="Screening not found",
         )
     
-    if screening.status != "on_sale":
+    if (screening.sale_start_time is None or screening.sale_end_time is None or 
+        not (screening.sale_start_time <= datetime.utcnow() <= screening.sale_end_time)):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Screening is not currently on sale",
@@ -664,16 +671,11 @@ async def payment_webhook():
 async def cleanup_internal(
     db: AsyncSession = db_dependency, redis: Redis = redis_dependency):
 
-    # first change all on_sale to past for screenings that are past start_time
-    await db.execute(
-        Screening.__table__.update().where(
-            (Screening.status == "on_sale") & (Screening.start_time < func.now())
-        ).values(status="past")
-    )
-
     # find all screenings that are past or cancelled
     result = await db.execute(
-        select(Screening.id).where(Screening.status.in_(["past", "cancelled"]))
+        select(Screening.id).where(
+            (Screening.is_cancelled == True) | (Screening.end_time < datetime.utcnow())
+        )
     )
 
     # next clear all the seats in redis for these screenings

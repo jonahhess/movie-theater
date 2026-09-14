@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { apiClient } from "./api";
 
 type EditableValues = Record<string, string>;
-type Resource = "users" | "movies" | "auditoriums" | "screenings" | "tickets" | "screening-seats";
+type Resource = "users" | "movies" | "auditoriums" | "screenings" | "tickets";
 
 function numberValue(values: EditableValues, key: string) {
   const value = Number(values[key]);
@@ -108,6 +108,9 @@ export async function updateAdminRecord(
         ...(hasValue(values, "status")
           ? { status: values.status as "draft" | "on_sale" | "past" | "cancelled" }
           : {}),
+          ...((hasValue(values, "sale_start_time") ? { sale_start_time: values.sale_start_time } : {})),
+          ...((hasValue(values, "sale_end_time") ? { sale_end_time: values.sale_end_time } : {})),
+          ...((hasValue(values, "is_cancelled") ? { is_cancelled: Boolean(values.is_cancelled) } : {})),
       },
     });
   }
@@ -196,7 +199,7 @@ export async function createAdminRecord(resource: Resource, values: EditableValu
     result = await apiClient.POST("/api/v1/admin/auditoriums", {
       body: {
         name: values.name,
-        is_active: booleanValue(values, "is_active"),
+        status: values.status as "draft" | "open" | "archived",
       },
     });
   } else {
@@ -207,7 +210,9 @@ export async function createAdminRecord(resource: Resource, values: EditableValu
         start_time: values.start_time,
         end_time: values.end_time,
         price: values.price,
-        status: values.status as "draft" | "on_sale" | "past" | "cancelled",
+        sale_start_time: values.sale_start_time,
+        sale_end_time: values.sale_end_time,
+        is_cancelled: Boolean(values.is_cancelled),
       },
     });
   }
@@ -250,36 +255,6 @@ export async function deleteAdminRecord(resource: Resource, id: number | string)
   }
 
   revalidatePath(`/${resource}`);
-  return {};
-}
-
-export async function openScreeningSale(id: number | string) {
-  const result = await apiClient.POST(
-    "/api/v1/admin/screenings/{screening_id}/sale/open",
-    { params: { path: { screening_id: Number(id) } } },
-  );
-
-  if (result.error) {
-    console.error("Failed to open screening sale", { screeningId: id, error: result.error });
-    return { error: errorMessage(result.error, "The screening sale could not be opened.") };
-  }
-
-  revalidatePath("/screenings");
-  return {};
-}
-
-export async function closeScreeningSale(id: number | string) {
-  const result = await apiClient.POST(
-    "/api/v1/admin/screenings/{screening_id}/sale/close",
-    { params: { path: { screening_id: Number(id) } } },
-  );
-
-  if (result.error) {
-    console.error("Failed to close screening sale", { screeningId: id, error: result.error });
-    return { error: errorMessage(result.error, "The screening sale could not be closed.") };
-  }
-
-  revalidatePath("/screenings");
   return {};
 }
 

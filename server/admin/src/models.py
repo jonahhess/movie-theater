@@ -295,11 +295,9 @@ class Screening(Base):
         default=12.50,
         nullable=False,
     )
-    status: Mapped[str] = mapped_column(
-        Enum("draft","on_sale","past", "cancelled", name="screening_status_enum"),
-        server_default="draft",
-        nullable=False,
-    )
+    sale_start_time: Mapped[datetime | None] = mapped_column(DateTime, index=True, nullable=True)
+    sale_end_time: Mapped[datetime | None] = mapped_column(DateTime, index=True, nullable=True)
+    is_cancelled: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("FALSE"))
 
     # Relationships
     movie: Mapped[Movie] = relationship("Movie")

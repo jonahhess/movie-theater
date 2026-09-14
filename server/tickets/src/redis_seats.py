@@ -60,6 +60,13 @@ async def warm_screening_seats(
         await pipe.execute()
 
 
+async def are_screening_seats_warmed(
+    redis: Redis,
+    screening_id: str,
+) -> bool:
+    """Return whether the screening seat map is initialized in Redis."""
+    return await redis.exists(_seat_map_key(screening_id)) > 0
+
 async def seat_exists(redis: Redis, screening_id: str, seat_id: str) -> bool:
     """Return whether a seat is part of the screening's warmed seat map."""
     return bool(await redis.hexists(_seat_map_key(screening_id), seat_id))

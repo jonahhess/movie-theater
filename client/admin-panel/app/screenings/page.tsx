@@ -2,8 +2,6 @@ import ResourceTablePage from "../components/ResourceTablePage";
 import {
   createAdminRecord,
   deleteAdminRecord,
-  closeScreeningSale,
-  openScreeningSale,
   updateAdminRecord,
 } from "../../lib/admin-actions";
 import { apiClient } from "../../lib/api";
@@ -13,11 +11,9 @@ const columns = [
   { key: "start_time", label: "Start time", type: "datetime-local" as const },
   { key: "end_time", label: "End time", type: "datetime-local" as const },
   { key: "price", label: "Price" },
-  { key: "status", label: "Status", type: "select" as const, options: [
-    { label: "On Sale", value: "on_sale" },
-    { label: "Past", value: "past" },
-    { label: "Cancelled", value: "cancelled" },
-  ] },
+  { key: "sale_start_time", label: "Sale Start Time", type: "datetime-local" as const },
+  { key: "sale_end_time", label: "Sale End Time", type: "datetime-local" as const },
+  { key: "is_cancelled", label: "Is Cancelled", type: "boolean" as const }
 ];
 
 export default async function ScreeningsPage() {
@@ -59,8 +55,6 @@ export default async function ScreeningsPage() {
       onSave={updateAdminRecord.bind(null, "screenings")}
       onCreate={createAdminRecord.bind(null, "screenings")}
       onDelete={deleteAdminRecord.bind(null, "screenings")}
-      onOpenSale={openScreeningSale}
-      onCloseSale={closeScreeningSale}
     />
   );
 }
