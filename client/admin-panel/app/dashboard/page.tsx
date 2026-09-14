@@ -29,7 +29,9 @@ export default async function DashboardPage() {
 
   const activeMovies = movies.filter((movie) => movie.status === "now_showing").length;
   const activeAuditoriums = auditoriums.filter((auditorium) => auditorium.status === "active").length;
-  const onSaleScreenings = screenings.filter((screening) => screening.status === "on_sale").length;
+  const onSaleScreenings = screenings.filter(
+    (screening) => screening.sale_start_time !== null && Number(screening.sale_start_time) <= now && screening.sale_end_time !== null && Number(screening.sale_end_time) >= now && !screening.is_cancelled
+  ).length;
   const formatDateTime = (value: Date | string) =>
     new Intl.DateTimeFormat("en", { dateStyle: "medium", timeStyle: "short" }).format(
       typeof value === "string" ? new Date(value) : value,
@@ -94,9 +96,6 @@ export default async function DashboardPage() {
                       Ends {screening.endTime ? formatDateTime(screening.endTime) : "Unknown"}
                     </p>
                   </div>
-                  <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${screening.status === "on_sale" ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-700"}`}>
-                    {screening.status.replace("_", " ")}
-                  </span>
                 </div>
               ))}
             </div>
