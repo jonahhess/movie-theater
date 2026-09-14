@@ -46,9 +46,17 @@ export default async function DashboardPage() {
             <h1 className="mt-1 text-3xl font-bold tracking-tight text-slate-900">Dashboard</h1>
             <p className="mt-2 text-slate-600">A quick view of today's programming and theater readiness.</p>
           </div>
-          <Link href="/screenings" className="rounded bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700">
+          <div id="dashboard-links">
+          <Link href="/screenings" className="rounded bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 m-1">
             Manage screenings
           </Link>
+           <Link href="/dashboard/1" className="rounded bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 m-1">
+            View Theater Performance
+          </Link>
+           <Link href="/dashboard/2" className="rounded bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 m-1">
+            View Movie Analytics
+          </Link>
+          </div>
         </div>
 
         <section className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4" aria-label="Overview">
