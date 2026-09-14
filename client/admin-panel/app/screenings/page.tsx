@@ -13,7 +13,11 @@ const columns = [
   { key: "start_time", label: "Start time", type: "datetime-local" as const },
   { key: "end_time", label: "End time", type: "datetime-local" as const },
   { key: "price", label: "Price" },
-  { key: "status", label: "Status" },
+  { key: "status", label: "Status", type: "select" as const, options: [
+    { label: "On Sale", value: "on_sale" },
+    { label: "Past", value: "past" },
+    { label: "Cancelled", value: "cancelled" },
+  ] },
 ];
 
 export default async function ScreeningsPage() {
