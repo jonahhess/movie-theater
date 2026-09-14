@@ -8,28 +8,33 @@ interface AccordionProps {
   defaultOpen?: boolean;
 }
 
-export default function Accordion({ summary, details, defaultOpen = false }: AccordionProps) {
+export default function Accordion({
+  summary,
+  details,
+  defaultOpen = false,
+}: AccordionProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <div className="border border-gray-200 rounded-lg overflow-hidden max-w-xl mx-auto">
+    <div
+      className="border border-gray-200 rounded-lg overflow-hidden max-w-xl mx-auto"
+      onPointerEnter={() => setIsOpen(true)}
+      onPointerLeave={() => setIsOpen(false)}
+    >
       {/* Clickable Header Button */}
       <button
-        onPointerEnter={() => setIsOpen(!isOpen)}
-        onPointerLeave={() => setIsOpen(!isOpen)}
         className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 font-semibold text-left select-none transition-colors duration-200"
         aria-expanded={isOpen}
       >
         <span>{summary}</span>
       </button>
 
-      {/* 
-        Buttery Smooth CSS Grid Transition Layout
-        Controlled explicitly by React state instead of browser internals.
-      */}
-      <div 
+      {/* Smooth CSS Grid Transition */}
+      <div
         className={`grid transition-[grid-template-rows] duration-300 ease-in-out bg-white ${
-          isOpen ? 'grid-rows-[1fr] border-t border-gray-200' : 'grid-rows-[0fr]'
+          isOpen
+            ? "grid-rows-[1fr] border-t border-gray-200"
+            : "grid-rows-[0fr]"
         }`}
       >
         <div className="overflow-hidden">
