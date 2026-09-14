@@ -1,11 +1,8 @@
 import { mainApi } from "@/lib/api";
 import Link from "next/link";
 import { PaginatedList } from "../components/PaginatedList";
-import type { components } from "@/types/main-schema";
 import formatDateTime from "@/helpers/formatDateTime";
 import Accordion from "../components/Accordian";
-
-type MovieResponse = components["schemas"]["MovieResponse"];
   
 interface ScreeningsPageProps {
   searchParams: Promise<{
@@ -52,6 +49,12 @@ export default async function ScreeningsPage({ searchParams }: ScreeningsPagePro
         <p className="rounded-2xl border border-border bg-bg-raised p-6 leading-7 text-foreground-muted">
           No screenings found.
         </p>
+        <Link
+          href="/movies"
+          className="mt-4 inline-block text-blue-700 underline"
+        >
+          Back to Movies
+        </Link>
       </main>
     );
   }
@@ -61,7 +64,13 @@ export default async function ScreeningsPage({ searchParams }: ScreeningsPagePro
   const calculateEndTime = (startTime: string, durationMinutes?: number) =>
     new Date(new Date(startTime).getTime() + (durationMinutes ?? 0) * 60000);
 
-  return (
+  return (<main className="p-8">
+      <Link
+          href="/movies"
+          className="mt-4 inline-block text-blue-700 underline"
+        >
+          Back to Movies
+        </Link>
       <PaginatedList
         data={screenings}
         title={filteredMovieTitle ? `Screenings for ${filteredMovieTitle}` : "Screenings"}
@@ -98,6 +107,7 @@ export default async function ScreeningsPage({ searchParams }: ScreeningsPagePro
             </>}>
           </Accordion>
             )}
-      />
+            />
+    </main>
   );
 }
