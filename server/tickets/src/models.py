@@ -89,6 +89,11 @@ class Screening(Base):
     __table_args__ = {"extend_existing": True}
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    movie_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("movies.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
     auditorium_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("auditoriums.id", ondelete="RESTRICT"),
@@ -147,3 +152,12 @@ class Seat(Base):
     # Relationships
     auditorium: Mapped[Auditorium] = relationship(
         "Auditorium", back_populates="seats")
+
+class Movie(Base):
+    __tablename__ = "movies"
+    __table_args__ = {"extend_existing": True}
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    duration_minutes: Mapped[int] = mapped_column(Integer, nullable=False)
+    
