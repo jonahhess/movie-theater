@@ -115,6 +115,7 @@ async def movie_screenings(
     list_stmt = (
         select(ScreeningView)
         .options(selectinload(ScreeningView.auditorium))
+        .options(selectinload(ScreeningView.movie))
         .where(ScreeningView.movie_id == movie_id)
         .order_by(ScreeningView.start_time.asc(), ScreeningView.id.asc())
         .offset(offset)
@@ -150,6 +151,7 @@ async def browse_screenings(
     list_stmt = (
         select(ScreeningView)
         .options(selectinload(ScreeningView.auditorium))
+        .options(selectinload(ScreeningView.movie))
         .order_by(ScreeningView.start_time.asc(), 
                   ScreeningView.id.asc())
         .offset(offset)
