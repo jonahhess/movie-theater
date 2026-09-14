@@ -12,7 +12,6 @@ from .database import get_admin_db
 from .models import Admin
 from .routes.auditoriums.router import router as auditoriums_router
 from .routes.movies.router import router as movies_router
-from .routes.screening_seats.router import router as screening_seats_router
 from .routes.screenings.router import router as screenings_router
 from .routes.tickets.router import router as tickets_router
 from .routes.users.router import router as users_router
@@ -85,4 +84,3 @@ protected_router.include_router(movies_router)
 protected_router.include_router(screenings_router)
 protected_router.include_router(auditoriums_router)
 protected_router.include_router(tickets_router)
-protected_router.include_router(screening_seats_router)
