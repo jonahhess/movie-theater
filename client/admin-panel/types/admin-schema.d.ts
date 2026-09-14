@@ -167,40 +167,6 @@ export interface paths {
         patch: operations["update_screening_api_v1_admin_screenings__screening_id__patch"];
         trace?: never;
     };
-    "/api/v1/admin/screenings/{screening_id}/sale/open": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Open Screening Sale */
-        post: operations["open_screening_sale_api_v1_admin_screenings__screening_id__sale_open_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/admin/screenings/{screening_id}/sale/close": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Close Screening Sale */
-        post: operations["close_screening_sale_api_v1_admin_screenings__screening_id__sale_close_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/admin/auditoriums": {
         parameters: {
             query?: never;
@@ -376,11 +342,15 @@ export interface components {
         AuditoriumCreateSchema: {
             /** Name */
             name: string;
+            /** Status */
+            status: string;
         };
         /** AuditoriumResponse */
         AuditoriumResponse: {
             /** Name */
             name: string;
+            /** Status */
+            status: string;
             /** Id */
             id: number;
             /**
@@ -388,8 +358,6 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
-            /** Status */
-            status: string;
             /** Total Capacity */
             total_capacity: number;
             /** Is Accessible */
@@ -406,6 +374,8 @@ export interface components {
         AuditoriumWithSeats: {
             /** Name */
             name: string;
+            /** Status */
+            status: string;
             /** Id */
             id: number;
             /**
@@ -413,8 +383,6 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
-            /** Status */
-            status: string;
             /** Total Capacity */
             total_capacity: number;
             /** Is Accessible */
@@ -589,7 +557,15 @@ export interface components {
             end_time: string;
             /** Price */
             price: number | string;
-            status: components["schemas"]["ScreeningStatus"];
+            /**
+             * Is Cancelled
+             * @default false
+             */
+            is_cancelled: boolean;
+            /** Sale Start Time */
+            sale_start_time?: string | null;
+            /** Sale End Time */
+            sale_end_time?: string | null;
         };
         /** ScreeningResponse */
         ScreeningResponse: {
@@ -611,13 +587,13 @@ export interface components {
             end_time: string;
             /** Price */
             price: string;
-            status: components["schemas"]["ScreeningStatus"];
+            /** Is Cancelled */
+            is_cancelled: boolean;
+            /** Sale Start Time */
+            sale_start_time: string | null;
+            /** Sale End Time */
+            sale_end_time: string | null;
         };
-        /**
-         * ScreeningStatus
-         * @enum {string}
-         */
-        ScreeningStatus: "draft" | "on_sale" | "past" | "cancelled";
         /** ScreeningUpdate */
         ScreeningUpdate: {
             /** Movie Id */
@@ -630,7 +606,12 @@ export interface components {
             end_time?: string | null;
             /** Price */
             price?: number | string | null;
-            status?: components["schemas"]["ScreeningStatus"] | null;
+            /** Is Cancelled */
+            is_cancelled?: boolean | null;
+            /** Sale Start Time */
+            sale_start_time?: string | null;
+            /** Sale End Time */
+            sale_end_time?: string | null;
         };
         /** SeatBase */
         SeatBase: {
@@ -1328,68 +1309,6 @@ export interface operations {
                 "application/json": components["schemas"]["ScreeningUpdate"];
             };
         };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ScreeningResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    open_screening_sale_api_v1_admin_screenings__screening_id__sale_open_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                screening_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ScreeningResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    close_screening_sale_api_v1_admin_screenings__screening_id__sale_close_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                screening_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {
