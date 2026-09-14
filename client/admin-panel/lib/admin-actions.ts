@@ -109,6 +109,9 @@ export async function updateAdminRecord(
           ? { status: values.status as "draft" | "on_sale" | "past" | "cancelled" }
           : {}),
       },
+      ...((hasValue(values, "sale_start_time") ? { sale_start_time: values.sale_start_time } : {})),
+      ...((hasValue(values, "sale_end_time") ? { sale_end_time: values.sale_end_time } : {})),
+      ...((hasValue(values, "is_cancelled") ? { is_cancelled: values.is_cancelled } : {})),
     });
   }
 
