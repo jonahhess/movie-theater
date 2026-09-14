@@ -2317,9 +2317,13 @@
             "type": "integer",
             "title": "Id"
           },
-          "screening_seat_id": {
+          "screening_id": {
             "type": "integer",
-            "title": "Screening Seat Id"
+            "title": "Screening Id"
+          },
+          "seat_id": {
+            "type": "integer",
+            "title": "Seat Id"
           },
           "email": {
             "type": "string",
@@ -2375,7 +2379,8 @@
         "type": "object",
         "required": [
           "id",
-          "screening_seat_id",
+          "screening_id",
+          "seat_id",
           "email",
           "receipt_number",
           "status",

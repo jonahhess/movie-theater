@@ -651,8 +651,10 @@ export interface components {
         TicketResponse: {
             /** Id */
             id: number;
-            /** Screening Seat Id */
-            screening_seat_id: number;
+            /** Screening Id */
+            screening_id: number;
+            /** Seat Id */
+            seat_id: number;
             /** Email */
             email: string;
             /** Phone */

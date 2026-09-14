@@ -511,12 +511,11 @@
           }
         ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "additionalProperties": true,
-                "title": "Contact Info"
+                "$ref": "#/components/schemas/ContactInfo"
               }
             }
           }
@@ -593,38 +592,6 @@
                 }
               }
             }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/tickets/qrcode": {
-      "get": {
-        "summary": "Get Qr",
-        "operationId": "get_qr_api_v1_tickets_qrcode_get",
-        "parameters": [
-          {
-            "name": "token",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Token"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response"
           },
           "422": {
             "description": "Validation Error",
@@ -818,6 +785,31 @@
   },
   "components": {
     "schemas": {
+      "ContactInfo": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email"
+        ],
+        "title": "ContactInfo"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -919,6 +911,31 @@
         ],
         "title": "RegisterRequest"
       },
+      "ScreeningResponse": {
+        "properties": {
+          "auditorium_id": {
+            "type": "integer",
+            "title": "Auditorium Id"
+          },
+          "start_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start Time"
+          },
+          "end_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "End Time"
+          }
+        },
+        "type": "object",
+        "required": [
+          "auditorium_id",
+          "start_time",
+          "end_time"
+        ],
+        "title": "ScreeningResponse"
+      },
       "ScreeningSeatResponse": {
         "properties": {
           "id": {
@@ -976,6 +993,29 @@
           "status"
         ],
         "title": "ScreeningSeatResponse"
+      },
+      "SeatResponse": {
+        "properties": {
+          "row": {
+            "type": "string",
+            "title": "Row"
+          },
+          "number": {
+            "type": "integer",
+            "title": "Number"
+          },
+          "is_accessible": {
+            "type": "boolean",
+            "title": "Is Accessible"
+          }
+        },
+        "type": "object",
+        "required": [
+          "row",
+          "number",
+          "is_accessible"
+        ],
+        "title": "SeatResponse"
       },
       "SessionResponse": {
         "properties": {
@@ -1041,9 +1081,13 @@
             "type": "integer",
             "title": "Id"
           },
-          "screening_seat_id": {
+          "screening_id": {
             "type": "integer",
-            "title": "Screening Seat Id"
+            "title": "Screening Id"
+          },
+          "seat_id": {
+            "type": "integer",
+            "title": "Seat Id"
           },
           "email": {
             "type": "string",
@@ -1095,16 +1139,25 @@
             "type": "string",
             "format": "date-time",
             "title": "Created At"
+          },
+          "screening": {
+            "$ref": "#/components/schemas/ScreeningResponse"
+          },
+          "seat": {
+            "$ref": "#/components/schemas/SeatResponse"
           }
         },
         "type": "object",
         "required": [
           "id",
-          "screening_seat_id",
+          "screening_id",
+          "seat_id",
           "email",
           "receipt_number",
           "status",
-          "created_at"
+          "created_at",
+          "screening",
+          "seat"
         ],
         "title": "TicketResponse"
       },

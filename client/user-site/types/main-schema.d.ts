@@ -165,7 +165,8 @@ export interface components {
             start_time: string;
             /** Price */
             price: string;
-            auditorium: components["schemas"]["AuditoriumResponse"] | null;
+            auditorium: components["schemas"]["AuditoriumResponse"];
+            movie: components["schemas"]["MovieResponse"];
         };
         /** ScreeningsListResponse */
         ScreeningsListResponse: {

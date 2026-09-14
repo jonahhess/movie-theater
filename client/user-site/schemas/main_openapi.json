@@ -517,14 +517,10 @@
             "title": "Price"
           },
           "auditorium": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/AuditoriumResponse"
-              },
-              {
-                "type": "null"
-              }
-            ]
+            "$ref": "#/components/schemas/AuditoriumResponse"
+          },
+          "movie": {
+            "$ref": "#/components/schemas/MovieResponse"
           }
         },
         "type": "object",
@@ -534,7 +530,8 @@
           "auditorium_id",
           "start_time",
           "price",
-          "auditorium"
+          "auditorium",
+          "movie"
         ],
         "title": "ScreeningResponse"
       },
