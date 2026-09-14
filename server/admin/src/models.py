@@ -126,6 +126,7 @@ class MovieLanguage(str, PyEnum):
     HINDI = "Hindi"
     OTHER = "Other"
 
+
 class Movie(Base):
     __tablename__ = "movies"
 
