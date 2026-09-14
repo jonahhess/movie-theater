@@ -383,9 +383,9 @@ async def make_payment(
     checkout_id = str(uuid.uuid7())
 
     # For demonstration, we'll assume payment is always successful.
-    success = await acquire_seats(redis, str(screening_id), user_uuid, checkout_id)
+    extended_reservation = await extend_seat_hold(redis, str(screening_id), user_uuid, 3600)
 
-    if not success:
+    if not extended_reservation:
         return False
     
     try:
@@ -402,26 +402,37 @@ async def make_payment(
                 )
             )
         
-        if purchased_seat_ids:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="One or more selected seats have already been purchased.",
-            )
+            if purchased_seat_ids:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="One or more selected seats have already been purchased.",
+                )
 
-        tickets_to_add = [
-            Ticket(
-                screening_id=screening_id,
-                seat_id=seat_id,
-                email=contact_info.email,
-                phone=contact_info.phone,
-                receipt_number=str(uuid.uuid7()),
-                status="confirmed",
-                checkout_id=checkout_id,
-                purchaser_uuid=uuid.UUID(user_uuid),
-            )
-            for seat_id in seat_ids
-        ]
-        db.add_all(tickets_to_add)
+            tickets_to_add = [
+                Ticket(
+                    screening_id=screening_id,
+                    seat_id=seat_id,
+                    email=contact_info.email,
+                    phone=contact_info.phone,
+                    receipt_number=str(uuid.uuid7()),
+                    status="confirmed",
+                    checkout_id=checkout_id,
+                    purchaser_uuid=uuid.UUID(user_uuid),
+                )
+                for seat_id in seat_ids
+            ]
+            db.add_all(tickets_to_add)
+
+        success = await acquire_seats(redis, str(screening_id), user_uuid, checkout_id)
+        if not success:
+            return False
+
+        # Generate magic links for all tickets
+        # magic_links = {ticket.id: generate_magic_link(ticket.receipt_number) for ticket in tickets_to_add}
+
+        # TODO: send email with the magic links to the user's email
+
+        return True
 
     except IntegrityError:
         # Most likely a concurrent checkout won the race between
@@ -475,13 +486,6 @@ async def make_payment(
                 "Seats were released."
             ),
         ) from exc
-
-    # Generate magic links for all tickets
-    # magic_links = {ticket.id: generate_magic_link(ticket.receipt_number) for ticket in tickets_to_add}
-
-    # TODO: send email with the magic links to the user's email
-
-    return True
 
 
 @router.delete("/screenings/{screening_id}/checkout/", response_model=bool)
