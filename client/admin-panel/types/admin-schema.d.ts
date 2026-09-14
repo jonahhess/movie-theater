@@ -376,15 +376,11 @@ export interface components {
         AuditoriumCreateSchema: {
             /** Name */
             name: string;
-            /** Is Active */
-            is_active: boolean;
         };
         /** AuditoriumResponse */
         AuditoriumResponse: {
             /** Name */
             name: string;
-            /** Is Active */
-            is_active: boolean;
             /** Id */
             id: number;
             /**
@@ -392,6 +388,8 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            /** Status */
+            status: string;
             /** Total Capacity */
             total_capacity: number;
             /** Is Accessible */
@@ -401,15 +399,13 @@ export interface components {
         AuditoriumUpdateSchema: {
             /** Name */
             name?: string | null;
-            /** Is Active */
-            is_active?: boolean | null;
+            /** Status */
+            status?: string | null;
         };
         /** AuditoriumWithSeats */
         AuditoriumWithSeats: {
             /** Name */
             name: string;
-            /** Is Active */
-            is_active: boolean;
             /** Id */
             id: number;
             /**
@@ -417,6 +413,8 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            /** Status */
+            status: string;
             /** Total Capacity */
             total_capacity: number;
             /** Is Accessible */
@@ -481,6 +479,22 @@ export interface components {
             /** Release Date */
             release_date?: string | null;
             status: components["schemas"]["MovieStatus"];
+            /** Genre */
+            genre: string;
+            /** Country */
+            country: string;
+            /** Language */
+            language: string;
+            /** Director */
+            director?: string | null;
+            /** Cast */
+            cast?: string | null;
+            /** Trailer Url */
+            trailer_url?: string | null;
+            /** Poster Url */
+            poster_url?: string | null;
+            /** Backdrop Url */
+            backdrop_url?: string | null;
         };
         /**
          * MovieRating
@@ -499,6 +513,22 @@ export interface components {
             /** Release Date */
             release_date?: string | null;
             status: components["schemas"]["MovieStatus"];
+            /** Genre */
+            genre: string;
+            /** Country */
+            country: string;
+            /** Language */
+            language: string;
+            /** Director */
+            director?: string | null;
+            /** Cast */
+            cast?: string | null;
+            /** Trailer Url */
+            trailer_url?: string | null;
+            /** Poster Url */
+            poster_url?: string | null;
+            /** Backdrop Url */
+            backdrop_url?: string | null;
             /** Id */
             id: number;
             /**
@@ -524,6 +554,22 @@ export interface components {
             /** Release Date */
             release_date?: string | null;
             status?: components["schemas"]["MovieStatus"] | null;
+            /** Genre */
+            genre?: string | null;
+            /** Country */
+            country?: string | null;
+            /** Language */
+            language?: string | null;
+            /** Director */
+            director?: string | null;
+            /** Cast */
+            cast?: string | null;
+            /** Trailer Url */
+            trailer_url?: string | null;
+            /** Poster Url */
+            poster_url?: string | null;
+            /** Backdrop Url */
+            backdrop_url?: string | null;
         };
         /** ScreeningCreate */
         ScreeningCreate: {
@@ -536,6 +582,11 @@ export interface components {
              * Format: date-time
              */
             start_time: string;
+            /**
+             * End Time
+             * Format: date-time
+             */
+            end_time: string;
             /** Price */
             price: number | string;
             status: components["schemas"]["ScreeningStatus"];
@@ -553,6 +604,11 @@ export interface components {
              * Format: date-time
              */
             start_time: string;
+            /**
+             * End Time
+             * Format: date-time
+             */
+            end_time: string;
             /** Price */
             price: string;
             status: components["schemas"]["ScreeningStatus"];
@@ -570,6 +626,8 @@ export interface components {
             auditorium_id?: number | null;
             /** Start Time */
             start_time?: string | null;
+            /** End Time */
+            end_time?: string | null;
             /** Price */
             price?: number | string | null;
             status?: components["schemas"]["ScreeningStatus"] | null;

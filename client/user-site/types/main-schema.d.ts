@@ -138,6 +138,24 @@ export interface components {
             rating: string;
             /** Release Date */
             release_date?: string | null;
+            /** Genre */
+            genre: string;
+            /** Country */
+            country: string;
+            /** Language */
+            language: string;
+            /** Poster Url */
+            poster_url?: string | null;
+            /** Trailer Url */
+            trailer_url?: string | null;
+            /** Backdrop Url */
+            backdrop_url?: string | null;
+            /** Tagline */
+            tagline?: string | null;
+            /** Director */
+            director?: string | null;
+            /** Cast */
+            cast?: string | null;
         };
         /** MoviesListResponse */
         MoviesListResponse: {
