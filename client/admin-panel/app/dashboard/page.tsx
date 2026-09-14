@@ -54,7 +54,6 @@ export default async function DashboardPage() {
         <section className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4" aria-label="Overview">
           {[
             ["Upcoming screenings", upcomingScreeningCount, "Next 8 scheduled"],
-            ["On sale", onSaleScreenings, "Ticket sales open"],
             ["Now showing", activeMovies, "Active movies"],
             ["Active auditoriums", activeAuditoriums, "Ready for scheduling"],
           ].map(([label, value, detail]) => (
