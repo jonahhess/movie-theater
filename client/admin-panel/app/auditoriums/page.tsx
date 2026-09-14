@@ -10,7 +10,6 @@ const columns = [
   { key: "id", label: "ID", editable: false },
   { key: "name", label: "Name" },
   { key: "seats", label: "Seat map", editable: false, linkBasePath: "/auditoriums" },
-  { key: "is_active", label: "Active", type: "boolean" as const },
   { key: "total_capacity", label: "Capacity", editable: false },
   { key: "is_accessible", label: "Accessible", editable: false },
   { key: "status", label: "Status", type: "select" as const, 
