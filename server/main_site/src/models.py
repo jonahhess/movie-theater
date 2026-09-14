@@ -57,7 +57,44 @@ class MovieView(Base):
         server_default="PG-13",
     )
     release_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    tagline: Mapped[str | None] = mapped_column(
+            String(500),
+            nullable=True,
+    )
+    
+    genre: Mapped[str] = mapped_column(
+        String(30),
+        nullable=False,
+    )
 
+    country: Mapped[str] = mapped_column(
+        String(50),
+        nullable=False,
+    )
+
+    language: Mapped[str] = mapped_column(
+        String(50),
+        nullable=False,
+        server_default="English",
+    )
+
+    imdb_rating: Mapped[Decimal | None] = mapped_column(
+        Numeric(3, 1),
+        nullable=True,
+    )
+
+    rotten_tomatoes_score: Mapped[int | None] = mapped_column(
+        Integer,
+        nullable=True,
+    )
+
+    director: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    cast: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
+    trailer_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    poster_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    backdrop_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    
 
 # view based on is_active
 class AuditoriumView(Base):
@@ -67,6 +104,7 @@ class AuditoriumView(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     is_accessible: Mapped[bool] = mapped_column(Boolean, nullable=False)
+
 
 # only show viewings based on start_time and status=on_sale
 class ScreeningView(Base):
@@ -85,6 +123,7 @@ class ScreeningView(Base):
         nullable=False,
     )
     start_time: Mapped[datetime] = mapped_column(DateTime, index=True, nullable=False)
+    end_time: Mapped[datetime] = mapped_column(DateTime, index=True, nullable=False)
     price: Mapped[Decimal] = mapped_column(
         Numeric(10, 2),
         default=12.50,
@@ -92,8 +131,9 @@ class ScreeningView(Base):
     )
 
     # Relationships
+    movie: Mapped[MovieView] = relationship("MovieView")
     auditorium: Mapped[AuditoriumView] = relationship(
-        "main_site.src.models.AuditoriumView",
+        "AuditoriumView",
         primaryjoin=lambda: foreign(ScreeningView.auditorium_id) == AuditoriumView.id,
         viewonly=True,
     )
