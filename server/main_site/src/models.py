@@ -131,7 +131,11 @@ class ScreeningView(Base):
     )
 
     # Relationships
-    movie: Mapped[MovieView] = relationship("MovieView")
+    movie: Mapped[MovieView] = relationship(
+        "MovieView",
+        primaryjoin=lambda: foreign(ScreeningView.movie_id) == MovieView.id,
+        viewonly=True,
+    )
     auditorium: Mapped[AuditoriumView] = relationship(
         "AuditoriumView",
         primaryjoin=lambda: foreign(ScreeningView.auditorium_id) == AuditoriumView.id,
