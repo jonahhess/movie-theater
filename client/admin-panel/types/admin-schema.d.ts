@@ -329,42 +329,6 @@ export interface paths {
         patch: operations["update_ticket_api_v1_admin_tickets__ticket_id__patch"];
         trace?: never;
     };
-    "/api/v1/admin/screening-seats": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List Screening Seats */
-        get: operations["list_screening_seats_api_v1_admin_screening_seats_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/admin/screening-seats/{screening_seat_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Screening Seat */
-        get: operations["get_screening_seat_api_v1_admin_screening_seats__screening_seat_id__get"];
-        put?: never;
-        post?: never;
-        /** Delete Screening Seat */
-        delete: operations["delete_screening_seat_api_v1_admin_screening_seats__screening_seat_id__delete"];
-        options?: never;
-        head?: never;
-        /** Update Screening Seat */
-        patch: operations["update_screening_seat_api_v1_admin_screening_seats__screening_seat_id__patch"];
-        trace?: never;
-    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -592,27 +556,6 @@ export interface components {
             /** Price */
             price: string;
             status: components["schemas"]["ScreeningStatus"];
-        };
-        /** ScreeningSeatResponse */
-        ScreeningSeatResponse: {
-            /** Id */
-            id: number;
-            /** Screening Id */
-            screening_id: number;
-            /** Seat Id */
-            seat_id: number;
-            /** Is Taken */
-            is_taken: boolean;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-        };
-        /** ScreeningSeatUpdate */
-        ScreeningSeatUpdate: {
-            /** Is Taken */
-            is_taken?: boolean | null;
         };
         /**
          * ScreeningStatus
@@ -1892,133 +1835,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TicketResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_screening_seats_api_v1_admin_screening_seats_get: {
-        parameters: {
-            query?: {
-                /** @description Filter by screening ID */
-                screening_id?: number | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ScreeningSeatResponse"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_screening_seat_api_v1_admin_screening_seats__screening_seat_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                screening_seat_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ScreeningSeatResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_screening_seat_api_v1_admin_screening_seats__screening_seat_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                screening_seat_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_screening_seat_api_v1_admin_screening_seats__screening_seat_id__patch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                screening_seat_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ScreeningSeatUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ScreeningSeatResponse"];
                 };
             };
             /** @description Validation Error */
