@@ -9,7 +9,6 @@ const links = [
   { href: "/auditoriums", label: "Auditoriums" },
   { href: "/screenings", label: "Screenings" },
   { href: "/tickets", label: "Tickets" },
-  { href: "/screening-seats", label: "Screening Seats" },
 ];
 
 export default function Header() {
