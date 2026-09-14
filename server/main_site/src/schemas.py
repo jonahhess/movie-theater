@@ -35,7 +35,8 @@ class ScreeningResponse(BaseModel):
     auditorium_id: int
     start_time: datetime
     price: Decimal
-    auditorium: AuditoriumResponse | None
+    auditorium: AuditoriumResponse
+    movie: MovieResponse
 
 
 class MoviesListResponse(BaseModel):
