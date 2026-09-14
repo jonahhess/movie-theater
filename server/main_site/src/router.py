@@ -114,8 +114,7 @@ async def movie_screenings(
     )
     list_stmt = (
         select(ScreeningView)
-        .options(selectinload(ScreeningView.auditorium))
-        .options(selectinload(ScreeningView.movie))
+        .options(selectinload(ScreeningView.auditorium), selectinload(ScreeningView.movie))
         .where(ScreeningView.movie_id == movie_id)
         .order_by(ScreeningView.start_time.asc(), ScreeningView.id.asc())
         .offset(offset)
@@ -150,8 +149,7 @@ async def browse_screenings(
     count_stmt = select(func.count()).select_from(ScreeningView)
     list_stmt = (
         select(ScreeningView)
-        .options(selectinload(ScreeningView.auditorium))
-        .options(selectinload(ScreeningView.movie))
+        .options(selectinload(ScreeningView.auditorium), selectinload(ScreeningView.movie))
         .order_by(ScreeningView.start_time.asc(), 
                   ScreeningView.id.asc())
         .offset(offset)
@@ -196,7 +194,7 @@ async def browse_screenings(
 async def screening_details(screening_id: int, db: AsyncSession = db_dependency):
     screening = await db.scalar(
         select(ScreeningView)
-        .options(selectinload(ScreeningView.auditorium))
+        .options(selectinload(ScreeningView.auditorium), selectinload(ScreeningView.movie))
         .where(ScreeningView.id == screening_id)
     )
 
