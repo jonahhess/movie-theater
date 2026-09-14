@@ -10,8 +10,8 @@ import { apiClient } from "../../lib/api";
 
 const columns = [
   { key: "id", label: "ID", editable: false },
-  { key: "auditorium_id", label: "Auditorium ID", type: "number" as const },
   { key: "start_time", label: "Start time", type: "datetime-local" as const },
+  { key: "end_time", label: "End time", type: "datetime-local" as const },
   { key: "price", label: "Price" },
   { key: "status", label: "Status" },
 ];
@@ -35,23 +35,16 @@ export default async function ScreeningsPage() {
     .map((auditorium) => ({
       label: `${auditorium.name} (#${auditorium.id})`,
       value: String(auditorium.id),
-      group: auditorium.is_active ? "Active auditoriums" : "Inactive auditoriums",
-      badge: auditorium.is_active ? "Active" : "Inactive",
-      active: auditorium.is_active,
+      group: auditorium.status === "active" ? "Active auditoriums" : auditorium.status === "frozen" ? "Frozen auditoriums" : "Inactive auditoriums",
+      badge: auditorium.status === "active" ? "Active" : "Inactive",
+      active: auditorium.status === "active",
     }))
     .sort((left, right) => Number(right.active) - Number(left.active) || left.label.localeCompare(right.label));
-  const statusOptions = [
-    { label: "Draft", value: "draft" },
-    { label: "Past", value: "past" },
-    { label: "Cancelled", value: "cancelled" },
-  ];
   const screeningColumns = [
     columns[0],
     { key: "movie_id", label: "Movie", type: "select" as const, options: movieOptions },
     { key: "auditorium_id", label: "Auditorium", type: "select" as const, options: auditoriumOptions },
-    ...columns.slice(2, -1),
-    { key: "status", label: "Status", type: "select" as const, options: statusOptions },
-  ];
+    ...columns.slice(1)];
 
   return (
     <ResourceTablePage
