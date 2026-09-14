@@ -33,19 +33,21 @@ class SeatResponse(SeatBase):
 
 class AuditoriumBaseSchema(BaseModel):
     name: str
-    is_active: bool
+    status: str
+
 
 class AuditoriumCreateSchema(AuditoriumBaseSchema):
     pass
 
 class AuditoriumUpdateSchema(BaseModel):
     name: str | None = None
-    is_active: bool | None = None
+    status: str | None = None
+
 
 class AuditoriumResponse(AuditoriumBaseSchema):
     id: int
-    created_at: datetime
 
+    created_at: datetime
     total_capacity: int
     is_accessible: bool
 
