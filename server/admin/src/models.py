@@ -157,9 +157,12 @@ class Movie(Base):
     )
 
     country: Mapped[MovieCountry] = mapped_column(
-        Enum(MovieCountry, name="movie_country_enum"),
-        nullable=False,
-    )
+    Enum(
+        MovieCountry,
+        values_callable=lambda enum_cls: [member.value for member in enum_cls],
+    ),
+    nullable=False,
+)
 
     language: Mapped[MovieLanguage] = mapped_column(
         Enum(MovieLanguage, name="movie_language_enum"),
