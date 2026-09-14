@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -30,7 +30,8 @@ async def ensure_seat_map_editable(
         select(Screening.id)
         .where(
             Screening.auditorium_id == auditorium_id,
-            Screening.status == "on_sale",
+            Screening.sale_start_time <= func.now(),
+            Screening.sale_end_time >= func.now(),
         )
         .limit(1)
     )
@@ -46,9 +47,12 @@ async def ensure_seat_map_editable(
     has_paid_tickets = await db.scalar(
         select(Ticket.id)
         .join(Seat, Ticket.seat_id == Seat.id)
+        .join(Screening, Ticket.screening_id == Screening.id)
         .where(
             Seat.auditorium_id == auditorium_id,
-            Ticket.status.in_(["confirmed", "redeemed"]),
+            Ticket.status != "cancelled",
+            Screening.sale_start_time <= func.now(),
+            Screening.sale_end_time >= func.now(),
         )
         .limit(1)
     )

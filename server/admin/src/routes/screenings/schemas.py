@@ -5,20 +5,15 @@ from enum import StrEnum
 from pydantic import BaseModel, ConfigDict
 
 
-class ScreeningStatus(StrEnum):
-    DRAFT = "draft"
-    ON_SALE = "on_sale"
-    PAST = "past"
-    CANCELLED = "cancelled"
-
-
 class ScreeningCreate(BaseModel):
     movie_id: int
     auditorium_id: int
     start_time: datetime
     end_time: datetime
     price: Decimal
-    status: ScreeningStatus = ScreeningStatus.DRAFT
+    sale_start_time: datetime | None = None
+    sale_end_time: datetime | None = None
+    is_cancelled: bool = False
 
 
 class ScreeningUpdate(BaseModel):
@@ -27,7 +22,9 @@ class ScreeningUpdate(BaseModel):
     start_time: datetime | None = None
     end_time: datetime | None = None
     price: Decimal | None = None
-    status: ScreeningStatus | None = None
+    sale_start_time: datetime | None = None
+    sale_end_time: datetime | None = None
+    is_cancelled: bool | None = None
 
 
 class ScreeningResponse(BaseModel):
@@ -39,4 +36,6 @@ class ScreeningResponse(BaseModel):
     start_time: datetime
     end_time: datetime
     price: Decimal
-    status: ScreeningStatus
+    sale_start_time: datetime | None
+    sale_end_time: datetime | None
+    is_cancelled: bool
