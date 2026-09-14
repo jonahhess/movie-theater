@@ -55,18 +55,18 @@ export default async function MoviesPage({ searchParams }: MoviesPageProps) {
         getPageHref={(nextOffset) => `/movies?limit=${limit}&offset=${nextOffset}`}
         renderItem={(movie) => (      
             <Accordion key={movie.id} 
-            summary={<>
-              <h2 className="mt-3 text-xl font-semibold tracking-tight">{movie.title}</h2>
-
-            </>} details={<>
+            summary={<Link
+            href={`/screenings?movie_id=${movie.id}`}
+            key={movie.id}
+            className="rounded-lg overflow-hidden"
+            >
+            <img src={movie.poster_url || ""} alt={movie.title} />
+            <h2 className="mt-3 text-xl font-semibold tracking-tight">{movie.title}</h2>
+            </Link>} 
+            details={<>
               <p className="mt-2 leading-7 text-foreground-subtle">{movie.description}</p>
               <br />
-            <Link
-            key={movie.id}
-            href={`/screenings?movie_id=${movie.id}`}
-            className="rounded-full bg-accent px-6 py-3 text-sm font-bold text-ink transition hover:bg-accent-hover"
-            > Find Screenings
-            </Link>
+            
             </>}> 
             </Accordion>
         )}
