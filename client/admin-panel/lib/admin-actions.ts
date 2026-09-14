@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { apiClient } from "./api";
 
 type EditableValues = Record<string, string>;
-type Resource = "users" | "movies" | "auditoriums" | "screenings" | "tickets" | "screening-seats";
+type Resource = "users" | "movies" | "auditoriums" | "screenings" | "tickets";
 
 function numberValue(values: EditableValues, key: string) {
   const value = Number(values[key]);
@@ -108,10 +108,10 @@ export async function updateAdminRecord(
         ...(hasValue(values, "status")
           ? { status: values.status as "draft" | "on_sale" | "past" | "cancelled" }
           : {}),
+          ...((hasValue(values, "sale_start_time") ? { sale_start_time: values.sale_start_time } : {})),
+          ...((hasValue(values, "sale_end_time") ? { sale_end_time: values.sale_end_time } : {})),
+          ...((hasValue(values, "is_cancelled") ? { is_cancelled: Boolean(values.is_cancelled) } : {})),
       },
-      ...((hasValue(values, "sale_start_time") ? { sale_start_time: values.sale_start_time } : {})),
-      ...((hasValue(values, "sale_end_time") ? { sale_end_time: values.sale_end_time } : {})),
-      ...((hasValue(values, "is_cancelled") ? { is_cancelled: values.is_cancelled } : {})),
     });
   }
 
