@@ -1,6 +1,7 @@
 import logging
 import uuid
 
+from aiomysql import IntegrityError
 import bcrypt
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.responses import StreamingResponse
@@ -12,7 +13,7 @@ from sqlalchemy.orm import selectinload
 
 from tickets.src.database import get_admin_db
 from tickets.src.helpers import get_or_create_user_uuid
-from tickets.src.models import Auditorium, Screening, ScreeningSeat, Seat, Ticket, User
+from tickets.src.models import Auditorium, Screening, Seat, Ticket, User
 from tickets.src.receipts import get_qr_code
 from tickets.src.redis_client import get_redis
 from tickets.src.redis_seats import (
@@ -32,6 +33,7 @@ from tickets.src.redis_seats import (
     warm_screening_seats,
 )
 from tickets.src.schemas import (
+    ContactInfo,
     LoginRequest,
     LoginResponse,
     RegisterRequest,
@@ -225,8 +227,8 @@ async def view_screening_seat_map(
 
     purchased_seat_ids = set(
         await db.scalars(
-            select(ScreeningSeat.seat_id).where(
-                ScreeningSeat.screening_id == screening_id
+            select(Ticket.seat_id).where(
+                Ticket.screening_id == screening_id
             )
         )
     )
@@ -296,9 +298,9 @@ async def hold_seat(
         )
 
     purchased = await db.scalar(
-        select(ScreeningSeat.id).where(
-            ScreeningSeat.screening_id == screening_id,
-            ScreeningSeat.seat_id == int(seat_id),
+        select(Ticket.seat_id).where(
+            Ticket.screening_id == screening_id,
+            Ticket.seat_id == int(seat_id),
         )
     )
     if purchased is not None:
@@ -369,17 +371,11 @@ async def get_checkout(
              response_model=bool)
 async def make_payment(
     screening_id: int,
+    contact_info: ContactInfo,
     user_uuid: str = user_uuid_dependency,
     redis: Redis = redis_dependency,
     db: AsyncSession = db_dependency,
-    contact_info: dict = None):  # Expecting dictionary with 'email' and 'phone' keys):
-
-    if contact_info is None or not contact_info.get("email"):
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail="Email is required to complete checkout",
-        )
-
+):
     held_seat_keys = await get_user_held_seats(redis, str(screening_id), user_uuid)
     if not held_seat_keys:
         return False
@@ -389,73 +385,104 @@ async def make_payment(
     # For demonstration, we'll assume payment is always successful.
     success = await acquire_seats(redis, str(screening_id), user_uuid, checkout_id)
 
-    if success:
-        try:
-            seat_ids = [int(seat_id_from_key(seat_key)) for seat_key in held_seat_keys]
+    if not success:
+        return False
+    
+    try:
+        seat_ids = [int(seat_id_from_key(seat_key)) for seat_key in held_seat_keys]
+        
+        async with db.begin():
             purchased_seat_ids = set(
                 await db.scalars(
-                    select(ScreeningSeat.seat_id).where(
-                        ScreeningSeat.screening_id == screening_id,
-                        ScreeningSeat.seat_id.in_(seat_ids),
+                    select(Ticket.seat_id).where(
+                        Ticket.screening_id == screening_id,
+                        Ticket.seat_id.in_(seat_ids),
+                        Ticket.status != "cancelled",
                     )
                 )
             )
-            if purchased_seat_ids:
-                raise HTTPException(
-                    status_code=status.HTTP_409_CONFLICT,
-                    detail="One or more selected seats have already been purchased.",
-                )
-
-            await db.rollback()
-
-            async with db.begin():
-                screening_seats = [
-                    ScreeningSeat(
-                        screening_id=screening_id,
-                        seat_id=seat_id,
-                        is_taken=True,
-                    )
-                    for seat_id in seat_ids
-                ]
-                db.add_all(screening_seats)
-                await db.flush()
-
-                tickets_to_add = [
-                    Ticket(
-                        screening_seat_id=screening_seat.id,
-                        email=contact_info.get("email"),
-                        phone=contact_info.get("phone"),
-                        receipt_number=str(uuid.uuid7()),
-                        status="confirmed",
-                        checkout_id=checkout_id,
-                        purchaser_uuid=uuid.UUID(user_uuid),
-                    )
-                    for screening_seat in screening_seats
-                ]
-                db.add_all(tickets_to_add)
-        except Exception as exc:
-            logger.exception(
-                "payment ticket creation failed: screening_id=%s",
-                screening_id,
-            )
-            await release_acquired_seats(redis, str(screening_id), checkout_id)
-            if isinstance(exc, HTTPException):
-                raise
+        
+        if purchased_seat_ids:
             raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail=(
-                    "Payment was accepted, but ticket creation failed. "
-                    "Seats were released."
-                ),
-            ) from exc
+                status_code=status.HTTP_409_CONFLICT,
+                detail="One or more selected seats have already been purchased.",
+            )
 
-        # TODO: Implement email sending logic here
-        # Generate a magic link for the receipt
-        # for ticket in tickets_to_add:
-        #   ticket.magic_link = generate_magic_link(ticket.receipt_number)
-        # send 1 or more emails with the order details and magic links
+        tickets_to_add = [
+            Ticket(
+                screening_id=screening_id,
+                seat_id=seat_id,
+                email=contact_info.email,
+                phone=contact_info.phone,
+                receipt_number=str(uuid.uuid7()),
+                status="confirmed",
+                checkout_id=checkout_id,
+                purchaser_uuid=uuid.UUID(user_uuid),
+            )
+            for seat_id in seat_ids
+        ]
+        db.add_all(tickets_to_add)
 
-    return success
+    except IntegrityError:
+        # Most likely a concurrent checkout won the race between
+        # our SELECT and INSERT. The unique constraint is the final
+        # protection against double-selling a seat.
+        await db.rollback()
+
+        await release_acquired_seats(
+            redis,
+            str(screening_id),
+            checkout_id,
+        )
+
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=(
+                "One or more selected seats have already "
+                "been purchased."
+            ),
+        )
+
+    except HTTPException:
+        await db.rollback()
+
+        await release_acquired_seats(
+            redis,
+            str(screening_id),
+            checkout_id,
+        )
+
+        raise
+
+    except Exception as exc:
+        await db.rollback()
+
+        logger.exception(
+            "Payment ticket creation failed: screening_id=%s",
+            screening_id,
+        )
+
+        await release_acquired_seats(
+            redis,
+            str(screening_id),
+            checkout_id,
+        )
+
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=(
+                "Payment was accepted, but ticket creation failed. "
+                "Seats were released."
+            ),
+        ) from exc
+
+    # TODO: Implement email sending logic here
+    # Generate a magic link for the receipt
+    # for ticket in tickets_to_add:
+    #   ticket.magic_link = generate_magic_link(ticket.receipt_number)
+    # send 1 or more emails with the order details and magic links
+
+    return True
 
 
 @router.delete("/screenings/{screening_id}/checkout/", response_model=bool)
@@ -526,6 +553,22 @@ async def open_screening_sale(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Screening is already on sale",
+        )
+
+    conflicting_screening = await db.scalar(
+        select(Screening.id)
+        .where(
+            Screening.auditorium_id == screening.auditorium_id,
+            Screening.start_time < screening.end_time,
+            Screening.end_time > screening.start_time,
+        )
+        .limit(1)
+    )
+
+    if conflicting_screening is not None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="The auditorium is already booked during this time",
         )
 
     auditorium_seats = await db.execute(

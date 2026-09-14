@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...database import get_admin_db
 from ...exceptions import NotFoundError
-from ...models import Auditorium, Movie, Screening, ScreeningSeat, Seat, Ticket
+from ...models import Auditorium, Movie, Screening, Ticket
 from .schemas import ScreeningCreate, ScreeningResponse, ScreeningUpdate
 
 router = APIRouter(prefix="/screenings")
@@ -30,10 +30,9 @@ async def ensure_screening_editable(
         )
 
     has_paid_tickets = await db.scalar(
-        select(ScreeningSeat.id)
-        .join(Ticket, Ticket.screening_seat_id == ScreeningSeat.id)
+        select(Ticket.id)
         .where(
-            ScreeningSeat.screening_id == screening.id,
+            Ticket.screening_id == screening.id,
             Ticket.status.in_(["confirmed", "redeemed"]),
         )
         .limit(1)
