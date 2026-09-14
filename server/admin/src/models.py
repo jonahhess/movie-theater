@@ -194,7 +194,7 @@ class Auditorium(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     status: Mapped[str] = mapped_column(
-        Enum("active", "frozen","inactive", name="movie_status_enum"),
+        Enum("active", "frozen","inactive", name="auditorium_status_enum"),
         nullable=False,
         server_default=text("'active'"),
     )
