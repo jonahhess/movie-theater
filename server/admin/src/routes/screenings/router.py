@@ -115,10 +115,25 @@ async def update_screening(
 
     await ensure_screening_editable(existing_screening, db)
 
+    existing_start_time = existing_screening.sale_start_time
+    existing_end_time = existing_screening.sale_end_time
+
+    if screening.sale_start_time is None:
+        screening.sale_start_time = existing_start_time
+    if screening.sale_end_time is None:
+        screening.sale_end_time = existing_end_time
+
     if (screening.sale_start_time is None) != (screening.sale_end_time is None):
         raise HTTPException(
             status_code=409,
             detail="Both sale_start_time and sale_end_time must be set together or both be None.",
+        )
+
+    if screening.sale_end_time is not None and screening.sale_start_time is not None and \
+       screening.sale_end_time <= screening.sale_start_time:
+        raise HTTPException(
+            status_code=409,
+            detail="sale end time must be after sale start time.",
         )
 
     for key, value in screening.model_dump(exclude_unset=True).items():
