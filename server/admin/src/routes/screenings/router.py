@@ -1,6 +1,5 @@
 import os
-
-import httpx
+from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,7 +19,7 @@ async def ensure_screening_editable(
     screening: Screening,
     db: AsyncSession,
 ) -> None:
-    if screening.status == "on_sale":
+    if screening.sale_start_time is not None and screening.sale_end_time is None and screening.sale_start_time <= datetime.now():
         raise HTTPException(
             status_code=409,
             detail=(
@@ -33,7 +32,7 @@ async def ensure_screening_editable(
         select(Ticket.id)
         .where(
             Ticket.screening_id == screening.id,
-            Ticket.status.in_(["confirmed", "redeemed"]),
+            Ticket.status != "cancelled",
         )
         .limit(1)
     )
@@ -77,10 +76,10 @@ async def list_screenings(db: AsyncSession = db_dependency):
 @router.post("", response_model=ScreeningResponse)
 async def create_screening(
     screening: ScreeningCreate, db: AsyncSession = db_dependency):
-    if screening.status == "on_sale":
+    if screening.sale_start_time is not None and screening.sale_end_time is None and screening.sale_start_time <= datetime.now():
         raise HTTPException(
             status_code=409,
-            detail="Create the screening as draft, then open sales explicitly.",
+            detail="Cannot create a screening while ticket sales are open.",
         )
     screening = Screening(**screening.model_dump(exclude_unset=True))
     db.add(screening)
@@ -115,96 +114,19 @@ async def update_screening(
         raise NotFoundError("Screening", screening_id)
 
     await ensure_screening_editable(existing_screening, db)
+
+    if (screening.sale_start_time is None) != (screening.sale_end_time is None):
+        raise HTTPException(
+            status_code=409,
+            detail="Both sale_start_time and sale_end_time must be set together or both be None.",
+        )
+
     for key, value in screening.model_dump(exclude_unset=True).items():
         setattr(existing_screening, key, value)
     await db.commit()
     await db.refresh(existing_screening)
     return existing_screening
 
-
-@router.post("/{screening_id}/sale/open", response_model=ScreeningResponse)
-async def open_screening_sale(screening_id: int, db: AsyncSession = db_dependency):
-
-    if not INTERNAL_SERVICE_TOKEN:
-        raise HTTPException(
-            status_code=503,
-            detail="Internal service token is not configured",
-        )
-
-    screening = await db.scalar(select(Screening).where(Screening.id == screening_id))
-
-    if screening is None:
-        raise NotFoundError("Screening", screening_id)
-
-    if screening.status != "draft":
-        raise HTTPException(
-            status_code=409,
-            detail="Only draft screenings can be opened for sale.",
-        )
-
-    await ensure_screening_references_active(screening, db)
-
-    try:
-        async with httpx.AsyncClient(base_url=TICKETS_BASE_URL) as client:
-            response = await client.post(
-                f"/internal/screenings/{screening_id}/sale/open",
-                json={},
-                headers={"x_internal_service_token": INTERNAL_SERVICE_TOKEN},
-                timeout=5.0,
-            )
-            response.raise_for_status()
-    except httpx.HTTPError as err:
-        await db.rollback()
-        raise HTTPException(
-            status_code=502,
-            detail="Tickets service failed to open screening sale",
-        ) from err
-
-    screening.status = "on_sale"
-    await db.commit()
-    await db.refresh(screening)
-    return screening
-
-
-@router.post("/{screening_id}/sale/close", response_model=ScreeningResponse)
-async def close_screening_sale(screening_id: int, db: AsyncSession = db_dependency):
-
-    if not INTERNAL_SERVICE_TOKEN:
-        raise HTTPException(
-            status_code=503,
-            detail="Internal service token is not configured",
-        )
-
-    screening = await db.scalar(select(Screening).where(Screening.id == screening_id))
-
-    if screening is None:
-        raise NotFoundError("Screening", screening_id)
-
-    if screening.status != "on_sale":
-        raise HTTPException(
-            status_code=409,
-            detail="Screening sale is not open",
-        )
-
-    try:
-        async with httpx.AsyncClient(base_url=TICKETS_BASE_URL) as client:
-            response = await client.post(
-                f"/internal/screenings/{screening_id}/sale/close",
-                headers={"x_internal_service_token": INTERNAL_SERVICE_TOKEN},
-                timeout=5.0,
-            )
-            response.raise_for_status()
-    except httpx.HTTPError as err:
-        await db.rollback()
-        raise HTTPException(
-            status_code=502,
-            detail="Tickets service failed to close screening sale",
-        ) from err
-
-    screening.status = "past"
-    await db.commit()
-    await db.refresh(screening)
-    return screening
 
 
 @router.delete("/{screening_id}", status_code=204)
