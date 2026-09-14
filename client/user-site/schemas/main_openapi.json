@@ -450,6 +450,84 @@
               }
             ],
             "title": "Release Date"
+          },
+          "genre": {
+            "type": "string",
+            "title": "Genre"
+          },
+          "country": {
+            "type": "string",
+            "title": "Country"
+          },
+          "language": {
+            "type": "string",
+            "title": "Language"
+          },
+          "poster_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Poster Url"
+          },
+          "trailer_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trailer Url"
+          },
+          "backdrop_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Backdrop Url"
+          },
+          "tagline": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tagline"
+          },
+          "director": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Director"
+          },
+          "cast": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cast"
           }
         },
         "type": "object",
@@ -457,7 +535,10 @@
           "id",
           "title",
           "duration_minutes",
-          "rating"
+          "rating",
+          "genre",
+          "country",
+          "language"
         ],
         "title": "MovieResponse"
       },
@@ -517,14 +598,10 @@
             "title": "Price"
           },
           "auditorium": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/AuditoriumResponse"
-              },
-              {
-                "type": "null"
-              }
-            ]
+            "$ref": "#/components/schemas/AuditoriumResponse"
+          },
+          "movie": {
+            "$ref": "#/components/schemas/MovieResponse"
           }
         },
         "type": "object",
@@ -534,7 +611,8 @@
           "auditorium_id",
           "start_time",
           "price",
-          "auditorium"
+          "auditorium",
+          "movie"
         ],
         "title": "ScreeningResponse"
       },

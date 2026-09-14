@@ -30,11 +30,21 @@ class SessionResponse(BaseModel):
     owner_tag: str | None = None
 
 
+class ScreeningResponse(BaseModel):
+    auditorium_id: int
+    start_time: datetime
+    end_time: datetime
+
+class SeatResponse(BaseModel):
+    row: str
+    number: int
+    is_accessible: bool
+
 class TicketResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-
     id: int
-    screening_seat_id: int
+    screening_id: int
+    seat_id: int
     email: str
     phone: str | None = None
     receipt_number: str
@@ -42,6 +52,8 @@ class TicketResponse(BaseModel):
     purchaser_uuid: UUID | None = None
     status: str
     created_at: datetime
+    screening: ScreeningResponse
+    seat: SeatResponse
 
 
 class ScreeningSeatResponse(BaseModel):

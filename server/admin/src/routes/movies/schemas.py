@@ -26,6 +26,14 @@ class MovieBaseSchema(BaseModel):
     rating: MovieRating
     release_date: date | None = None
     status: MovieStatus
+    genre: str
+    country: str
+    language: str
+    director: str | None = None
+    cast: str | None = None
+    trailer_url: str | None = None
+    poster_url: str | None = None
+    backdrop_url: str | None = None
 
 
 class MovieCreateSchema(MovieBaseSchema):
@@ -38,6 +46,14 @@ class MovieUpdateSchema(MovieBaseSchema):
     rating: MovieRating | None = None
     release_date: date | None = None
     status: MovieStatus | None = None
+    genre: str | None = None
+    country: str | None = None
+    language: str | None = None
+    director: str | None = None
+    cast: str | None = None
+    trailer_url: str | None = None
+    poster_url: str | None = None
+    backdrop_url: str | None = None
 
 class MovieResponseSchema(MovieBaseSchema):
     model_config = ConfigDict(from_attributes=True)

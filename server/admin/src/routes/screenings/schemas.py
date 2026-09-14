@@ -16,14 +16,16 @@ class ScreeningCreate(BaseModel):
     movie_id: int
     auditorium_id: int
     start_time: datetime
+    end_time: datetime
     price: Decimal
-    status: ScreeningStatus
+    status: ScreeningStatus = ScreeningStatus.DRAFT
 
 
 class ScreeningUpdate(BaseModel):
     movie_id: int | None = None
     auditorium_id: int | None = None
     start_time: datetime | None = None
+    end_time: datetime | None = None
     price: Decimal | None = None
     status: ScreeningStatus | None = None
 
@@ -35,5 +37,6 @@ class ScreeningResponse(BaseModel):
     movie_id: int
     auditorium_id: int
     start_time: datetime
+    end_time: datetime
     price: Decimal
     status: ScreeningStatus

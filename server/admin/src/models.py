@@ -70,61 +70,56 @@ class Admin(Base):
 
 
 class MovieGenre(str, PyEnum):
-    ACTION = "action"
-    ADVENTURE = "adventure"
-    ANIMATION = "animation"
-    COMEDY = "comedy"
-    CRIME = "crime"
-    DOCUMENTARY = "documentary"
-    DRAMA = "drama"
-    FANTASY = "fantasy"
-    HORROR = "horror"
-    MYSTERY = "mystery"
-    ROMANCE = "romance"
-    SCI_FI = "sci-fi"
-    THRILLER = "thriller"
-    WAR = "war"
-    WESTERN = "western"
-    OTHER = "other"
+    Action = "Action"
+    Adventure = "Adventure"
+    Animation = "Animation"
+    Comedy = "Comedy"
+    Crime = "Crime"
+    Documentary = "Documentary"
+    Drama = "Drama"
+    Fantasy = "Fantasy"
+    Horror = "Horror"
+    Mystery = "Mystery"
+    Romance = "Romance"
+    Sci_Fi = "Sci-Fi"
+    Thriller = "Thriller"
+    War = "War"
+    Western = "Western"
+    Other = "Other"
 
 
 class MovieCountry(str, PyEnum):
-    USA = "USA"
-    UK = "UK"
-    CANADA = "Canada"
-    AUSTRALIA = "Australia"
-    FRANCE = "France"
-    GERMANY = "Germany"
-    ITALY = "Italy"
-    SPAIN = "Spain"
-    JAPAN = "Japan"
-    SOUTH_KOREA = "South Korea"
-    INDIA = "India"
-    CHINA = "China"
-    ISRAEL = "Israel"
-    OTHER = "Other"
+    Usa = "USA"
+    Uk = "UK"
+    Canada = "Canada"
+    Australia = "Australia"
+    France = "France"
+    Germany = "Germany"
+    Italy = "Italy"
+    Spain = "Spain"
+    Japan = "Japan"
+    South_Korea = "South Korea"
+    India = "India"
+    China = "China"
+    Israel = "Israel"
+    Other = "Other"
 
-class MovieStatus(str, PyEnum):
-    DRAFT = "draft"
-    COMING_SOON = "coming_soon"
-    NOW_SHOWING = "now_showing"
-    ARCHIVED = "archived"
 
 class MovieLanguage(str, PyEnum):
-    ENGLISH = "English"
-    HEBREW = "Hebrew"
-    ARABIC = "Arabic"
-    FRENCH = "French"
-    SPANISH = "Spanish"
-    GERMAN = "German"
-    ITALIAN = "Italian"
-    PORTUGUESE = "Portuguese"
-    RUSSIAN = "Russian"
-    JAPANESE = "Japanese"
-    KOREAN = "Korean"
-    CHINESE = "Chinese"
-    HINDI = "Hindi"
-    OTHER = "Other"
+    English = "English"
+    Hebrew = "Hebrew"
+    Arabic = "Arabic"
+    French = "French"
+    Spanish = "Spanish"
+    German = "German"
+    Italian = "Italian"
+    Portuguese  = "Portuguese"
+    Russian = "Russian"
+    Japanese = "Japanese"
+    Korean = "Korean"
+    Chinese = "Chinese"
+    Hindi = "Hindi"
+    Other = "Other"
 
 
 class Movie(Base):
@@ -169,7 +164,7 @@ class Movie(Base):
     language: Mapped[MovieLanguage] = mapped_column(
         Enum(MovieLanguage, name="movie_language_enum"),
         nullable=False,
-        server_default=MovieLanguage.ENGLISH.value,
+        server_default=MovieLanguage.English.value,
     )
 
     imdb_rating: Mapped[Decimal | None] = mapped_column(

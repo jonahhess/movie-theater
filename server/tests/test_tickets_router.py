@@ -328,7 +328,7 @@ def test_make_payment_creates_tickets_for_held_seats(monkeypatch):
     async def scenario():
         async with make_client(monkeypatch) as (client, session_factory, redis):
             async with session_factory() as session:
-                auditorium = Auditorium(is_active=True)
+                auditorium = Auditorium(status="active")
                 auditorium.seats = [Seat(row="A", number=1), Seat(row="A", number=2)]
                 session.add(auditorium)
                 await session.flush()
@@ -449,7 +449,7 @@ def test_open_screening_sale_warms_auditorium_seats(monkeypatch):
         monkeypatch.setattr(token_module, "INTERNAL_SERVICE_TOKEN", "shared-secret")
         async with make_client(monkeypatch) as (client, session_factory, redis):
             async with session_factory() as session:
-                auditorium = Auditorium(is_active=True)
+                auditorium = Auditorium(status="active")
                 auditorium.seats = [
                     Seat(row="A", number=1),
                     Seat(row="A", number=2),

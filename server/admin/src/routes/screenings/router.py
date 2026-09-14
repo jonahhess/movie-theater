@@ -61,9 +61,9 @@ async def ensure_screening_references_active(
         )
 
     auditorium_active = await db.scalar(
-        select(Auditorium.is_active).where(Auditorium.id == screening.auditorium_id)
+        select(Auditorium.status).where(Auditorium.id == screening.auditorium_id)
     )
-    if auditorium_active is not True:
+    if auditorium_active != "active":
         raise HTTPException(
             status_code=409,
             detail="The screening auditorium must be active before sales can open.",

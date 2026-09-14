@@ -13,8 +13,8 @@ from sqlalchemy.orm import selectinload
 
 from tickets.src.database import get_admin_db
 from tickets.src.helpers import get_or_create_user_uuid
-from tickets.src.models import Auditorium, Screening, Seat, Ticket, User
-from tickets.src.receipts import get_qr_code
+from tickets.src.models import Auditorium, Screening, Seat, Ticket, User, Movie
+# from tickets.src.receipts import generate_magic_link
 from tickets.src.redis_client import get_redis
 from tickets.src.redis_seats import (
     acquire_seats,
@@ -383,9 +383,9 @@ async def make_payment(
     checkout_id = str(uuid.uuid7())
 
     # For demonstration, we'll assume payment is always successful.
-    success = await acquire_seats(redis, str(screening_id), user_uuid, checkout_id)
+    extended_reservation = await extend_seat_hold(redis, str(screening_id), user_uuid, 3600)
 
-    if not success:
+    if not extended_reservation:
         return False
     
     try:
@@ -402,26 +402,37 @@ async def make_payment(
                 )
             )
         
-        if purchased_seat_ids:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="One or more selected seats have already been purchased.",
-            )
+            if purchased_seat_ids:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="One or more selected seats have already been purchased.",
+                )
 
-        tickets_to_add = [
-            Ticket(
-                screening_id=screening_id,
-                seat_id=seat_id,
-                email=contact_info.email,
-                phone=contact_info.phone,
-                receipt_number=str(uuid.uuid7()),
-                status="confirmed",
-                checkout_id=checkout_id,
-                purchaser_uuid=uuid.UUID(user_uuid),
-            )
-            for seat_id in seat_ids
-        ]
-        db.add_all(tickets_to_add)
+            tickets_to_add = [
+                Ticket(
+                    screening_id=screening_id,
+                    seat_id=seat_id,
+                    email=contact_info.email,
+                    phone=contact_info.phone,
+                    receipt_number=str(uuid.uuid7()),
+                    status="confirmed",
+                    checkout_id=checkout_id,
+                    purchaser_uuid=uuid.UUID(user_uuid),
+                )
+                for seat_id in seat_ids
+            ]
+            db.add_all(tickets_to_add)
+
+        success = await acquire_seats(redis, str(screening_id), user_uuid, checkout_id)
+        if not success:
+            return False
+
+        # Generate magic links for all tickets
+        # magic_links = {ticket.id: generate_magic_link(ticket.receipt_number) for ticket in tickets_to_add}
+
+        # TODO: send email with the magic links to the user's email
+
+        return True
 
     except IntegrityError:
         # Most likely a concurrent checkout won the race between
@@ -476,14 +487,6 @@ async def make_payment(
             ),
         ) from exc
 
-    # TODO: Implement email sending logic here
-    # Generate a magic link for the receipt
-    # for ticket in tickets_to_add:
-    #   ticket.magic_link = generate_magic_link(ticket.receipt_number)
-    # send 1 or more emails with the order details and magic links
-
-    return True
-
 
 @router.delete("/screenings/{screening_id}/checkout/", response_model=bool)
 async def cancel_checkout(
@@ -503,7 +506,9 @@ async def get_tickets(
     # Fetch all users tickets from the database based on held seats
     purchaser_uuid = uuid.UUID(user_uuid)
     tickets = await db.execute(
-        select(Ticket).where(Ticket.purchaser_uuid == purchaser_uuid)
+        select(Ticket)
+        .options(selectinload(Ticket.screening), selectinload(Ticket.seat))
+        .where(Ticket.purchaser_uuid == purchaser_uuid)
     )
     return tickets.scalars().all()
 
@@ -529,9 +534,6 @@ async def get_ticket(
         )
     return ticket
 
-@router.get("/qrcode", response_class=StreamingResponse)
-async def get_qr(token: str):
-    return await get_qr_code(token)
 
 protected_router = APIRouter(dependencies=[Depends(require_internal_service)])
 
@@ -559,6 +561,7 @@ async def open_screening_sale(
         select(Screening.id)
         .where(
             Screening.auditorium_id == screening.auditorium_id,
+            Screening.id != screening_id,
             Screening.start_time < screening.end_time,
             Screening.end_time > screening.start_time,
         )
@@ -569,6 +572,18 @@ async def open_screening_sale(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="The auditorium is already booked during this time",
+        )
+
+    movie_duration = await db.scalar(
+        select(Movie.duration_minutes).where(Movie.id == screening.movie_id)
+    )
+
+    screening_duration = (screening.end_time - screening.start_time).total_seconds() / 60
+
+    if movie_duration < screening_duration:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Screening duration is shorter than the movie duration",
         )
 
     auditorium_seats = await db.execute(
