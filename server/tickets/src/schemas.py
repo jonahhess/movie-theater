@@ -55,3 +55,7 @@ class ScreeningSeatResponse(BaseModel):
     y_pos: int
     angle: int
     status: str
+
+class ContactInfo(BaseModel):
+    email: EmailStr
+    phone: str | None = None
