@@ -3,9 +3,11 @@ from __future__ import annotations
 import uuid
 from datetime import date, datetime
 from decimal import Decimal
+from enum import Enum as PyEnum
 
 from sqlalchemy import (
     Boolean,
+    Computed,
     Date,
     DateTime,
     Enum,
@@ -67,6 +69,63 @@ class Admin(Base):
     )
 
 
+class MovieGenre(str, PyEnum):
+    ACTION = "action"
+    ADVENTURE = "adventure"
+    ANIMATION = "animation"
+    COMEDY = "comedy"
+    CRIME = "crime"
+    DOCUMENTARY = "documentary"
+    DRAMA = "drama"
+    FANTASY = "fantasy"
+    HORROR = "horror"
+    MYSTERY = "mystery"
+    ROMANCE = "romance"
+    SCI_FI = "sci-fi"
+    THRILLER = "thriller"
+    WAR = "war"
+    WESTERN = "western"
+    OTHER = "other"
+
+
+class MovieCountry(str, PyEnum):
+    USA = "USA"
+    UK = "UK"
+    CANADA = "Canada"
+    AUSTRALIA = "Australia"
+    FRANCE = "France"
+    GERMANY = "Germany"
+    ITALY = "Italy"
+    SPAIN = "Spain"
+    JAPAN = "Japan"
+    SOUTH_KOREA = "South Korea"
+    INDIA = "India"
+    CHINA = "China"
+    ISRAEL = "Israel"
+    OTHER = "Other"
+
+class MovieStatus(str, PyEnum):
+    DRAFT = "draft"
+    COMING_SOON = "coming_soon"
+    NOW_SHOWING = "now_showing"
+    ARCHIVED = "archived"
+
+class MovieLanguage(str, PyEnum):
+    ENGLISH = "English"
+    HEBREW = "Hebrew"
+    ARABIC = "Arabic"
+    FRENCH = "French"
+    SPANISH = "Spanish"
+    GERMAN = "German"
+    ITALIAN = "Italian"
+    PORTUGUESE = "Portuguese"
+    RUSSIAN = "Russian"
+    JAPANESE = "Japanese"
+    KOREAN = "Korean"
+    CHINESE = "Chinese"
+    HINDI = "Hindi"
+    OTHER = "Other"
+
 class Movie(Base):
     __tablename__ = "movies"
 
@@ -91,12 +150,55 @@ class Movie(Base):
         server_default=text("CURRENT_TIMESTAMP"),
     )
 
+    tagline: Mapped[str | None] = mapped_column(
+        String(500),
+        nullable=True,
+    )
+
+    genre: Mapped[MovieGenre] = mapped_column(
+        Enum(MovieGenre, name="movie_genre_enum"),
+        nullable=False,
+    )
+
+    country: Mapped[MovieCountry] = mapped_column(
+        Enum(MovieCountry, name="movie_country_enum"),
+        nullable=False,
+    )
+
+    language: Mapped[MovieLanguage] = mapped_column(
+        Enum(MovieLanguage, name="movie_language_enum"),
+        nullable=False,
+        server_default=MovieLanguage.ENGLISH.value,
+    )
+
+    imdb_rating: Mapped[Decimal | None] = mapped_column(
+        Numeric(3, 1),
+        nullable=True,
+    )
+
+    rotten_tomatoes_score: Mapped[int | None] = mapped_column(
+        Integer,
+        nullable=True,
+    )
+
+    director: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    cast: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
+    trailer_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    poster_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    backdrop_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
+
 class Auditorium(Base):
     __tablename__ = "auditoriums"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
-    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    status: Mapped[str] = mapped_column(
+        Enum("active", "frozen","inactive", name="movie_status_enum"),
+        nullable=False,
+        server_default=text("'active'"),
+    )
 
     # Relationships
     seats: Mapped[list[Seat]] = relationship(
@@ -138,6 +240,7 @@ class Auditorium(Base):
         nullable=False,
         server_default=text("CURRENT_TIMESTAMP"),
     )
+
 
 class Seat(Base):
     __tablename__ = "seats"
@@ -190,6 +293,7 @@ class Screening(Base):
         nullable=False,
     )
     start_time: Mapped[datetime] = mapped_column(DateTime, index=True, nullable=False)
+    end_time: Mapped[datetime] = mapped_column(DateTime, index=True, nullable=False)
     price: Mapped[Decimal] = mapped_column(
         Numeric(10, 2),
         default=12.50,
@@ -202,53 +306,22 @@ class Screening(Base):
     )
 
     # Relationships
+    movie: Mapped[Movie] = relationship("Movie")
     auditorium: Mapped[Auditorium] = relationship("Auditorium")
-    screening_seats: Mapped[list[ScreeningSeat]] = relationship(
-        "ScreeningSeat",
-        back_populates="screening",
-        cascade="all, delete-orphan",
-    )
 
-class ScreeningSeat(Base):
-    __tablename__ = "screening_seats"
-    __table_args__ = (
-        UniqueConstraint("screening_id", "seat_id", name="unique_seat_per_screening"),
-    )
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    screening_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("screenings.id", ondelete="CASCADE"),
-        nullable=False,
-    )
-    seat_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("seats.id", ondelete="CASCADE"),
-        nullable=False,
-    )
-    is_taken: Mapped[bool] = mapped_column(Boolean, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime,
-        nullable=False,
-        server_default=text("CURRENT_TIMESTAMP"),
-    )
-
-    # Relationships
-    screening: Mapped[Screening] = relationship(
-        "Screening",
-        back_populates="screening_seats",
-    )
-    seat: Mapped[Seat] = relationship("Seat")
 
 class Ticket(Base):
     __tablename__ = "tickets"
 
+    __table_args__ = (
+    UniqueConstraint(
+        "screening_id",
+        "active_seat_id",
+        name="unique_active_ticket_seat_per_screening",
+    ),
+)
+
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    screening_seat_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("screening_seats.id", ondelete="RESTRICT"),
-        nullable=False,
-    )
     email: Mapped[str] = mapped_column(String(255), index=True, nullable=False)
     phone: Mapped[str | None] = mapped_column(String(20), nullable=True)
     receipt_number: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
@@ -263,12 +336,31 @@ class Ticket(Base):
         server_default="confirmed",
         nullable=False,
     )
+
+    screening_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("screenings.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
+
+    seat_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("seats.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
+
+    active_seat_id: Mapped[int | None] = mapped_column(
+    Integer,
+    Computed(
+        "CASE WHEN status = 'cancelled' THEN NULL ELSE seat_id END",
+        persisted=True,
+    ),
+)
+    screening: Mapped[Screening] = relationship("Screening")
+    seat: Mapped[Seat] = relationship("Seat")
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         nullable=False,
         server_default=text("CURRENT_TIMESTAMP"),
     )
-
-    # Relationships
-    screening_seat: Mapped[ScreeningSeat] = relationship(
-                                            "ScreeningSeat")
