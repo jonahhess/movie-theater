@@ -502,7 +502,9 @@ async def get_tickets(
     # Fetch all users tickets from the database based on held seats
     purchaser_uuid = uuid.UUID(user_uuid)
     tickets = await db.execute(
-        select(Ticket).where(Ticket.purchaser_uuid == purchaser_uuid)
+        select(Ticket)
+        .options(selectinload(Ticket.screening), selectinload(Ticket.seat))
+        .where(Ticket.purchaser_uuid == purchaser_uuid)
     )
     return tickets.scalars().all()
 
