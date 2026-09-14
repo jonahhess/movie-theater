@@ -5,12 +5,12 @@ from datetime import datetime
 
 from sqlalchemy import (
     Boolean,
+    Computed,
     DateTime,
     Enum,
     ForeignKey,
     Integer,
     String,
-    UniqueConstraint,
     Uuid,
     text,
 )
@@ -37,13 +37,9 @@ class User(Base):
 
 class Ticket(Base):
     __tablename__ = "tickets"
+    __table_args__ = {"extend_existing": True}
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    screening_seat_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("screening_seats.id", ondelete="RESTRICT"),
-        nullable=False,
-    )
     email: Mapped[str] = mapped_column(String(255), index=True, nullable=False)
     phone: Mapped[str | None] = mapped_column(String(20), nullable=True)
     receipt_number: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
@@ -58,6 +54,29 @@ class Ticket(Base):
         server_default="confirmed",
         nullable=False,
     )
+    screening_id: Mapped[int] = mapped_column(
+            Integer,
+            ForeignKey("screenings.id", ondelete="RESTRICT"),
+            nullable=False,
+        )
+    
+    seat_id: Mapped[int] = mapped_column(
+            Integer,
+            ForeignKey("seats.id", ondelete="RESTRICT"),
+            nullable=False,
+        )
+    
+    active_seat_id: Mapped[int | None] = mapped_column(
+        Integer,
+        Computed(
+            "CASE WHEN status = 'cancelled' THEN NULL ELSE seat_id END",
+            persisted=True,
+        ),
+    )
+
+    screening: Mapped[Screening] = relationship("Screening")
+    seat: Mapped[Seat] = relationship("Seat")
+    
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         nullable=False,
@@ -76,6 +95,7 @@ class Screening(Base):
         nullable=False,
     )
     start_time: Mapped[datetime] = mapped_column(DateTime, index=True, nullable=False)
+    end_time: Mapped[datetime] = mapped_column(DateTime, index=True, nullable=False)
     status: Mapped[str] = mapped_column(
         Enum("draft","on_sale","past", "cancelled", name="screening_status_enum"),
         server_default="draft",
@@ -88,8 +108,11 @@ class Auditorium(Base):
     __table_args__ = {"extend_existing": True}
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
-
+    status: Mapped[str] = mapped_column(
+        Enum("active", "frozen","inactive", name="movie_status_enum"),
+        nullable=False,
+        server_default=text("'active'"),
+    )
     # Relationships
     seats: Mapped[list[Seat]] = relationship(
         "Seat",
@@ -124,28 +147,3 @@ class Seat(Base):
     # Relationships
     auditorium: Mapped[Auditorium] = relationship(
         "Auditorium", back_populates="seats")
-
-class ScreeningSeat(Base):
-    __tablename__ = "screening_seats"
-    __table_args__ = (
-        UniqueConstraint("screening_id", "seat_id", name="unique_seat_per_screening"),
-        {"extend_existing": True},
-    )
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    screening_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("screenings.id", ondelete="CASCADE"),
-        nullable=False,
-    )
-    seat_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("seats.id", ondelete="CASCADE"),
-        nullable=False,
-    )
-    is_taken: Mapped[bool] = mapped_column(Boolean, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime,
-        nullable=False,
-        server_default=text("CURRENT_TIMESTAMP"),
-    )
