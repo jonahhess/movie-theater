@@ -14,7 +14,7 @@ from sqlalchemy.orm import selectinload
 from tickets.src.database import get_admin_db
 from tickets.src.helpers import get_or_create_user_uuid
 from tickets.src.models import Auditorium, Screening, Seat, Ticket, User
-from tickets.src.receipts import get_qr_code
+# from tickets.src.receipts import generate_magic_link
 from tickets.src.redis_client import get_redis
 from tickets.src.redis_seats import (
     acquire_seats,
@@ -476,11 +476,10 @@ async def make_payment(
             ),
         ) from exc
 
-    # TODO: Implement email sending logic here
-    # Generate a magic link for the receipt
-    # for ticket in tickets_to_add:
-    #   ticket.magic_link = generate_magic_link(ticket.receipt_number)
-    # send 1 or more emails with the order details and magic links
+    # Generate magic links for all tickets
+    # magic_links = {ticket.id: generate_magic_link(ticket.receipt_number) for ticket in tickets_to_add}
+
+    # TODO: send email with the magic links to the user's email
 
     return True
 
@@ -529,9 +528,6 @@ async def get_ticket(
         )
     return ticket
 
-@router.get("/qrcode", response_class=StreamingResponse)
-async def get_qr(token: str):
-    return await get_qr_code(token)
 
 protected_router = APIRouter(dependencies=[Depends(require_internal_service)])
 
