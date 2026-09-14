@@ -13,6 +13,17 @@ class MovieResponse(BaseModel):
     duration_minutes: int
     rating: str
     release_date: date | None = None
+    genre: str
+    country: str
+    language: str
+    poster_url: str | None = None
+    trailer_url: str | None = None
+    backdrop_url: str | None = None
+    tagline: str | None = None
+    director: str | None = None
+    cast: str | None = None
+
+
 
 class MovieListResponse(BaseModel):
     total: int
