@@ -23,12 +23,12 @@ export default async function DashboardPage() {
       const endTime = movie
         ? new Date(startTime.getTime() + movie.duration_minutes * 60_000)
         : null;
-
+        
       return { ...screening, movie, auditorium: auditoriumById.get(screening.auditorium_id), endTime };
     });
 
   const activeMovies = movies.filter((movie) => movie.status === "now_showing").length;
-  const activeAuditoriums = auditoriums.filter((auditorium) => auditorium.is_active).length;
+  const activeAuditoriums = auditoriums.filter((auditorium) => auditorium.status === "active").length;
   const onSaleScreenings = screenings.filter((screening) => screening.status === "on_sale").length;
   const formatDateTime = (value: Date | string) =>
     new Intl.DateTimeFormat("en", { dateStyle: "medium", timeStyle: "short" }).format(
@@ -42,7 +42,7 @@ export default async function DashboardPage() {
           <div>
             <p className="text-sm font-medium uppercase tracking-wide text-blue-700">Operations</p>
             <h1 className="mt-1 text-3xl font-bold tracking-tight text-slate-900">Dashboard</h1>
-            <p className="mt-2 text-slate-600">A quick view of today's programming and theatre readiness.</p>
+            <p className="mt-2 text-slate-600">A quick view of today's programming and theater readiness.</p>
           </div>
           <Link href="/screenings" className="rounded bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700">
             Manage screenings

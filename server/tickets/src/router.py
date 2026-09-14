@@ -586,6 +586,13 @@ async def open_screening_sale(
             detail="Screening duration is shorter than the movie duration",
         )
 
+    auditorium = await db.get(Auditorium, screening.auditorium_id)
+    if auditorium is None or auditorium.status != "active":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Auditorium is not available",
+        )
+
     auditorium_seats = await db.execute(
         select(Auditorium).where(
             Auditorium.id == screening.auditorium_id).options(

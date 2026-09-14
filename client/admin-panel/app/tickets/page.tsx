@@ -5,7 +5,8 @@ import { apiClient } from "../../lib/api";
 const columns = [
   { key: "id", label: "ID", editable: false },
   { key: "receipt_number", label: "Receipt #", editable: false },
-  { key: "screening_seat_id", label: "Seat Assignment ID", editable: false },
+  { key: "screening_id", label: "Screening ID", editable: false },
+  { key: "seat_id", label: "Seat ID", editable: false },
   { key: "email", label: "Customer Email" },
   { key: "phone", label: "Customer Phone" },
   {

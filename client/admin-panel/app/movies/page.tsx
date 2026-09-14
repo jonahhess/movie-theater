@@ -29,6 +29,62 @@ const columns = [
       { label: "Archived", value: "archived" },
     ],
   },
+  { key: "tagline", label: "Tagline", editable: true },
+  { key: "genre", label: "Genre" as const, options: [
+    { label: "Action", value: "Action" },
+    { label: "Adventure", value: "Adventure" },
+    { label: "Animation", value: "Animation" },
+    { label: "Comedy", value: "Comedy" },
+    { label: "Crime", value: "Crime" },
+    { label: "Documentary", value: "Documentary" },
+    { label: "Drama", value: "Drama" },
+    { label: "Fantasy", value: "Fantasy" },
+    { label: "Horror", value: "Horror" },
+    { label: "Mystery", value: "Mystery" },
+    { label: "Romance", value: "Romance" },
+    { label: "Sci-Fi", value: "Sci-Fi" },
+    { label: "Thriller", value: "Thriller" },
+    { label: "War", value: "War" },
+    { label: "Western", value: "Western" },
+    { label: "Other", value: "Other" },
+  ]},
+  { key: "country", label: "Country" as const, options: [
+    { label: "USA", value: "USA" },
+    { label: "UK", value: "UK" },
+    { label: "Canada", value: "Canada" },
+    { label: "Australia", value: "Australia" },
+    { label: "France", value: "France" },
+    { label: "Germany", value: "Germany" },
+    { label: "Italy", value: "Italy" },
+    { label: "Spain", value: "Spain" },
+    { label: "Japan", value: "Japan" },
+    { label: "South Korea", value: "South Korea" },
+    { label: "India", value: "India" },
+    { label: "China", value: "China" },
+    { label: "Israel", value: "Israel" },
+    { label: "Other", value: "Other" },
+  ]},
+  { key: "language", label: "Language" as const, options: [
+    { label: "English", value: "English" },
+    { label: "Hebrew", value: "Hebrew" },
+    { label: "Arabic", value: "Arabic" },
+    { label: "French", value: "French" },
+    { label: "Spanish", value: "Spanish" },
+    { label: "German", value: "German" },
+    { label: "Italian", value: "Italian" },
+    { label: "Portuguese", value: "Portuguese" },
+    { label: "Russian", value: "Russian" },
+    { label: "Japanese", value: "Japanese" },
+    { label: "Korean", value: "Korean" },
+    { label: "Chinese", value: "Chinese" },
+    { label: "Hindi", value: "Hindi" },
+    { label: "Other", value: "Other" },
+  ]},
+  { key: "director", label: "Director", editable: true },
+  { key: "cast", label: "Cast", editable: true },
+  { key: "trailer_url", label: "Trailer URL", editable: true },
+  { key: "poster_url", label: "Poster URL", editable: true },
+  { key: "backdrop_url", label: "Backdrop URL", editable: true },
 ];
 
 export default async function MoviesPage() {
@@ -45,4 +101,4 @@ export default async function MoviesPage() {
       onDelete={deleteAdminRecord.bind(null, "movies")}
     />
   );
-}
+}  
