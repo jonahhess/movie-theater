@@ -241,7 +241,7 @@ async def view_screening_seat_map(
     async for key in redis.scan_iter(
         match=f"screening:{screening_id}::*"
     )
-}
+    }
 
     locked_seat_id_strings = set(locked_seat_ids)
 
