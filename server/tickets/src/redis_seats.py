@@ -389,12 +389,7 @@ for i, key in ipairs(KEYS) do
 
     if current == old_user then
         redis.call('SET', key, new_user, 'KEEPTTL')
-
-        -- key = screening:<screening_id>::<uuid>
-        local screening_id, uuid = string.match(key, "^screening:(.-)::(.+)$")
-
-        table.insert(updated, screening_id)
-        table.insert(updated, uuid)
+        table.insert(updated, key)
     end
 end
 
@@ -429,19 +424,23 @@ async def change_seat_owner(
         )
             
         # Lua returns:
-        # [screening_id, uuid, screening_id, uuid, ...]
+        # [screening:<screening_id>::<uuid>, screening:<screening_id>::<uuid>, ...]
 
         owner_tag = generate_owner_tag(new_user_uuid)
         events = []
-        for i in range(0, len(result), 2):
-            screening_id = str(result[i])
-            events.append(publish_seat_update(redis, screening_id, new_user_uuid, "locked", owner_tag=owner_tag))
+        for key_str in result:
+            parsed = _parse_seat_key(key_str)
+            if parsed is None:
+                continue
+
+            screening_id, seat_id = parsed
+            events.append(publish_seat_update(redis, screening_id, seat_id, "locked", owner_tag=owner_tag))
         await gather(*events)
 
     except RedisError as e:
         print(f"Failed to execute change_owner script: {e}")
         return 0
-    return len(result) // 2
+    return len(result)
 
 # --- PURPOSE 2: CACHE WARMING ---
 
